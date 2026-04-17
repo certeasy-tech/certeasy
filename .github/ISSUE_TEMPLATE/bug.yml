@@ -9,22 +9,22 @@ body:
     id: version
     attributes:
       label: Version
-      placeholder: ex: v1.2.0
+      placeholder: "ex: v1.2.0"
 
   - type: input
     id: environment
     attributes:
       label: Environment
-      placeholder: Windows / Linux / ADCS version
+      placeholder: "Windows / Linux / ADCS version"
 
   - type: textarea
     id: description
     attributes:
       label: Description
-      placeholder: Describe the issue
+      placeholder: "Describe the issue"
 
   - type: textarea
     id: logs
     attributes:
       label: Logs
-      placeholder: Paste logs if available
+      placeholder: "Paste logs if available"

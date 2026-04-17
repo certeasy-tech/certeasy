@@ -17,11 +17,15 @@ Certeasy is an ACME connector for Microsoft ADCS that enables automated internal
 ## 🔐 Security
 
 All releases are signed and verified before distribution.
+for security issues → private contact (see SECURITY.md)
 
 ## 🛠 Support
 
-- Bugs / features → GitHub Issues
-- Security issues → private contact (see SECURITY.md)
+- 🐛 Report a bug → https://github.com/certeasy-tech/certeasy/issues/new?template=bug.yml
+- 💡 Request a feature → https://github.com/certeasy-tech/certeasy/issues/new?template=feature.yml
+- ❓ Ask a question → https://github.com/certeasy-tech/certeasy/issues/new?template=question.yml
+
+- 🔐Security issues → private contact (see SECURITY.md)
 
 ## 📄 License
 

@@ -25,4 +25,4 @@ All releases are signed and verified before distribution.
 
 ## 📄 License
 
-Commercial license required for production usage.
+Certeasy is proprietary software. See LICENSE for details.

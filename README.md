@@ -12,7 +12,7 @@ Certeasy is an ACME connector for Microsoft ADCS that enables automated internal
 
 ## 📖 Documentation
 
-👉 https://certeasy-tech.github.io/certeasy/
+👉 https://docs.certeasy.tech
 
 ## 🔐 Security
 

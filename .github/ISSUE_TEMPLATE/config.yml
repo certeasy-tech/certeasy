@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security issue
+    url: mailto:security@certeasy.tech
+    about: Please report security vulnerabilities privately.
+  - name: Licensing or commercial inquiry
+    url: mailto:contact@certeasy.tech
+    about: Contact us for licensing, trial, or commercial questions.

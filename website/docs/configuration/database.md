@@ -9,11 +9,11 @@ Certeasy stores all ACME state (accounts, orders, challenges, certificates, audi
 
 ## Supported Drivers
 
-| Driver | Key | Notes |
-|---|---|---|
-| SQLite | `sqlite` | Default. No setup required. Recommended for single-node deployments. |
-| PostgreSQL | `postgres` | Recommended for production. |
-| SQL Server | `sqlserver` | For environments standardized on Microsoft SQL Server. |
+| Driver | Key | Notes                                                                                               |
+|---|---|-----------------------------------------------------------------------------------------------------|
+| SQLite | `sqlite` | Default. No setup required. Recommended for single-node deployments. Do not supports multiple nodes |
+| PostgreSQL | `postgres` | Recommended for multi node deploymnent.                                                             |
+| SQL Server | `sqlserver` | For environments standardized on Microsoft SQL Server.                                              |
 
 ## Configuration
 

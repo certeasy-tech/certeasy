@@ -34,33 +34,33 @@ dns-validation-profiles:
 
 ### Profile
 
-| Field | Default | Description |
-|---|---|---|
-| `name` | — | Unique profile name. Referenced by issuance policies. |
-| `mode` | `local` | Validation mode. Only `local` is currently available. |
-| `timeout` | — | Overall validation timeout. |
+ | Field | Default | Type | Description                                      |
+|---|---|----------|------|---------------------------------------------|
+| `name` | — | string | Unique profile name. Referenced by issuance policies. |
+| `mode` | `local` | string | Validation mode. Only `local` is currently available. |
+| `timeout` | — | duration | Overall validation timeout.                           |
 
 ### Zones
 
 Each zone entry defines which DNS zones this profile handles and how to resolve them.
 
-| Field | Default | Description |
-|---|---|---|
-| `suffixes` | — | List of DNS zone suffixes (e.g. `corp.internal`) |
-| `system` | — | Use the system resolver for this zone |
-| `dns-server` | — | Explicit DNS server address (overrides system) |
-| `authoritative` | — | Require authoritative responses |
-| `dnssec` | — | Require DNSSEC validation |
-| `protocol` | — | DNS protocol: `udp` or `tcp` |
+| Field | Default | Type                                | Description                                      |
+|---|---|-------------------------------------|--------------------------------------------------|
+| `suffixes` | — | List string                         | List of DNS zone suffixes (e.g. `corp.internal`) |
+| `system` | — | boolean                             | Use the system resolver for this zone            |
+| `dns-server` | — | List string                         | Explicit DNS server address (overrides system)   |
+| `authoritative` | — | boolean                             | Require authoritative responses                  |
+| `dnssec` | — | boolean                             | Require DNSSEC validation                        |
+| `protocol` | — | string | DNS protocol: `udp` or `tcp`                     |
 
 ### Resolved IP Policy
 
 After a challenge DNS name resolves, Certeasy checks the resulting IP against these rules.
 
-| Field | Description |
-|---|---|
-| `allow-cidrs` | IP ranges that are acceptable |
-| `deny-cidrs` | IP ranges that are explicitly rejected (loopback, link-local, etc.) |
+| Field | Type                                                                | Description                   |
+|---|---------------------------------------------------------------------|-------------------------------|
+| `allow-cidrs` | List string | IP ranges that are acceptable |
+| `deny-cidrs` | List string | IP ranges that are explicitly rejected (loopback, link-local, etc.) |
 
 Deny rules are evaluated first. If an IP matches a deny CIDR, the challenge fails regardless of allow rules.
 
@@ -73,18 +73,22 @@ dns-validation-profiles:
   - name: corp-internal
     mode: local
     zones:
-      - suffixes: ["corp.internal"]
+      - suffixes: 
+        - "corp.internal"
         system: true
     resolved-ip-policy:
-      allow-cidrs: ["10.0.0.0/8"]
+      allow-cidrs: 
+       - "10.0.0.0/8"
 
   - name: dmz
     mode: local
     zones:
-      - suffixes: ["dmz.example.com"]
+      - suffixes: 
+        - "dmz.example.com"
         dns-server: "192.168.100.1"
     resolved-ip-policy:
-      allow-cidrs: ["172.16.0.0/12"]
+      allow-cidrs: 
+       - "172.16.0.0/12"
 ```
 
 When multiple profiles exist, each [issuance policy](/configuration/issuance-policies) must explicitly reference the profile to use.

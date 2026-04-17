@@ -60,12 +60,29 @@ issuance-policies:
         - ".corp.internal/3"
 ```
 
-This configuration uses:
-- **SQLite** database (default, stored in workdir)
-- **Default worker settings** (4 workers)
-- **Implicit policy binding** (single policy + single authority → no `policy-bindings` needed)
-- **Implicit DNS profile** (single profile → no explicit reference needed in the policy)
-- **PKI-mode TLS** — Certeasy issues and renews its own HTTPS certificate automatically via `ca1`
+## What this configuration actually does
+
+In plain English:
+
+> Certeasy listens on port 8443 and exposes itself at `https://acme.corp.internal`.
+> It contacts `LAB-RootCA` (your ADCS) to obtain a certificate for that hostname using the `ACME-Template-Server` template, and renews it automatically before expiry.
+> It accepts ACME certificate requests for any name under `corp.internal` (up to 3 labels), validates challenges using the system DNS resolver, and forwards CSR signing to the same `LAB-RootCA`.
+
+The authority `ca1` plays **two roles** here: it secures Certeasy's own HTTPS endpoint **and** signs the certificates your ACME clients request. Both use the same ADCS CA and the same template.
+
+`ca-name` (`PKI\\LAB-RootCA`) is the name of your ADCS certification authority — the backslash-separated form is `<server>\<CA common name>`. You can retrieve the exact value with `certutil -CA` on the ADCS host. `certificate-template` (`ACME-Template-Server`) is the name of the certificate template configured in ADCS for ACME enrollment. See [ADCS Configuration](../configuration/adcs) for how to set up the template and permissions.
+
+## Workers
+
+Certeasy processes certificate orders (validation, CSR submission, renewals) through an internal job queue. By default, **4 workers** consume that queue in the background. You don't need to configure this for a standard deployment — the default handles the load of most environments. Workers are only worth tuning if you have a very high volume of concurrent requests.
+
+## Implicit policy binding
+
+This configuration has exactly one policy (`corp-server`) and one authority (`ca1`). Certeasy connects them automatically — no `policy-bindings` section is needed.
+
+:::tip Think of it like a default route
+With a single destination, you don't need a routing table. As soon as you add a second authority (e.g. a pre-production CA), Certeasy can no longer guess which policy routes where — you'll need to declare `policy-bindings` explicitly at that point.
+:::
 
 :::info How PKI-mode TLS works
 On first startup, Certeasy submits a CSR to your ADCS for a certificate covering `acme.corp.internal` (taken from `server.url`). The certificate is cached locally and renewed automatically before expiry. No manual certificate provisioning required.

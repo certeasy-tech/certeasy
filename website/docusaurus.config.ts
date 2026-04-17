@@ -13,6 +13,7 @@ const config: Config = {
   organizationName: 'certeasy',
   projectName: 'certeasy-docs',
 
+  trailingSlash: false,
   onBrokenLinks: 'warn',
   markdown: {
     hooks: {
@@ -85,7 +86,7 @@ const config: Config = {
           items: [
             {label: 'Quick Start', to: '/getting-started/installation'},
             {label: 'Configuration', to: '/configuration/overview'},
-            {label: 'Reference', to: '/reference/full-configuration'},
+            {label: 'Full Example', to: '/reference/full-example'},
           ],
         },
         {

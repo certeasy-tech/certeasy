@@ -58,7 +58,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Reference',
       items: [
-        'reference/full-configuration',
+        'reference/full-example',
       ],
     },
     'changelog/index',

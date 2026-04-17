@@ -6,6 +6,7 @@ title: TLS Certificate Manager
 # TLS Certificate Manager
 
 The `tls-certificate-manager` section configures the TLS certificate that Certeasy uses for its **own HTTPS endpoint** — not the certificates it issues to clients.
+Every hostname listed in `server.url` must be covered by exactly one bundle, or the server will not start.
 
 ## Configuration
 
@@ -18,25 +19,35 @@ tls-certificate-manager:
       mode: files
       local-cert-file: "C:\\certeasy\\tls\\fullchain.pem"
       local-key-file: "C:\\certeasy\\tls\\privkey.pem"
-  acquire-timeout: 2m
-  renew-before: 720h
-  pki-poll-interval: 2s
-  file-watch-interval: 5s
-  local-pki-cache-dir: "%WORKDIR%/server-certificate-cache"
+  file-watch-interval: 60s
 ```
 
 ## Bundles
 
 A bundle associates a set of hostnames with a TLS certificate source. At least one bundle is required.
+For an external name you can use a Let's Encrypt certificate; for an internal name you can use your ADCS certificate.
 
-| Field | Required | Description |
-|---|---|---|
-| `name` | Yes | Bundle identifier |
-| `hosts` | Conditional | Hostnames this bundle serves. Can be omitted if there is only one bundle (public hosts are used). |
-| `mode` | Yes | Certificate source: `files` or `pki` |
-| `local-cert-file` | For `files` mode | Path to the PEM certificate chain |
-| `local-key-file` | For `files` mode | Path to the PEM private key |
-| `authority` | For `pki` mode | Authority name to use for auto-renewal |
+### Common fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | string | Yes | Bundle identifier |
+| `hosts` | list of strings | Conditional | Hostnames this bundle serves. Can be omitted if there is only one bundle. |
+| `mode` | string | Yes | Certificate source: `files` or `pki` |
+
+### `files` mode fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `local-cert-file` | string | Yes | Path to the PEM certificate chain |
+| `local-key-file` | string | Yes | Path to the PEM private key |
+
+### `pki` mode fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `authority` | string | Yes | Name of the authority to use for auto-issuance and renewal |
+
 
 ## Modes
 
@@ -54,6 +65,11 @@ bundles:
 
 Certeasy watches the files for changes and reloads automatically (controlled by `file-watch-interval`).
 
+| Field | Default | Description |
+|---|---|---|
+| `file-watch-interval` | `5s` | How often to check for certificate file changes |
+
+
 ### `pki` — Auto-renewal via Internal PKI
 
 Certeasy issues and renews its own server certificate through one of its configured authorities. The certificate is cached locally.
@@ -67,14 +83,11 @@ bundles:
 
 This is the recommended mode for fully automated certificate management.
 
-## Global Fields
-
 | Field | Default | Description |
 |---|---|---|
 | `acquire-timeout` | `2m` | Timeout to acquire a certificate at startup |
 | `renew-before` | `720h` (30 days) | How early to start renewal before expiry |
 | `pki-poll-interval` | `2s` | Polling interval when waiting for PKI issuance |
-| `file-watch-interval` | `5s` | How often to check for certificate file changes |
 | `local-pki-cache-dir` | `%WORKDIR%/server-certificate-cache` | Directory to cache PKI-issued server certificates |
 
 ## Multiple Bundles
@@ -99,4 +112,3 @@ tls-certificate-manager:
       local-key-file: "/etc/certeasy/tls/dmz.key"
 ```
 
-When multiple bundles exist, every public hostname listed in `server.url` must be covered by exactly one bundle.

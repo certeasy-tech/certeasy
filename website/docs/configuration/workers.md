@@ -57,7 +57,7 @@ The default settings (4 workers, 1s–2m backoff) work well for most deployments
 
 ## Multi-node Deployments
 
-Running multiple Certeasy instances against the same database is supported. Each instance competes for job leases — only one instance processes each job. Set `worker-id` to a unique value per instance:
+Running multiple Certeasy instances against the same database is supported (PostgreSQL, SQL Server). Each instance competes for job leases — only one instance processes each job. Set `worker-id` to a unique value per instance:
 
 ```yaml
 # Node 1

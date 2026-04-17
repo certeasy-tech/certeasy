@@ -55,9 +55,17 @@ Certeasy avoids requiring explicit configuration for common cases:
 - If only one DNS profile exists → policies don't need to reference it explicitly
 - If exactly one policy and one authority exist → `policy-bindings` can be omitted entirely
 
-## Config File Examples
+## `workdir`
 
-| File | Purpose |
+```yaml
+workdir: "C:\\ProgramData\\certeasy"
+```
+
+Base directory for all runtime files: SQLite database, TLS certificate cache, log files (when `output: file`).
+
+| OS | Default |
 |---|---|
-| `config-minimal.yml` | Smallest valid configuration |
-| `config-full.yml` | Every available option documented |
+| Windows | `%ProgramData%\certeasy` |
+| Linux | `/var/lib/certeasy` |
+
+All relative paths in other configuration sections (e.g. `database.path`, `local-pki-cache-dir`) are resolved relative to `workdir`.

@@ -1,7 +1,8 @@
 name: Bug report
 description: Report a bug in Certeasy
 title: "[BUG] "
-labels: ["bug"]
+labels:
+  - bug
 
 body:
   - type: input

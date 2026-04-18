@@ -19,7 +19,7 @@ Certeasy runs as a single binary. It targets **Windows Server** (to run close to
 
 ## Download
 
-Download the latest release from the [releases page](https://certeasy.tech).
+Download the latest beta release from the [releases page](https://github.com/certeasy-tech/certeasy/releases).
 
 The Windows binary is a single `certeasy.exe` — no installer, no dependencies.
 

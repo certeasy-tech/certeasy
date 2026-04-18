@@ -11,11 +11,13 @@ It lets you automate TLS certificate issuance inside your organization — witho
 
 ## The Problem
 
-Internal PKI is hard to automate. ADCS was not designed for the kind of automated, API-driven certificate lifecycle that modern infrastructure expects. Most organizations end up with one of these situations:
+Active Directory takes care of Windows machines: certificates are deployed automatically through Group Policy, no one has to think about it.
 
-- Certificates managed manually → forgotten renewals, outages
-- Complex scripting around `certreq.exe` → fragile and hard to audit
-- External CAs for internal services → data leaves your network
+Linux servers, reverse proxies, load balancers, and containers are a different story. ADCS was never designed for them, so teams fill the gap however they can:
+
+- Certificates managed manually, renewed by hand → forgotten renewals, outages
+- Custom scripts around `certreq.exe` → fragile, hard to audit, breaks on updates
+- External CAs for internal services → certificates issued outside your network, outside your policies
 
 ## The Solution
 

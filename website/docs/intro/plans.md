@@ -11,47 +11,61 @@ title: Plans & Pricing
 
 Ideal for small environments and proof-of-concept deployments.
 
-- Up to **100 certificates per year** (~25 servers at 90-day renewal)
-- **1 ADCS authority**
-- HTTP-01 challenge validation
+- **1 production installation**
+- **~25 managed servers** (100 certificates/year at 90-day renewal)
+- **1 ADCS production authority**
+- HTTP-01, DNS-01, TLS-ALPN-01 challenge validation
 - SQLite database
 
 ### Starter — €299 / year
 
 For small production environments.
 
-- Up to **1,000 certificates per year** (~250 servers at 90-day renewal)
-- **2 ADCS authorities** (e.g. production + test)
-- HTTP-01 challenge validation
+- **1 production installation**
+- **~250 managed servers** (1,000 certificates/year at 90-day renewal)
+- **2 ADCS production authorities**
+- HTTP-01, DNS-01, TLS-ALPN-01 challenge validation
 - SQLite database
 
 ### Pro — €499 / year
 
 For production environments and larger organizations.
 
-- **Unlimited certificates**
-- **3 ADCS authorities** (e.g. production + pre-production + test)
-- All challenge types (HTTP-01, DNS-01, TLS-ALPN-01)
-- PostgreSQL / SQL Server support
-- Dashboard
-- Monitoring & alerting
+- **1 production installation** (Active/Passive included)
+- **Unlimited managed servers**
+- **3 ADCS production authorities**
+- PostgreSQL database
+- SQL Server support *(coming in V2)*
+- Dashboard *(coming in V4)*
+- Monitoring & alerting *(coming in V4)*
 
 ### Enterprise — €999 / year / CA
 
 For organizations with advanced requirements.
 
 - Everything in Pro
-- **Up to 5 ADCS authorities** (production + pre-prod + test + staging + DR)
-- Split deployment: ADCS connector on Tier 0 + ACME responder on separate host
-- Distributed validation agents (segmented networks)
-- TLS service discovery
+- **Up to 5 ADCS production authorities**
+- Split deployment: ADCS connector on Tier 0 + ACME responder on separate host *(coming in V2)*
+- Active/Active high availability (multi-node, requires PostgreSQL) *(coming in V2)*
+- Distributed validation agents (segmented networks) *(coming in V3)*
+
+:::tip Active/Passive high availability
+Active/Passive HA is a supported deployment pattern available to all Pro and above users — run two Certeasy instances against the same PostgreSQL database with a load balancer or keepalived in front. No additional license required.
+:::
+- TLS service discovery *(coming in V4)*
 - Optional SLA
 
 Beyond 5 CAs — [contact us](https://certeasy.tech/contact).
 
-## Free Trial
+:::note License required — limits not yet enforced
+A license file (`certeasy.lic`) is required to run Certeasy, including on the Free plan. Registration takes 30 seconds and delivers the file by email.
 
-All paid plans include a **6-month free trial** — no credit card required. [Start your trial](https://certeasy.tech/trial) on the official site.
+Free licenses have no expiry — the counterpart is registration. Plan quotas (certificate count, number of ADCS authorities) are not yet enforced: all active licenses currently have full access regardless of plan. Enforcement will be introduced before the V1 stable release.
+:::
+
+## Evaluation period
+
+All paid plans include a **6-month evaluation period** — no credit card required, no automatic charge. At the end, you choose to subscribe for a year or simply stop. [Start your evaluation](https://certeasy.tech/trial) on the official site.
 
 :::note
 All prices exclude VAT. One activation slot = one ADCS CA fingerprint. Prices are locked — no unexpected increases.

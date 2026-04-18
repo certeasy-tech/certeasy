@@ -27,5 +27,5 @@ Initial public release.
 ---
 
 :::note
-Certeasy is currently in beta. This changelog will be updated with each release.
+Certeasy is currently in **public beta**. Core issuance has been tested with certbot. Formal validation with acme.sh, Caddy, DNS-01 and TLS-ALPN-01 is in progress. Revocation and account update are implemented but rarely exercised in practice — use with caution. This changelog will be updated with each release.
 :::

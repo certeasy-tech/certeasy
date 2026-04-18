@@ -76,6 +76,11 @@ const config: Config = {
           label: 'Product site',
           position: 'right',
         },
+        {
+          href: 'https://github.com/certeasy-tech/certeasy/releases',
+          label: 'Download',
+          position: 'right',
+        },
       ],
     },
     footer: {

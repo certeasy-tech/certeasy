@@ -67,7 +67,11 @@ Plan quotas (managed server count, number of ADCS authorities) are not yet enfor
 
 ## Evaluation period
 
-All paid plans include a **6-month evaluation period** — no credit card required, no automatic charge. At the end, you choose to subscribe for a year or simply stop. [Start your evaluation](https://certeasy.tech/trial) on the official site.
+All paid plans include a **6-month free trial** — sign up, no card required, no automatic charge. At the end, you choose to subscribe for a year or simply stop.
+
+If you subscribe, your license is extended by one year from the trial expiry date — not from the payment date. No re-activation, no service interruption.
+
+[Start your free trial](https://certeasy.tech/trial) on the official site.
 
 :::note
 All prices exclude VAT. One activation slot = one ADCS CA fingerprint. Prices are locked — no unexpected increases.

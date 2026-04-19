@@ -12,7 +12,7 @@ title: Plans & Pricing
 Ideal for small environments and proof-of-concept deployments.
 
 - **1 production installation**
-- **~25 managed servers** (100 certificates/year at 90-day renewal)
+- **~25 managed servers** (distinct ACME accounts with at least one active certificate)
 - **1 ADCS production authority**
 - HTTP-01, DNS-01, TLS-ALPN-01 challenge validation
 - SQLite database
@@ -22,7 +22,7 @@ Ideal for small environments and proof-of-concept deployments.
 For small production environments.
 
 - **1 production installation**
-- **~250 managed servers** (1,000 certificates/year at 90-day renewal)
+- **~250 managed servers** (distinct ACME accounts with at least one active certificate)
 - **2 ADCS production authorities**
 - HTTP-01, DNS-01, TLS-ALPN-01 challenge validation
 - SQLite database
@@ -60,7 +60,9 @@ Beyond 5 CAs — [contact us](https://certeasy.tech/contact).
 :::note License required — limits not yet enforced
 A license file (`certeasy.lic`) is required to run Certeasy, including on the Free plan. Registration takes 30 seconds and delivers the file by email.
 
-Free licenses have no expiry — the counterpart is registration. Plan quotas (certificate count, number of ADCS authorities) are not yet enforced: all active licenses currently have full access regardless of plan. Enforcement will be introduced before the V1 stable release.
+**Managed server quota** is counted as the number of distinct ACME accounts with at least one active (non-expired, non-revoked) certificate. Retries and re-issuances from the same ACME account do not count. An account with no active certificate (failed setup, tests) does not consume quota.
+
+Plan quotas (managed server count, number of ADCS authorities) are not yet enforced: all active licenses currently have full access regardless of plan. Enforcement will be introduced before the V1 stable release.
 :::
 
 ## Evaluation period

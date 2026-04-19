@@ -69,7 +69,9 @@ Plan quotas (managed server count, number of ADCS authorities) are not yet enfor
 
 All paid plans include a **6-month free trial** — sign up, no card required, no automatic charge. At the end, you choose to subscribe for a year or simply stop.
 
-If you subscribe, your license is extended by one year from the trial expiry date — not from the payment date. No re-activation, no service interruption.
+If you subscribe, a new license file is sent to your email. Replace the existing `certeasy.lic` on your server: no reinstallation, no configuration change. Your license is extended by one year from the trial expiry date, not from the payment date.
+
+On connected installations, auto-renewal can be configured so the binary fetches and replaces the file itself. On air-gapped servers, the manual file replacement is the only step required.
 
 [Start your free trial](https://certeasy.tech/trial) on the official site.
 

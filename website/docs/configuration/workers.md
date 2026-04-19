@@ -19,6 +19,7 @@ workers:
   base-backoff: 1s
   max-backoff: 2m
   queue-size: 4
+  drain-timeout: 30s
 ```
 
 ## Fields
@@ -33,6 +34,7 @@ workers:
 | `base-backoff` | `1s` | Initial backoff on job failure. |
 | `max-backoff` | `2m` | Maximum backoff after repeated failures. |
 | `queue-size` | value of `workers` | In-memory job queue buffer size. |
+| `drain-timeout` | `30s` | Maximum graceful-stop wait time for in-flight jobs before forced worker cancellation. |
 
 ## How the Job Engine Works
 
@@ -47,6 +49,13 @@ All background work in Certeasy (DNS challenge validation, ADCS polling) is hand
 
 Jobs are persistent — if Certeasy restarts mid-processing, workers resume from the database.
 
+## Shutdown and Recovery
+
+- On **graceful stop** (`SIGTERM`), the dispatcher stops claiming new jobs, then workers drain in-flight jobs for up to `drain-timeout`.
+- If `drain-timeout` is exceeded, in-flight handlers are cancelled and process shutdown continues.
+- On **force kill** (`SIGKILL` / `kill -9`), no graceful cleanup runs. In-flight jobs remain locked until their lease expires, then are picked again by workers after restart.
+- In practice, worst-case recovery delay after force kill is approximately `lease`.
+
 ## Tuning
 
 The default settings (4 workers, 1s–2m backoff) work well for most deployments. Consider adjusting if:
@@ -54,6 +63,12 @@ The default settings (4 workers, 1s–2m backoff) work well for most deployments
 - **High certificate volume**: increase `workers` and `queue-size`
 - **Slow ADCS**: increase `max-backoff` and `lease` to tolerate longer processing times
 - **Multi-node**: set a unique `worker-id` per instance to distinguish workers in logs
+
+## Tuning Relationships
+
+- Set `drain-timeout` to cover normal in-flight processing time during maintenance restarts.
+- Keep `lease` long enough to avoid premature reclaim during transient slowdowns, while still allowing acceptable post-crash recovery time.
+- In orchestrators, configure termination grace period to be greater than both `server.shutdown-timeout` and `workers.drain-timeout` (plus margin).
 
 ## Multi-node Deployments
 

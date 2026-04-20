@@ -18,6 +18,7 @@ Certeasy is configured with a single YAML file. The parser is strict: unknown fi
 | [`issuance-policies`](./issuance-policies) | Yes | Which names are allowed, key requirements |
 | [`policy-bindings`](./policy-bindings) | Conditional | Links policies to authorities |
 | [`database`](./database) | No | Database driver and connection settings |
+| [`license`](./license) | No | Optional online license checks and auto-renew |
 | [`logs`](../administration/logging) | No | Log level, format, output, per-service levels |
 | [`workers`](./workers) | No | Async job engine tuning |
 | `workdir` | No | Base directory for runtime files |
@@ -51,6 +52,8 @@ At runtime:
 Certeasy avoids requiring explicit configuration for common cases:
 
 - If `database` is omitted → SQLite at `%WORKDIR%/db.sqlite`
+- If `license` is omitted → online license mode with defaults (`certeasy.tech`, `30s`)
+- If `license.offline: true` → offline license mode
 - If `workers` is omitted → 4 workers with sensible backoff settings
 - If only one DNS profile exists → policies don't need to reference it explicitly
 - If exactly one policy and one authority exist → `policy-bindings` can be omitted entirely

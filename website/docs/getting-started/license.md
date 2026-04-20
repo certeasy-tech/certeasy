@@ -5,7 +5,8 @@ title: License
 
 # License
 
-Certeasy requires a valid license file (`.lic`) to run. The Free plan license is issued automatically when you [register](https://certeasy.tech/free). Paid plan licenses are sent by email after your trial or purchase.
+Certeasy requires a valid license file (`.lic`) to run.  
+Free licenses are issued from [certeasy.tech/free](https://certeasy.tech/free). Paid licenses are sent by email after trial/purchase.
 
 ## License File Format
 
@@ -19,44 +20,76 @@ Signature: <base64 Ed25519 signature>
 -----END CERTEASY LICENSE-----
 ```
 
-The payload contains your plan, the number of authorized ADCS authorities, and the expiry date. The signature is verified offline against a public key embedded in the binary — no network required at startup.
+The payload contains your plan, the number of authorized ADCS authorities, and the expiry date. The signature is verified offline against a public key embedded in the binary.
 
-## Installation
+## Install / Update a License
 
-Place the license file in Certeasy's work directory:
+Certeasy does not read `certeasy.lic` directly at runtime.  
+You install (or replace) a license by importing the `.lic` into the application database:
 
-| OS | Default path |
-|---|---|
-| Windows | `%ProgramData%\certeasy\certeasy.lic` |
-| Linux | `/var/lib/certeasy/certeasy.lic` |
-
-To use a different path, set it in your configuration file:
-
-```yaml
-license: C:\certeasy\certeasy.lic
+```powershell
+# Windows
+certeasy.exe -f C:\certeasy\config.yml --license C:\temp\certeasy.lic
 ```
 
-## Validation Behavior
+```bash
+# Linux
+./certeasy -f /etc/certeasy/config.yml --license /tmp/certeasy.lic
+```
 
-On every startup, Certeasy validates the license **offline** (signature + expiry check). No network call is required for this step.
+Behavior of `--license`:
+- validates signature + expiry
+- writes the license to DB
+- exits (does not start the ACME server)
 
-Certeasy also performs a periodic **online revocation check** against `certeasy.tech`. This check is fail-safe: if the server is unreachable or times out, the binary continues running based on the offline result. Only an explicit revocation response from the server causes a hard failure.
+If the import fails, the process exits with a non-zero code.
 
-:::note
-If your Certeasy host has no internet access, the online check is simply skipped. The binary functions normally as long as the license is not expired.
-:::
+## Runtime Validation
 
-## Auto-Renewal
+At startup, Certeasy validates the stored license offline (signature + expiry).  
+No internet access is required for this step.
 
-Certeasy renews the license file automatically when expiry is within 30 days, by calling `POST /api/license/refresh`. The new `.lic` is written atomically to the same path. If renewal fails (network error, server unavailable), the current license keeps working until its actual expiry date.
+If no license is installed:
+- startup fails by default
+- `--grace` allows a first-install grace window (96h)
 
-No manual action is required for renewal as long as:
-- The license file path is writable by the Certeasy service account
-- `certeasy.tech` is reachable from the host (or renewal can be done manually — see below)
+If a license is expired:
+- startup is still allowed for 14 days (post-expiry grace)
+- after that, startup fails with `license has expired`
 
-## Manual Renewal
+## Online Checks and Auto-Renew
 
-If auto-renewal is not possible (air-gapped environment, expired license), log in to your [customer portal](https://certeasy.tech/account) to download a fresh `.lic` file, then replace the existing one on the server. A service restart is not required — Certeasy re-reads the license file periodically.
+Certeasy can optionally run online checks and auto-renew by calling the backend refresh API.
+
+Online behavior is configured in `license` (see [Configuration / License](../configuration/license)).
+
+Default check cadence:
+- more than 30 days before expiry: every 30 days
+- 30 days or less before expiry: every 24h
+- after a failed online attempt: retry in 6h (or 1h near expiry)
+
+If the refresh endpoint is unreachable, Certeasy continues with offline validation.  
+Only an explicit server revocation response is a hard failure.
+
+During post-expiry startup grace, online renewal can still recover the installation automatically if online checks are enabled.
+
+By default, online checks are enabled and target Certeasy's official backend.
+To force offline mode, set:
+
+```yaml
+license:
+  offline: true
+```
+
+## Manual Renewal / Replacement
+
+To manually update a license (air-gapped, support-issued license, etc.), run `--license` again with the new file:
+
+```bash
+./certeasy -f /etc/certeasy/config.yml --license /tmp/new-certeasy.lic
+```
+
+For immediate effect on a running instance, restart the service after import.
 
 ## Checking License Status
 
@@ -70,18 +103,18 @@ Get-Content "C:\ProgramData\certeasy\certeasy.log" -Tail 20
 tail -20 /var/lib/certeasy/certeasy.log
 ```
 
-On startup, Certeasy logs the active plan, the number of authorized CAs, and the expiry date.
+On startup, Certeasy logs license details (`id`, `plan`, `max_cas`, holder, expiry, source).
 
 ## Troubleshooting
 
-**`license file not found`**  
-The `.lic` file is missing or the configured path is wrong. Check the `license` key in your config, or place the file in the default workdir location.
+**`no license found — download your license at https://certeasy.tech/account`**  
+No license is stored in the database. Import one with `--license`, or use `--grace` for initial bootstrap.
 
-**`invalid license signature`**  
-The file is corrupted or was modified. Download a fresh copy from your customer portal.
+**`invalid license: invalid license signature`**  
+The provided `.lic` file is corrupted or was modified.
 
 **`license has expired`**  
-Auto-renewal failed. Log in to the [customer portal](https://certeasy.tech/account) to download a new `.lic` and replace it on the server.
+License is beyond the post-expiry startup grace window. Import a renewed license.
 
 **`license has been revoked by the server`**  
-The license was revoked (e.g. after a chargeback or duplicate activation). Contact `contact@certeasy.tech`.
+The server explicitly revoked the license. Contact `contact@certeasy.tech`.

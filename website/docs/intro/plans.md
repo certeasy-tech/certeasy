@@ -1,4 +1,6 @@
----
+
+
+
 sidebar_position: 3
 title: Plans & Pricing
 ---
@@ -17,7 +19,7 @@ Ideal for small environments and proof-of-concept deployments.
 - HTTP-01, DNS-01, TLS-ALPN-01 challenge validation
 - SQLite database
 
-### Starter — €299 / year
+### Starter — €299 / year *(excl. VAT)*
 
 For small production environments.
 
@@ -27,7 +29,7 @@ For small production environments.
 - HTTP-01, DNS-01, TLS-ALPN-01 challenge validation
 - SQLite database
 
-### Pro — €499 / year
+### Pro — €499 / year *(excl. VAT)*
 
 For production environments and larger organizations.
 
@@ -39,7 +41,7 @@ For production environments and larger organizations.
 - Dashboard *(coming in V4)*
 - Monitoring & alerting *(coming in V4)*
 
-### Enterprise — €999 / year / CA
+### Enterprise — €999 / year / CA *(excl. VAT)*
 
 For organizations with advanced requirements.
 

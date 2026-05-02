@@ -22,10 +22,49 @@ Signature: <base64 Ed25519 signature>
 
 The payload contains your plan, the number of authorized ADCS authorities, and the expiry date. The signature is verified offline against a public key embedded in the binary.
 
-## Install / Update a License
+## Activation Methods
 
-Certeasy does not read `certeasy.lic` directly at runtime.  
-You install (or replace) a license by importing the `.lic` into the application database:
+There are two ways to activate Certeasy: online registration or manual file import.
+
+### Option 1 — Online Registration
+
+Register directly from the command line using your license ID from [certeasy.tech/account](https://certeasy.tech/account).
+
+You need:
+- Your **license ID** — available on your account page
+- A **deployment environment** label (`prod`, `dev`, `staging`, etc.)
+
+```powershell
+# Windows
+certeasy.exe -f C:\certeasy\config.yml --register-license <license-id> --env prod
+```
+
+```bash
+# Linux
+./certeasy -f /etc/certeasy/config.yml --register-license <license-id> --env prod
+```
+
+The server name defaults to the machine hostname. Override it with `--env-name`:
+
+```bash
+./certeasy -f /etc/certeasy/config.yml --register-license <license-id> --env prod --env-name my-server
+```
+
+Behavior of `--register-license`:
+- connects to certeasy.tech and registers the installation
+- downloads and stores the `.lic` in DB automatically
+- exits (does not start the ACME server)
+- `--env` is required; `--env-name` defaults to the machine hostname
+
+If this installation is already registered under a different license, the command fails with an error asking you to migrate via the portal.
+
+:::note
+`--register-license` requires online access to certeasy.tech. For air-gapped environments, use Option 2.
+:::
+
+### Option 2 — Manual File Import
+
+Download the `.lic` from [certeasy.tech/account](https://certeasy.tech/account) (you will need the installation ID — see [Runtime Validation](#runtime-validation) below) and import it:
 
 ```powershell
 # Windows
@@ -49,9 +88,11 @@ If the import fails, the process exits with a non-zero code.
 At startup, Certeasy validates the stored license offline (signature + expiry).  
 No internet access is required for this step.
 
-If no license is installed:
-- startup fails by default
-- `--grace` allows a first-install grace window (96h)
+If no license is installed, Certeasy logs your **installation ID** and the available activation options. To activate:
+- run `--register-license` with your license ID from the portal (online), or
+- import a `.lic` file with `--license` (offline-compatible)
+
+Startup fails by default without a license. Use `--grace` for a first-install grace window (7 days).
 
 If a license is expired:
 - startup is still allowed for 14 days (post-expiry grace)
@@ -108,7 +149,7 @@ On startup, Certeasy logs license details (`id`, `plan`, `max_cas`, holder, expi
 ## Troubleshooting
 
 **`no license found — download your license at https://certeasy.tech/account`**  
-No license is stored in the database. Import one with `--license`, or use `--grace` for initial bootstrap.
+No license is stored in the database. The installation ID is printed in the logs — use it to activate via `--register-license` or download a `.lic` from the portal and import it with `--license`. Use `--grace` for an initial bootstrap grace period.
 
 **`invalid license: invalid license signature`**  
 The provided `.lic` file is corrupted or was modified.
@@ -118,3 +159,6 @@ License is beyond the post-expiry startup grace window. Import a renewed license
 
 **`license has been revoked by the server`**  
 The server explicitly revoked the license. Contact `contact@certeasy.tech`.
+
+**`installation already registered under a different license`**  
+The installation ID is already bound to a different license on the server. Go to [certeasy.tech/account](https://certeasy.tech/account) to migrate the installation before running `--register-license` again.

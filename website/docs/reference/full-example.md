@@ -57,6 +57,9 @@ logs:
     JWKS: warn
     worker: info
     http-server: info
+  tags:                   # Free-form labels added to every log entry (Grafana/Loki)
+    instance: cert-srv-01
+    region: eu-west
 
 # ── TLS Certificate Manager ───────────────────────────────────────────────────
 tls-certificate-manager:

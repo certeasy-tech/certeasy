@@ -22,32 +22,43 @@ Signature: <base64 Ed25519 signature>
 
 The payload contains your plan, the number of authorized ADCS authorities, and the expiry date. The signature is verified offline against a public key embedded in the binary.
 
+## Identifiers
+
+Certeasy uses two human-readable keys, both in Crockford-base32 with a built-in check digit (no `I`, `L`, `O`, or `U`):
+
+| Key | Prefix | Example | Where it comes from |
+|---|---|---|---|
+| **License key** | `CRT-` | `CRT-EAYG2Q-QQBYYQ-VZHZ4M-5GWHNJ-V96MQX` | Issued on your account page; pass to `--register-license` |
+| **Installation key** | `INST-` | `INST-4RD63B-JE8MKM-MA5R51-DENCSA-52HJ6X` | Generated locally on first start; printed in the logs |
+
+Both keys are five groups of six characters; the last character is a checksum (Luhn mod-32 over Crockford-base32). The example values above intentionally end with `X` and **will not validate** — replace them with the real key shown on your account page or printed in your server logs. A mistyped license key is rejected at `--register-license` time with a clear error message before any network call is made.
+
 ## Activation Methods
 
 There are two ways to activate Certeasy: online registration or manual file import.
 
 ### Option 1 — Online Registration
 
-Register directly from the command line using your license ID from [certeasy.tech/account](https://certeasy.tech/account).
+Register directly from the command line using your license key from [certeasy.tech/account](https://certeasy.tech/account).
 
 You need:
-- Your **license ID** — available on your account page
+- Your **license key** — available on your account page (shape: `CRT-XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX`)
 - A **deployment environment** label (`prod`, `dev`, `staging`, etc.)
 
 ```powershell
 # Windows
-certeasy.exe -f C:\certeasy\config.yml --register-license <license-id> --env prod
+certeasy.exe -f C:\certeasy\config.yml --register-license <license-key> --env prod
 ```
 
 ```bash
 # Linux
-./certeasy -f /etc/certeasy/config.yml --register-license <license-id> --env prod
+./certeasy -f /etc/certeasy/config.yml --register-license <license-key> --env prod
 ```
 
 The server name defaults to the machine hostname. Override it with `--env-name`:
 
 ```bash
-./certeasy -f /etc/certeasy/config.yml --register-license <license-id> --env prod --env-name my-server
+./certeasy -f /etc/certeasy/config.yml --register-license <license-key> --env prod --env-name my-server
 ```
 
 Behavior of `--register-license`:
@@ -64,7 +75,7 @@ If this installation is already registered under a different license, the comman
 
 ### Option 2 — Manual File Import
 
-Download the `.lic` from [certeasy.tech/account](https://certeasy.tech/account) (you will need the installation ID — see [Runtime Validation](#runtime-validation) below) and import it:
+Download the `.lic` from [certeasy.tech/account](https://certeasy.tech/account) (you will need the installation key — see [Runtime Validation](#runtime-validation) below) and import it:
 
 ```powershell
 # Windows
@@ -88,8 +99,8 @@ If the import fails, the process exits with a non-zero code.
 At startup, Certeasy validates the stored license offline (signature + expiry).  
 No internet access is required for this step.
 
-If no license is installed, Certeasy logs your **installation ID** and the available activation options. To activate:
-- run `--register-license` with your license ID from the portal (online), or
+If no license is installed, Certeasy logs your **installation key** and the available activation options. To activate:
+- run `--register-license` with your license key from the portal (online), or
 - import a `.lic` file with `--license` (offline-compatible)
 
 Startup fails by default without a license. Use `--grace` for a first-install grace window (7 days).
@@ -148,8 +159,8 @@ On startup, Certeasy logs license details (`id`, `plan`, `max_cas`, holder, expi
 
 ## Troubleshooting
 
-**`no license found — download your license at https://certeasy.tech/account`**  
-No license is stored in the database. The installation ID is printed in the logs — use it to activate via `--register-license` or download a `.lic` from the portal and import it with `--license`. Use `--grace` for an initial bootstrap grace period.
+**`WARNING: PRODUCT NOT REGISTERED`**  
+No license is stored in the database. The startup logs print your **installation key** (`INST-…`) and the registration URL — use it to activate via `--register-license <license-key>` or download a `.lic` from the portal and import it with `--license`. Use `--grace` for an initial bootstrap grace period.
 
 **`invalid license: invalid license signature`**  
 The provided `.lic` file is corrupted or was modified.
@@ -161,4 +172,4 @@ License is beyond the post-expiry startup grace window. Import a renewed license
 The server explicitly revoked the license. Contact `contact@certeasy.tech`.
 
 **`installation already registered under a different license`**  
-The installation ID is already bound to a different license on the server. Go to [certeasy.tech/account](https://certeasy.tech/account) to migrate the installation before running `--register-license` again.
+The installation key is already bound to a different license on the server. Go to [certeasy.tech/account](https://certeasy.tech/account) to migrate the installation before running `--register-license` again.

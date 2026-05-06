@@ -7,7 +7,7 @@ title: License
 
 The `license` section controls optional online checks and auto-renew behavior.
 
-License activation is done with a CLI flag — either `--register-license` for online registration or `--license` to import a file (see [Getting Started / License](../getting-started/license)).
+License activation is done with a CLI flag — either `--register-license <license-key>` (e.g. `CRT-…`) for online registration, or `--license <path>` to import a `.lic` file. On first start the server prints its **installation key** (`INST-…`) in the logs; you'll need it to download a `.lic` from the portal. See [Getting Started / License](../getting-started/license) for the full flow.
 
 ## Configuration
 

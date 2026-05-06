@@ -21,6 +21,9 @@ logs:
   services:
     DB-Driver: warn
     Certeasy-acme-server: debug
+  tags:
+    instance: cert-srv-01
+    region: eu-west
 ```
 
 ## Fields
@@ -33,7 +36,8 @@ logs:
 | `file` | — | Log file path. Required if `output: file`. |
 | `rotate.max-size-mb` | — | Max log file size in MB before rotation |
 | `rotate.max-backups` | — | Number of rotated log files to keep |
-| `services` | `{}` | Per-service log level overrides |
+| `services` | empty | Per-service log level overrides |
+| `tags` | empty | User-defined labels added to every log entry — useful for Grafana/Loki filtering |
 
 ## Per-Service Log Levels
 
@@ -59,6 +63,24 @@ logs:
 | `JWKS` | JWS key validation |
 | `worker` | Job engine (lease, dispatch, backoff) |
 | `http-server` | HTTP server lifecycle |
+
+## Tags (Grafana/Loki labels)
+
+`logs.tags` is a free-form map of `key: value` pairs added to **every** log entry. Use it to attach environment metadata that your log aggregator (Grafana/Loki, Splunk, Elastic…) can filter on.
+
+```yaml
+logs:
+  tags:
+    instance: cert-srv-01
+    region: eu-west
+    role: production
+```
+
+Each entry shows up as a top-level field in the JSON output, alongside `time`, `level`, `msg`, etc. There is no fixed list of allowed keys — pick whatever your stack expects.
+
+:::note
+The previous automatic `env` field is no longer added to log entries; it conflicted with the `env=` shown inside license-related log messages (license environment, e.g. `env=dev` / `env=prod`). If you want an environment label, set it explicitly under `tags`.
+:::
 
 ## Log Rotation
 

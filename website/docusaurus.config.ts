@@ -40,6 +40,12 @@ const config: Config = {
             },
           },
         },
+        sitemap: {
+          changefreq: 'weekly',
+          priority: 0.7,
+          ignorePatterns: ['/tags/**'],
+          filename: 'sitemap.xml',
+        },
         blog: false,
         theme: {
           customCss: './src/css/custom.css',

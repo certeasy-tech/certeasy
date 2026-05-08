@@ -38,6 +38,66 @@ jobs:
         working-directory: website
         run: npm run build
 
+      - name: Expose Markdown sources and LLM files
+        run: |
+          set -euo pipefail
+
+          mkdir -p website/build/markdown
+
+          # Copie les sources Markdown/MDX dans /markdown/
+          if [ -d website/docs ]; then
+            rsync -av \
+              --include='*/' \
+              --include='*.md' \
+              --include='*.mdx' \
+              --exclude='*' \
+              website/docs/ website/build/markdown/
+          elif [ -d docs ]; then
+            rsync -av \
+              --include='*/' \
+              --include='*.md' \
+              --include='*.mdx' \
+              --exclude='*' \
+              docs/ website/build/markdown/
+          else
+            echo "No docs folder found"
+            exit 1
+          fi
+
+          # Fichier court pour les IA
+          cat > website/build/llms.txt <<'EOF'
+          # Certeasy Documentation
+
+          > Certeasy is an on-premise ACME server for Microsoft ADCS.
+
+          Useful documentation entry points:
+
+          - [Full Markdown export](https://docs.certeasy.tech/llms-full.txt)
+          - [Markdown sources](https://docs.certeasy.tech/markdown/)
+          - [Documentation website](https://docs.certeasy.tech/)
+          EOF
+
+          # Export complet concaténé
+          {
+            echo "# Certeasy Documentation Full Export"
+            echo
+            echo "Source: https://docs.certeasy.tech/"
+            echo
+            echo "---"
+            echo
+
+            find website/build/markdown -type f \( -name '*.md' -o -name '*.mdx' \) | sort | while read -r file; do
+              rel="${file#website/build/markdown/}"
+              echo
+              echo "---"
+              echo
+              echo "# ${rel}"
+              echo
+              cat "$file"
+              echo
+            done
+          } > website/build/llms-full.txt
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

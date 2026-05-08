@@ -34,6 +34,8 @@ const sidebars: SidebarsConfig = {
         'configuration/policy-bindings',
         'configuration/authorities',
         'configuration/workers',
+        'configuration/rate-limiting',
+        'configuration/renewal-info',
       ],
     },
     {

@@ -21,6 +21,8 @@ Certeasy is configured with a single YAML file. The parser is strict: unknown fi
 | [`license`](./license) | No | Optional online license checks and auto-renew |
 | [`logs`](../administration/logging) | No | Log level, format, output, per-service levels |
 | [`workers`](./workers) | No | Async job engine tuning |
+| [`rate-limiting`](./rate-limiting) | No | Per-IP, per-account, and duplicate-certificate rate limits |
+| [`renewal-info`](./renewal-info) | No | ACME Renewal Information (RFC 9773) — suggested renewal window |
 | `workdir` | No | Base directory for runtime files |
 
 ## Runtime Model
@@ -57,6 +59,8 @@ Certeasy avoids requiring explicit configuration for common cases:
 - If `workers` is omitted → 4 workers with sensible backoff settings
 - If only one DNS profile exists → policies don't need to reference it explicitly
 - If exactly one policy and one authority exist → `policy-bindings` can be omitted entirely
+- If `rate-limiting` is omitted → safe defaults: 200 req/min/IP, 5 accounts/h/IP, 20 orders/h/account, 5 same-FQDN issuances per 7 days, 5 failed validations per (account, hostname) per hour, 30 in-flight pending authzs per account
+- If `renewal-info` is omitted → ARI is still active with default window (last third of cert lifetime, 48h wide, 6h `Retry-After`)
 
 ## `workdir`
 

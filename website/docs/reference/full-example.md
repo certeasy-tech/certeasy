@@ -162,4 +162,53 @@ workers:
   base-backoff: 1s
   max-backoff: 2m
   queue-size: 4                        # defaults to value of workers
+
+# ── Rate Limiting ─────────────────────────────────────────────────────────────
+# Omit this section entirely to apply the defaults shown below.
+# Whitelist is intentionally empty — secure by default, no IP is auto-trusted.
+rate-limiting:
+  whitelist:                           # OPTIONAL — entries bypass IP-based limits
+                                       # Add only if you have a specific reason
+                                       # (e.g. monitoring probes you control).
+                                       # Example values (commented out by default):
+                                       # - "127.0.0.1"
+                                       # - "10.42.0.0/16"
+
+  global:                              # Per-IP token bucket on every endpoint
+    enabled: true
+    requests-per-minute: 200
+    burst: 20
+
+  account-creation:                    # Per-IP cap on new-account
+    enabled: true
+    per-ip-per-hour: 5
+    burst: 2
+
+  order-creation:                      # Per-account caps on new-order
+    enabled: true
+    orders-per-account-per-hour: 20
+    order-burst: 5
+    san-budget-per-account-per-hour: 100
+
+  duplicate-certificate:               # Anti-runaway: same FQDN set per account
+    enabled: true                      # Set to false to disable entirely
+    max-per-window: 5
+    window: 168h                       # 7 days
+
+  failed-validation:                   # Anti-misconfig: bucket per (account, hostname)
+    enabled: true                      # Counter lives in memory only
+    max-per-window: 5
+    window: 1h
+
+  pending-authorizations:              # Anti-DoS: in-flight authzs per account
+    enabled: true
+    max: 30                            # Calibrated for 1 machine = 1 account
+
+# ── Renewal Information (ARI, RFC 9773) ───────────────────────────────────────
+# Always active — endpoint advertised in /directory as renewalInfo.
+# Omit this section to apply the defaults.
+renewal-info:
+  lifetime-fraction: 0.66              # Window opens at notBefore + lifetime*0.66
+  window-width: 48h                    # Spread renewals across this duration
+  retry-after: 6h                      # Sent as Retry-After header on responses
 ```

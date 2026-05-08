@@ -190,3 +190,58 @@ The enforced rules prevent entire classes of ADCS certificate-based attacks (ESC
 **Attack**: Certificates trusted across forests allow lateral movement.
 
 **Mitigations**: EKU restricted to Server Authentication. No user or machine authentication EKUs. No identity-bearing Subject or SAN fields.
+
+---
+
+## Lifecycle Protections
+
+The rules above apply at issuance time. Two additional protections operate around the certificate's lifetime:
+
+### Anti-DoS: Pending Authorizations Cap
+
+Clients that create orders but never finalize them leave behind pending `acme_authorizations` rows. Without a cap, this is a silent storage-growth DoS. Certeasy refuses new orders when the account already has too many in-flight pending authzs.
+
+| Property | Default | Configurable |
+|---|---|---|
+| Max in-flight | 30 | `rate-limiting.pending-authorizations.max` |
+| Disable | — | `rate-limiting.pending-authorizations.enabled: false` |
+
+The default of 30 is calibrated for the typical "one machine = one ACME account" model where a real client rarely has more than 5–10 pending authzs at once. Expired authzs are excluded from the count so abandoned orders don't lock the account out forever.
+
+See [Rate Limiting](../configuration/rate-limiting#pending-authorizations).
+
+### Anti-Misconfig: Failed Validation Limit
+
+A misconfigured ACME client (broken DNS, port 80 closed, wrong TLS-ALPN) will keep retrying validations indefinitely, burning CA worker capacity. Certeasy keeps an in-memory counter per `(account, hostname)` and refuses new authorizations once that counter is at cap.
+
+| Property | Default | Configurable |
+|---|---|---|
+| Cap | 5 failed validations | `rate-limiting.failed-validation.max-per-window` |
+| Window | 1h | `rate-limiting.failed-validation.window` |
+| Disable | — | `rate-limiting.failed-validation.enabled: false` |
+
+The counter decays continuously, so a transient outage that produces a few failures clears within minutes. The check at order-creation time is non-consuming — only actual challenge failures count.
+
+See [Rate Limiting](../configuration/rate-limiting#failed-validation).
+
+### Anti-Runaway: Duplicate Certificate Limit
+
+A misconfigured or compromised ACME client can loop on the same domain and burn through CA resources — the "2000 certs for one site" failure mode. Certeasy caps repeat issuance of the same FQDN set per account within a rolling time window.
+
+| Property | Default | Configurable |
+|---|---|---|
+| Cap | 5 issuances | `rate-limiting.duplicate-certificate.max-per-window` |
+| Window | 168h (7 days) | `rate-limiting.duplicate-certificate.window` |
+| Disable | — | `rate-limiting.duplicate-certificate.enabled: false` |
+
+The set is canonicalised (lowercased, sorted, deduplicated, wildcards preserved) and hashed; the count uses an indexed DB lookup. **Revoked certificates are excluded** so legitimate post-revocation reissuance is not blocked. When the limit is hit, the response is HTTP 429 with a precise `Retry-After` (the moment the oldest in-window certificate falls out of the window).
+
+See [Rate Limiting](../configuration/rate-limiting#duplicate-certificate).
+
+### Forced Renewal via ARI
+
+Certeasy implements ACME Renewal Information (RFC 9773). For a **revoked** certificate, the suggested renewal window collapses to `[now, now]`, instructing compliant clients (recent certbot, acme.sh, lego, Caddy, Traefik) to renew immediately. This makes revocation a usable rollover tool for key compromise, template misconfiguration, or rotation.
+
+For non-revoked certificates, ARI spreads renewals across a configurable window in the last third of the certificate's lifetime, avoiding thundering-herd reissue across thousands of clients.
+
+See [Renewal Information](../configuration/renewal-info).

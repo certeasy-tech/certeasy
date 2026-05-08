@@ -28,10 +28,10 @@ Certeasy uses two human-readable keys, both in Crockford-base32 with a built-in 
 
 | Key | Prefix | Example | Where it comes from |
 |---|---|---|---|
-| **License key** | `CRT-` | `CRT-EAYG2Q-QQBYYQ-VZHZ4M-5GWHNJ-V96MQX` | Issued on your account page; pass to `--register-license` |
+| **License key** | `CRT-` | `CRT-EAYG2Q-QQBYYQ-VZHZ4M-5GWHNJ-V96MQX` | Issued on your account page; pass to `certeasy license register` |
 | **Installation key** | `INST-` | `INST-4RD63B-JE8MKM-MA5R51-DENCSA-52HJ6X` | Generated locally on first start; printed in the logs |
 
-Both keys are five groups of six characters; the last character is a checksum (Luhn mod-32 over Crockford-base32). The example values above intentionally end with `X` and **will not validate** — replace them with the real key shown on your account page or printed in your server logs. A mistyped license key is rejected at `--register-license` time with a clear error message before any network call is made.
+Both keys are five groups of six characters; the last character is a checksum (Luhn mod-32 over Crockford-base32). The example values above intentionally end with `X` and **will not validate** — replace them with the real key shown on your account page or printed in your server logs. A mistyped license key is rejected at `certeasy license register` time with a clear error message before any network call is made.
 
 ## Activation Methods
 
@@ -47,21 +47,21 @@ You need:
 
 ```powershell
 # Windows
-certeasy.exe -f C:\certeasy\config.yml --register-license <license-key> --env prod
+certeasy.exe license register -f C:\certeasy\config.yml --env prod <license-key>
 ```
 
 ```bash
 # Linux
-./certeasy -f /etc/certeasy/config.yml --register-license <license-key> --env prod
+./certeasy license register -f /etc/certeasy/config.yml --env prod <license-key>
 ```
 
 The server name defaults to the machine hostname. Override it with `--env-name`:
 
 ```bash
-./certeasy -f /etc/certeasy/config.yml --register-license <license-key> --env prod --env-name my-server
+./certeasy license register -f /etc/certeasy/config.yml --env prod --env-name my-server <license-key>
 ```
 
-Behavior of `--register-license`:
+Behavior of `certeasy license register`:
 - connects to certeasy.tech and registers the installation
 - downloads and stores the `.lic` in DB automatically
 - exits (does not start the ACME server)
@@ -70,7 +70,7 @@ Behavior of `--register-license`:
 If this installation is already registered under a different license, the command fails with an error asking you to migrate via the portal.
 
 :::note
-`--register-license` requires online access to certeasy.tech. For air-gapped environments, use Option 2.
+`certeasy license register` requires online access to certeasy.tech. For air-gapped environments, use Option 2.
 :::
 
 ### Option 2 — Manual File Import
@@ -79,15 +79,15 @@ Download the `.lic` from [certeasy.tech/account](https://certeasy.tech/account) 
 
 ```powershell
 # Windows
-certeasy.exe -f C:\certeasy\config.yml --license C:\temp\certeasy.lic
+certeasy.exe license install -f C:\certeasy\config.yml C:\temp\certeasy.lic
 ```
 
 ```bash
 # Linux
-./certeasy -f /etc/certeasy/config.yml --license /tmp/certeasy.lic
+./certeasy license install -f /etc/certeasy/config.yml /tmp/certeasy.lic
 ```
 
-Behavior of `--license`:
+Behavior of `certeasy license install`:
 - validates signature + expiry
 - writes the license to DB
 - exits (does not start the ACME server)
@@ -100,8 +100,8 @@ At startup, Certeasy validates the stored license offline (signature + expiry).
 No internet access is required for this step.
 
 If no license is installed, Certeasy logs your **installation key** and the available activation options. To activate:
-- run `--register-license` with your license key from the portal (online), or
-- import a `.lic` file with `--license` (offline-compatible)
+- run `certeasy license register` with your license key from the portal (online), or
+- import a `.lic` file with `certeasy license install` (offline-compatible)
 
 Startup fails by default without a license. Use `--grace` for a first-install grace window (7 days).
 
@@ -135,10 +135,10 @@ license:
 
 ## Manual Renewal / Replacement
 
-To manually update a license (air-gapped, support-issued license, etc.), run `--license` again with the new file:
+To manually update a license (air-gapped, support-issued license, etc.), run `certeasy license install` again with the new file:
 
 ```bash
-./certeasy -f /etc/certeasy/config.yml --license /tmp/new-certeasy.lic
+./certeasy license install -f /etc/certeasy/config.yml /tmp/new-certeasy.lic
 ```
 
 For immediate effect on a running instance, restart the service after import.
@@ -160,7 +160,7 @@ On startup, Certeasy logs license details (`id`, `plan`, `max_cas`, holder, expi
 ## Troubleshooting
 
 **`WARNING: PRODUCT NOT REGISTERED`**  
-No license is stored in the database. The startup logs print your **installation key** (`INST-…`) and the registration URL — use it to activate via `--register-license <license-key>` or download a `.lic` from the portal and import it with `--license`. Use `--grace` for an initial bootstrap grace period.
+No license is stored in the database. The startup logs print your **installation key** (`INST-…`) and the registration URL — use it to activate via `certeasy license register <license-key>` or download a `.lic` from the portal and import it with `certeasy license install`. Use `--grace` for an initial bootstrap grace period.
 
 **`invalid license: invalid license signature`**  
 The provided `.lic` file is corrupted or was modified.
@@ -172,4 +172,4 @@ License is beyond the post-expiry startup grace window. Import a renewed license
 The server explicitly revoked the license. Contact `contact@certeasy.tech`.
 
 **`installation already registered under a different license`**  
-The installation key is already bound to a different license on the server. Go to [certeasy.tech/account](https://certeasy.tech/account) to migrate the installation before running `--register-license` again.
+The installation key is already bound to a different license on the server. Go to [certeasy.tech/account](https://certeasy.tech/account) to migrate the installation before running `certeasy license register` again.

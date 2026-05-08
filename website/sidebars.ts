@@ -54,6 +54,7 @@ const sidebars: SidebarsConfig = {
         'administration/logging',
         'administration/schema',
         'administration/migrations',
+        'administration/backup',
       ],
     },
     {

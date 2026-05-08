@@ -7,7 +7,7 @@ title: License
 
 The `license` section controls optional online checks and auto-renew behavior.
 
-License activation is done with a CLI flag — either `--register-license <license-key>` (e.g. `CRT-…`) for online registration, or `--license <path>` to import a `.lic` file. On first start the server prints its **installation key** (`INST-…`) in the logs; you'll need it to download a `.lic` from the portal. See [Getting Started / License](../getting-started/license) for the full flow.
+License activation is done with a CLI subcommand — either `certeasy license register <license-key>` (e.g. `CRT-…`) for online registration, or `certeasy license install <path>` to import a `.lic` file. On first start the server prints its **installation key** (`INST-…`) in the logs; you'll need it to download a `.lic` from the portal. See [Getting Started / License](../getting-started/license) for the full flow.
 
 ## Configuration
 
@@ -54,9 +54,9 @@ license:
 In offline mode:
 - no outbound license HTTP calls are made
 - startup/runtime rely only on the locally stored license in DB
-- renewal is manual: import a new file with `--license`
+- renewal is manual: import a new file with `certeasy license install`
 
 :::note
-`--register-license` requires online access and does not work when `offline: true`. Use `--license` for air-gapped environments.
+`certeasy license register` requires online access and does not work when `offline: true`. Use `certeasy license install` for air-gapped environments.
 :::
 

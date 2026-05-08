@@ -1,9 +1,11 @@
----
+
+# Database Schema  ddd ---
 sidebar_position: 2
 title: Database Schema
 ---
 
 # Database Schema
+
 
 Certeasy's schema is managed automatically via embedded migrations. This page documents the tables, their purpose, and their lifecycle.
 

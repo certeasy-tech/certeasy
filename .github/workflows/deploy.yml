@@ -38,46 +38,90 @@ jobs:
         working-directory: website
         run: npm run build
 
-      - name: Expose Markdown sources and LLM files
+      - name: Expose Markdown sources, robots, sitemap and LLM files
         run: |
           set -euo pipefail
 
           mkdir -p website/build/markdown
 
-          # Copie les sources Markdown/MDX dans /markdown/
           if [ -d website/docs ]; then
-            rsync -av \
-              --include='*/' \
-              --include='*.md' \
-              --include='*.mdx' \
-              --exclude='*' \
-              website/docs/ website/build/markdown/
+            DOCS_DIR="website/docs"
           elif [ -d docs ]; then
-            rsync -av \
-              --include='*/' \
-              --include='*.md' \
-              --include='*.mdx' \
-              --exclude='*' \
-              docs/ website/build/markdown/
+            DOCS_DIR="docs"
           else
             echo "No docs folder found"
             exit 1
           fi
 
-          # Fichier court pour les IA
+          rsync -av \
+            --include='*/' \
+            --include='*.md' \
+            --include='*.mdx' \
+            --exclude='*' \
+            "$DOCS_DIR/" website/build/markdown/
+
+          # robots.txt
+          cat > website/build/robots.txt <<'EOF'
+          User-agent: *
+          Allow: /
+
+          Sitemap: https://docs.certeasy.tech/sitemap.xml
+          Sitemap: https://docs.certeasy.tech/markdown-sitemap.xml
+          EOF
+
+          # Page HTML d'index pour /markdown/
+          {
+            echo '<!doctype html>'
+            echo '<html lang="en">'
+            echo '<head>'
+            echo '  <meta charset="utf-8">'
+            echo '  <meta name="viewport" content="width=device-width, initial-scale=1">'
+            echo '  <title>Certeasy Markdown Documentation</title>'
+            echo '  <meta name="description" content="Raw Markdown sources for the Certeasy documentation.">'
+            echo '</head>'
+            echo '<body>'
+            echo '  <h1>Certeasy Markdown Documentation</h1>'
+            echo '  <p>Raw Markdown sources for the Certeasy documentation.</p>'
+            echo '  <ul>'
+
+            find website/build/markdown -type f \( -name '*.md' -o -name '*.mdx' \) | sort | while read -r file; do
+              rel="${file#website/build/markdown/}"
+              url="/markdown/$rel"
+              title="$rel"
+              echo "    <li><a href=\"$url\">$title</a></li>"
+            done
+
+            echo '  </ul>'
+            echo '  <p><a href="/llms.txt">llms.txt</a> · <a href="/llms-full.txt">llms-full.txt</a> · <a href="/markdown-sitemap.xml">Markdown sitemap</a></p>'
+            echo '</body>'
+            echo '</html>'
+          } > website/build/markdown/index.html
+
+          # llms.txt
           cat > website/build/llms.txt <<'EOF'
           # Certeasy Documentation
 
-          > Certeasy is an on-premise ACME server for Microsoft ADCS.
+          > Official documentation for Certeasy, an on-premise ACME server for Microsoft ADCS.
 
-          Useful documentation entry points:
+          ## Main resources
 
-          - [Full Markdown export](https://docs.certeasy.tech/llms-full.txt)
-          - [Markdown sources](https://docs.certeasy.tech/markdown/)
           - [Documentation website](https://docs.certeasy.tech/)
+          - [Markdown index](https://docs.certeasy.tech/markdown/)
+          - [Full Markdown export](https://docs.certeasy.tech/llms-full.txt)
+          - [Markdown sitemap](https://docs.certeasy.tech/markdown-sitemap.xml)
+          - [Certeasy website](https://certeasy.tech/)
+
+          ## Suggested entry points
+
+          - Installation
+          - Minimal configuration
+          - Microsoft ADCS integration
+          - ACME clients
+          - Licensing
+          - Troubleshooting
           EOF
 
-          # Export complet concaténé
+          # llms-full.txt
           {
             echo "# Certeasy Documentation Full Export"
             echo
@@ -97,6 +141,33 @@ jobs:
               echo
             done
           } > website/build/llms-full.txt
+
+          # Sitemap XML dédié aux fichiers Markdown
+          {
+            echo '<?xml version="1.0" encoding="UTF-8"?>'
+            echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+
+            echo '  <url>'
+            echo '    <loc>https://docs.certeasy.tech/markdown/</loc>'
+            echo '  </url>'
+
+            find website/build/markdown -type f \( -name '*.md' -o -name '*.mdx' \) | sort | while read -r file; do
+              rel="${file#website/build/markdown/}"
+              echo '  <url>'
+              echo "    <loc>https://docs.certeasy.tech/markdown/$rel</loc>"
+              echo '  </url>'
+            done
+
+            echo '  <url>'
+            echo '    <loc>https://docs.certeasy.tech/llms.txt</loc>'
+            echo '  </url>'
+
+            echo '  <url>'
+            echo '    <loc>https://docs.certeasy.tech/llms-full.txt</loc>'
+            echo '  </url>'
+
+            echo '</urlset>'
+          } > website/build/markdown-sitemap.xml
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

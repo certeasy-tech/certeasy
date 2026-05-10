@@ -19,7 +19,7 @@ server:
   write-timeout: 30s
   idle-timeout: 60s
   max-body-bytes: 1048576
-  shutdown-timeout: 10s
+  shutdown-timeout: 30s
   remote-ip-header: "X-Forwarded-For"
   trusted-proxies:
     - "10.0.0.0/8"
@@ -36,7 +36,7 @@ server:
 | `write-timeout` | `30s` | No | Timeout for writing the response. |
 | `idle-timeout` | `60s` | No | Keep-alive idle connection timeout. |
 | `max-body-bytes` | `1048576` (1 MB) | No | Maximum request body size. |
-| `shutdown-timeout` | `10s` | No | Graceful shutdown wait time. |
+| `shutdown-timeout` | `30s` | No | Graceful shutdown wait time. Must be ≤ `workers.drain-timeout`. See [Graceful shutdown](../administration/shutdown.md). |
 | `remote-ip-header` | — | No | Header to trust for the client IP (e.g. `X-Forwarded-For`). Only used if `trusted-proxies` is set. |
 | `trusted-proxies` | — | No | CIDR ranges of trusted reverse proxies. |
 

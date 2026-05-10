@@ -211,4 +211,14 @@ renewal-info:
   lifetime-fraction: 0.66              # Window opens at notBefore + lifetime*0.66
   window-width: 48h                    # Spread renewals across this duration
   retry-after: 6h                      # Sent as Retry-After header on responses
+
+# ── Audit log (HMAC-chained JSONL) ────────────────────────────────────────────
+# Enabled by default. Omit this section to apply the defaults shown below.
+# Verify the chain with: certeasy audit verify -f config.yml
+audit:
+  enabled: true
+  path: ""                             # Empty → <workdir>/audit.log
+  rotate:
+    max-size-mb: 0                     # 0 → no in-process rotation (let logrotate / Task Scheduler handle it)
+    max-backups: 0                     # Ignored when max-size-mb is 0
 ```

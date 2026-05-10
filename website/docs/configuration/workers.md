@@ -34,7 +34,7 @@ workers:
 | `base-backoff` | `1s` | Initial backoff on job failure. |
 | `max-backoff` | `2m` | Maximum backoff after repeated failures. |
 | `queue-size` | value of `workers` | In-memory job queue buffer size. |
-| `drain-timeout` | `30s` | Maximum graceful-stop wait time for in-flight jobs before forced worker cancellation. |
+| `drain-timeout` | `30s` | Maximum graceful-stop wait time for in-flight jobs before forced worker cancellation. Must be ≥ `server.shutdown-timeout`. See [Graceful shutdown](../administration/shutdown.md). |
 
 ## How the Job Engine Works
 

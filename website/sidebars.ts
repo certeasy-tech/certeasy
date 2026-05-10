@@ -59,6 +59,7 @@ const sidebars: SidebarsConfig = {
         'administration/backup',
         'administration/shutdown',
         'administration/audit',
+        'administration/license-enforcement',
       ],
     },
     {

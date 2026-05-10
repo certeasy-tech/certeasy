@@ -41,7 +41,7 @@ For production environments and larger organizations.
 - Dashboard *(coming in V4)*
 - Monitoring & alerting *(coming in V4)*
 
-### Enterprise — €999 / year / CA *(excl. VAT)*
+### Enterprise — €999 / year *(excl. VAT)*
 
 For organizations with advanced requirements.
 
@@ -59,12 +59,12 @@ Active/Passive HA is a supported deployment pattern available to all Pro and abo
 
 Beyond 5 CAs — [contact us](https://certeasy.tech/contact).
 
-:::note License required — limits not yet enforced
+:::note License required
 A license file (`certeasy.lic`) is required to run Certeasy, including on the Free plan. Registration takes 30 seconds and delivers the file by email.
 
 **Managed server quota** is counted as the number of distinct ACME accounts with at least one active (non-expired, non-revoked) certificate. Retries and re-issuances from the same ACME account do not count. An account with no active certificate (failed setup, tests) does not consume quota.
 
-Plan quotas (managed server count, number of ADCS authorities) are not yet enforced: all active licenses currently have full access regardless of plan. Enforcement will be introduced before the V1 stable release.
+Plan quotas (managed server count, number of authorities, allowed database driver) are enforced by the binary at startup and on every new order. Renewals continue to work even when the configuration exceeds the plan, so existing clients are never interrupted by a downgrade. See the [License enforcement page](../administration/license-enforcement.md) for the full behaviour.
 :::
 
 ## Evaluation period

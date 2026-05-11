@@ -157,8 +157,8 @@ workers:
   worker-id: "worker"
   workers: 4
   lease: 30s
-  idle-min: 200ms
-  idle-max: 5s
+  idle-min: 50ms
+  idle-max: 200ms
   base-backoff: 1s
   max-backoff: 2m
   queue-size: 4                        # defaults to value of workers

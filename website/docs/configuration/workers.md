@@ -14,8 +14,8 @@ workers:
   worker-id: "worker-1"
   workers: 4
   lease: 30s
-  idle-min: 200ms
-  idle-max: 5s
+  idle-min: 50ms
+  idle-max: 200ms
   base-backoff: 1s
   max-backoff: 2m
   queue-size: 4
@@ -29,8 +29,8 @@ workers:
 | `worker-id` | `worker` | Unique identifier for this worker instance. Useful in multi-node deployments. |
 | `workers` | `4` | Number of concurrent worker goroutines. |
 | `lease` | `30s` | How long a worker holds a job lock. If processing takes longer, the lease is renewed automatically. |
-| `idle-min` | `200ms` | Minimum polling interval when the queue is empty. |
-| `idle-max` | `5s` | Maximum polling interval when the queue is empty. |
+| `idle-min` | `50ms` | Minimum polling interval when the queue is empty. |
+| `idle-max` | `200ms` | Maximum polling interval when the queue is empty. Caps the empty-queue exponential backoff so the first job that arrives after a long quiet period is picked up within this delay. |
 | `base-backoff` | `1s` | Initial backoff on job failure. |
 | `max-backoff` | `2m` | Maximum backoff after repeated failures. |
 | `queue-size` | value of `workers` | In-memory job queue buffer size. |
@@ -63,6 +63,7 @@ The default settings (4 workers, 1s–2m backoff) work well for most deployments
 - **High certificate volume**: increase `workers` and `queue-size`
 - **Slow ADCS**: increase `max-backoff` and `lease` to tolerate longer processing times
 - **Multi-node**: set a unique `worker-id` per instance to distinguish workers in logs
+- **Many idle instances against a shared database (HA)**: raise `idle-max` to `1s`–`2s` to reduce the steady-state read load on the shared database. The defaults are tuned for a single-instance deployment, where the per-poll cost is negligible and tight polling keeps certificate-issuance latency low.
 
 ## Tuning Relationships
 

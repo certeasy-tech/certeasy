@@ -34,7 +34,7 @@ logs:
 
 | Field | Default | Description |
 |---|---|---|
-| `level` | `info` | Global log level: `debug`, `info`, `warn`, `error` |
+| `level` | `info` | Global log level: `debug`, `info`, `warn`, `error`, `off`. `off` (alias `none`) fully suppresses logs and is most useful as a per-service override. |
 | `format` | `json` | Log format: `json` or `text` |
 | `output` | `stderr` | Output destination: `stderr`, `stdout`, or `file` |
 | `file` | — | Log file path. Required if `output: file`. |
@@ -53,6 +53,15 @@ logs:
   services:
     Certeasy-acme-server: debug
     Async-Acme-Challenges: debug
+```
+
+Use `off` (or `none`) to fully silence a service — for example when a chatty driver is generating noise during dev or staging captures:
+
+```yaml
+logs:
+  services:
+    DB-Driver: off
+    Certeasy-acme-server: warn
 ```
 
 ### Registered Service Names

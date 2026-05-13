@@ -9,6 +9,7 @@ const sidebars: SidebarsConfig = {
         'intro/what-is-certeasy',
         'intro/how-it-works',
         'intro/plans',
+        'intro/roadmap',
       ],
     },
     {
@@ -76,6 +77,7 @@ const sidebars: SidebarsConfig = {
       label: 'Reference',
       items: [
         'reference/full-example',
+        'reference/standards-compliance',
       ],
     },
     'changelog/index',

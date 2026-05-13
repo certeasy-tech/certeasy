@@ -7,6 +7,10 @@ title: lego
 
 [lego](https://go-acme.github.io/lego/) is a single static Go binary with no runtime dependency — ideal for container images, CI runners, and minimal Linux installs. This page covers the lego-specific bits; for the general onboarding flow and trust-store setup see [First Certificate](../getting-started/first-certificate.md).
 
+:::info Documented for lego **5.x** (tested with 5.0.2)
+lego 5.0 introduced a CLI breaking change: every flag (`--server`, `--email`, `--domains`, `--http`, `--dns`, etc.) is now a **subcommand flag**, not a global flag. The subcommand (`run`, `renew`, `revoke`) must come first. The legacy `renew` and top-level `revoke` are gone — use `run --renew-force` and `certificates revoke`. If you are still on lego 4.x, the global-flag-first syntax of the old documentation applies; consider upgrading.
+:::
+
 ## What changes vs certbot
 
 - **Key type**: lego generates **ECDSA P-256** keys by default for both the ACME account and the certificate. This sidesteps the `signature.min-rsa-bits` policy entirely. To force RSA, pass `--key-type rsa3072` (or `rsa4096`). `rsa2048` will be refused under the default `min-rsa-bits: 3072` policy.

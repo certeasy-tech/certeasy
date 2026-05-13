@@ -7,6 +7,10 @@ title: certbot
 
 [certbot](https://certbot.eff.org/) is the EFF's reference ACME client, Python-based, with the broadest community documentation and the most mature distro packaging. This page is the comprehensive reference; for a 5-minute onboarding tour see [Getting Started → First Certificate](../getting-started/first-certificate.md).
 
+:::info Documented for certbot **3.x** (tested with the latest `certbot/certbot:latest` Docker image)
+certbot's CLI has been stable since 1.x — the `certonly` / `renew` / `revoke` subcommands and their flags work identically across recent versions. If you are on an older 1.x or 2.x release, the syntax on this page still applies.
+:::
+
 ## What changes vs lego / acme.sh
 
 - **Key type**: certbot generates **RSA 4096** by default. Always passes the `signature.min-rsa-bits: 3072` policy without tweaking — no surprise like acme.sh's `--keylength 2048` rejection.

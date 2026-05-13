@@ -1,8 +1,4 @@
-/3
-
-
-
-
+---
 sidebar_position: 1
 title: Logging
 ---

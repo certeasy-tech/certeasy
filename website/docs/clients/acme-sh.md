@@ -7,6 +7,10 @@ title: acme.sh
 
 [acme.sh](https://github.com/acmesh-official/acme.sh) is a pure shell client — useful when Python (certbot) or Go (lego) aren't available, or simply when minimum runtime footprint matters. This page covers the acme.sh-specific bits; for the general onboarding flow and trust-store setup see [First Certificate](../getting-started/first-certificate.md).
 
+:::info Documented for acme.sh **3.x** (tested with the latest `neilpang/acme.sh:latest` Docker image)
+acme.sh's CLI has been stable for years — `--issue` / `--renew` / `--revoke` and their flags work identically across 2.x and 3.x. If you are on an older version and a flag is missing, upgrade is the recommended path.
+:::
+
 ## What changes vs certbot
 
 - **Key type**: acme.sh generates **RSA 2048** by default. This is **refused** by Certeasy under the default `signature.min-rsa-bits: 3072` policy — always pass `--keylength` explicitly:

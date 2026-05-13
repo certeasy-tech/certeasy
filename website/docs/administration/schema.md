@@ -1,5 +1,4 @@
-
-# Database Schema  ddd ---
+---
 sidebar_position: 2
 title: Database Schema
 ---

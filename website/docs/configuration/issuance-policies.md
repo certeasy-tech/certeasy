@@ -114,6 +114,48 @@ Before matching, all DNS names are:
 - Trailing dot removed
 - Rejected if they contain empty labels (`..`) or whitespace
 
+Pa## CSR Extension Whitelist (Extended Key Usage)
+
+Certeasy validates the contents of the CSR's `extensionRequest` strictly: only DNS-typed SANs and the Extended Key Usage extension (EKU, OID `2.5.29.37`) are accepted. By default the **only EKU value tolerated is `serverAuth`** (OID `1.3.6.1.5.5.7.3.1`) — the appropriate purpose for a public-server TLS certificate.
+
+To accept additional EKU values, opt in per policy:
+
+```yaml
+issuance-policies:
+  - name: lab-server
+    csr:
+      allowed-extra-eku:
+        - clientAuth
+        # - codeSigning
+        # - emailProtection
+        # - timeStamping
+        # - ocspSigning
+        # - anyPurpose
+        # - "1.3.6.1.4.1.311.10.3.4"   # raw OID also accepted
+```
+
+`serverAuth` is implicit and does not need to be listed.
+
+:::warning Security
+Adding entries to `allowed-extra-eku` lets ACME clients request certificates with non-server-TLS purposes through that policy. Whether the issued certificate actually carries those EKUs depends on the back-end CA template:
+
+- **ADCS templates configured as "Build from this Active Directory information"** ignore the CSR's EKU and apply the template's own. Adding entries here has no effect on the issued cert.
+- **ADCS templates configured as "Supply in the request"** honor the CSR's EKU. The issued cert will carry whatever the CSR asked for, as long as the template permits it.
+
+Only loosen this for policies whose authority you trust to enforce purpose constraints — e.g. a dedicated code-signing authority + template + audit trail. For the typical "Web Server" use case, leave it empty.
+:::
+
+### Note on `clientAuth` and the CA/B Forum baseline
+
+For most of TLS history, server certificates routinely declared both `serverAuth` and `clientAuth` in their Extended Key Usage. Some popular ACME clients still do this by default — notably **acme.sh**, whose built-in CSR template emits `extendedKeyUsage = serverAuth, clientAuth`. Without `clientAuth` in `allowed-extra-eku`, those CSRs are refused.
+
+The CA/B Forum's TLS Baseline Requirements **forbid this combination from June 2026 onwards**: a publicly-trusted server certificate must declare `serverAuth` only. Certeasy is most often deployed against an internal ADCS — outside the public WebPKI — so the rule is advisory rather than binding for your deployment, but mirroring the public-trust posture is good hygiene.
+
+Two practical positions:
+
+1. **Strict (recommended for new deployments)**: leave `allowed-extra-eku` empty. Use lego or certbot, which emit `serverAuth` only by default. acme.sh works after a one-line override of its OpenSSL template.
+2. **Pragmatic (existing acme.sh fleet)**: add `clientAuth` to `allowed-extra-eku` so existing scripts keep working, and plan a migration once the fleet has moved off acme.sh's default template.
+
 ## Signature Defaults
 
 If `signature` is omitted:

@@ -35,7 +35,7 @@ Your ADCS never changes. Your ACME clients don't know they're talking to an inte
 | Property | Detail |
 |---|---|
 | **100% on-premise** | No data leaves your network |
-| **Standard protocol** | RFC 8555 ACME — works with any ACME client |
+| **Standard protocol** | RFC 8555 ACME + RFC 9773 ARI (read-only) — works with any ACME client. See [Standards & RFC support](../reference/standards-compliance.md) for the detailed conformance matrix. |
 | **ADCS-native** | Uses `certreq.exe`, no ADCS changes required |
 | **Secure by default** | Conservative defaults: RSA 3072-bit minimum, strict algorithm allow-list |
 | **Hardened against ADCS attacks** | Certificate identity limited to validated DNS names — prevents ESC1–ESC13 by design |

@@ -23,6 +23,15 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'ACME Clients',
+      items: [
+        'clients/certbot',
+        'clients/lego',
+        'clients/acme-sh',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Configuration',
       items: [
         'configuration/overview',

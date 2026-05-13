@@ -143,6 +143,24 @@ issuance-policies:
       allowed-ec-curves:
         - "P-256"
         - "P-384"
+    # CSR Extended Key Usage whitelist. Default: serverAuth only.
+    # See SECURITY WARNING in configuration/issuance-policies.md before
+    # adding non-server purposes — back-end ADCS templates configured as
+    # "Supply in the request" will honor the CSR's EKU.
+    #
+    # clientAuth note: acme.sh's default OpenSSL template emits
+    # EKU=serverAuth,clientAuth. The CA/B Forum baseline forbids this
+    # combination on publicly-trusted certs from June 2026 onwards. Keep
+    # the entry below ONLY if you must support unmodified acme.sh; lego
+    # and certbot emit serverAuth only and don't need it. See
+    # configuration/issuance-policies.md for the full discussion.
+    # csr:
+    #   allowed-extra-eku:
+    #     - clientAuth
+    #     # - codeSigning
+    #     # - emailProtection
+    #     # raw OID also accepted, e.g. Microsoft EFS:
+    #     # - "1.3.6.1.4.1.311.10.3.4"
 
 # ── Policy Bindings ───────────────────────────────────────────────────────────
 # Can be omitted when there is exactly one policy and one authority.

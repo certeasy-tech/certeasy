@@ -1,0 +1,82 @@
+---
+sidebar_position: 2
+title: Standards & RFC support
+---
+
+# Standards & RFC support
+
+Certeasy implements the IETF ACME family of standards. This page documents which parts of each RFC are supported today, which are partial, and which are planned. Use it when auditing Certeasy against a compliance requirement or before integrating an ACME client that depends on a specific feature.
+
+## RFC 8555 — ACME core protocol
+
+**Status**: Supported with known gaps documented below.
+
+| Feature | RFC § | Status |
+|---|---|---|
+| Account create / contact update / key change / deactivate | §7.3 | ✅ |
+| `newOrder` and order state machine | §7.4 | ✅ |
+| Authorization + challenge dispatch (HTTP-01, DNS-01, TLS-ALPN-01) | §7.5, §8 | ✅ |
+| `finalize` + CSR validation | §7.4 | ✅ |
+| `revoke-cert` signed with account key | §7.6 | ✅ (server-side — see limitations) |
+| Wildcard issuance (`*.zone`) | §7.1.4, §8.4 | 🟡 finalize fix in place, full hardening planned for V1.0 |
+| `Location` headers and response URLs canonicalization | §7.4 and following | 🟡 finalize + main endpoints in place, full audit planned for V1.0 |
+| External Account Binding (EAB) | §7.3.4 | 🔴 not supported in V0.9 / V1.0 — planned for V2.0 |
+
+### Known limitations
+
+#### Wildcard hardening (planned for V1.0)
+
+The server accepts and issues wildcard certificates today (`*.example.com`), but a handful of edge cases are still being audited end-to-end with strict ACME clients:
+
+- Order JSON response `Identifier.value` reconstruction with the `*.` prefix.
+- Multi-level wildcards such as `*.sub.example.com`.
+- Mixed orders combining `example.com` and `*.example.com` in the same `newOrder`.
+
+In practice, wildcards work today with lego, certbot, and acme.sh.
+
+#### `Location` headers audit (planned for V1.0)
+
+The most common ACME endpoints (`newAccount`, `newOrder`, `finalize`) emit the `Location` header required by RFC 8555. The remaining endpoints (`POST-as-GET` on account, order, authz, challenge, certificate, plus key-change) are being reviewed systematically to confirm conformance with strict ACME clients.
+
+#### Server-side revocation only (full propagation planned for V1.0)
+
+`POST /acme/revoke-cert` marks the certificate revoked in Certeasy's database and emits an audit event. **The underlying ADCS CRL / OCSP responder is not yet updated** — a client validating chain status against ADCS will still see the certificate as valid until the CRL is published. Cabling the revocation all the way to ADCS (`certreq -revoke`) lands in V1.0.
+
+#### External Account Binding (EAB) — planned for V2.0
+
+EAB lets you bind a new ACME account to an out-of-band identity (HMAC key shared via your provisioning system). Useful for multi-tenant DevOps deployments where each team is given its own credentials. Not implemented in V0.9 / V1.0 — single-tenant enterprise deployments do not need it. Tracked on the [roadmap](../intro/roadmap.md) for V2.0.
+
+## RFC 9773 — ACME Renewal Information (ARI)
+
+**Status**: Partial — read-only ARI is supported, the `replaces` hint is silently accepted.
+
+| Feature | RFC § | Status |
+|---|---|---|
+| `renewalInfo` directory entry | §3 | ✅ |
+| `GET /acme/renewal-info/<certID>` with suggested window + `Retry-After` | §4 | ✅ |
+| `newOrder.replaces` validation + persistence + `renewalInfo` window collapse on the replaced cert | §5 | 🟡 field accepted silently — full semantics planned for V1.1 |
+
+### Known limitations
+
+#### `replaces` semantics (planned for V1.1)
+
+ARI-aware clients (recent lego, certbot) can send `newOrder.replaces` without seeing a `400 malformed` — Certeasy accepts the field. However the server does not yet:
+
+- Reject duplicate `replaces` with `409 alreadyReplaced`.
+- Persist the `old_cert → new_cert` link.
+- Collapse the replaced certificate's `renewalInfo` window to force renewal of other clients holding the old cert.
+
+In a single-instance deployment this is invisible. In multi-instance or HA deployments the full ARI benefit is reduced until the semantics ship.
+
+## RFC 5280 — X.509 certificates
+
+**Status**: Supported.
+
+- Issued certificates carry the **Subject Alternative Name** extension only, with DNS names from the validated authorizations.
+- The **Subject Common Name** field is intentionally left empty. This follows the CA/Browser Forum baseline since 2019: modern TLS clients (Chrome, Firefox, Go ≥ 1.15, Java ≥ 11) validate against SAN, not CN. Legacy clients that still require a CN-based match may need adjustment.
+- **Extended Key Usage**: `serverAuth` only. `clientAuth`, `codeSigning`, `anyPurpose` and other EKUs are never set, even if requested by the client's CSR. Certificates issued by Certeasy are TLS server certificates — never reusable for AD authentication, SMB signing, or other server-side roles. The strict EKU policy can be relaxed per-policy via `csr.allowed-extra-eku` if a specific client (e.g. acme.sh) declares additional EKUs in its CSR.
+- **Signature algorithms**: configurable allow-list per policy, default minimum RSA 3072-bit, ECDSA P-256 and above.
+
+## Roadmap
+
+The remaining gaps on this page are tracked in the [public roadmap](../intro/roadmap.md) and target the next minor releases. Subscribe now (Pro, Enterprise) to lock the price while features ship progressively.

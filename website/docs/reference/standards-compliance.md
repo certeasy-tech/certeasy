@@ -18,21 +18,11 @@ Certeasy implements the IETF ACME family of standards. This page documents which
 | Authorization + challenge dispatch (HTTP-01, DNS-01, TLS-ALPN-01) | §7.5, §8 | ✅ |
 | `finalize` + CSR validation | §7.4 | ✅ |
 | `revoke-cert` signed with account key | §7.6 | ✅ (server-side — see limitations) |
-| Wildcard issuance (`*.zone`) | §7.1.4, §8.4 | 🟡 finalize fix in place, full hardening planned for V1.0 |
+| Wildcard issuance (`*.zone`, mixed `zone + *.zone` in one order) | §7.1.4, §8.4 | ✅ |
 | `Location` headers and response URLs canonicalization | §7.4 and following | 🟡 finalize + main endpoints in place, full audit planned for V1.0 |
 | External Account Binding (EAB) | §7.3.4 | 🔴 not supported in V0.9 / V1.0 — planned for V2.0 |
 
 ### Known limitations
-
-#### Wildcard hardening (planned for V1.0)
-
-The server accepts and issues wildcard certificates today (`*.example.com`), but a handful of edge cases are still being audited end-to-end with strict ACME clients:
-
-- Order JSON response `Identifier.value` reconstruction with the `*.` prefix.
-- Multi-level wildcards such as `*.sub.example.com`.
-- Mixed orders combining `example.com` and `*.example.com` in the same `newOrder`.
-
-In practice, wildcards work today with lego, certbot, and acme.sh.
 
 #### `Location` headers audit (planned for V1.0)
 

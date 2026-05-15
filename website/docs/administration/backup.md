@@ -1,6 +1,6 @@
 ---
 sidebar_position: 4
-title: Backup &amp; restore
+title: Backup & restore
 ---
 
 # Backup &amp; restore

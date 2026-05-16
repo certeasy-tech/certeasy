@@ -63,6 +63,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Administration',
       items: [
+        'administration/deployment-topology',
         'administration/logging',
         'administration/schema',
         'administration/migrations',

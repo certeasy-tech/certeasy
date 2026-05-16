@@ -17,6 +17,10 @@ Certeasy runs as a single binary. It targets **Windows Server** (to run close to
 | **Network** | Certeasy must be reachable by ACME clients (HTTPS, port 443 or custom) |
 | **Database** | SQLite (default, no setup), PostgreSQL, or SQL Server |
 
+:::warning Deployment topology
+Certeasy is supported as a **single-instance** deployment, or as **cold Active / Passive** with manual switchover (PostgreSQL or SQL Server required, no SQLite). Running two Certeasy instances concurrently against the same database is **not supported** and produces silent failure modes (`badNonce` errors, drifting rate limits, etc.). See [Deployment topology](../administration/deployment-topology.md) before deploying.
+:::
+
 ## Download
 
 Download the latest beta release from the [releases page](https://github.com/certeasy-tech/certeasy/releases).

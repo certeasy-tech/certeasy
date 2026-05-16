@@ -1,3 +1,4 @@
+
 ---
 sidebar_position: 4
 title: Public roadmap
@@ -24,7 +25,7 @@ Legend: ✅ shipped · 🎯 next release in flight.
 | SQLite backup CLI (`backup create` / `backup verify`) | 0.9 ✅ | All | Disaster recovery without a 3rd-party tool |
 | License enforcement (strict boot + acknowledgement) | 0.9 ✅ | All | Predictable cost ceiling, no surprise billing |
 | Graceful HTTP shutdown | 0.9 ✅ | All | Zero in-flight cert lost on `systemctl restart` |
-| RFC 8555 `Location` headers audit complete | 1.0 🎯 | All | Conformance with strict-RFC ACME clients (NativeClient, Caddy) |
+| RFC 8555 `Location` headers audit complete | 0.9 ✅ | All | Conformance with strict-RFC ACME clients (NativeClient, Caddy) |
 | Real ADCS revocation (CRL / OCSP propagation) | 1.0 🎯 | All | A revoked certificate is actually revoked end-to-end |
 | Cleanup / retention of expired ACME records | 1.0 🎯 | All | Long-term operations: the database stops growing forever |
 | Health / metrics endpoints (`/healthz`, `/readyz`, Prometheus `/metrics`) | 1.0 🎯 | All | Drop-in integration with existing supervision (Zabbix, Centreon, Prometheus, Grafana) |
@@ -41,7 +42,7 @@ Legend: ✅ shipped · 🎯 next release in flight.
 
 ## Compliance and RFC gaps
 
-The RFC gaps documented in [Standards & RFC support](../reference/standards-compliance.md) (full `Location` headers audit, ADCS revocation propagation, EAB) are tracked in the table above. The "1.0 🎯" entries close the gaps that are visible to a standard ACME client today.
+The RFC gaps documented in [Standards & RFC support](../reference/standards-compliance.md) (ADCS revocation propagation, EAB) are tracked in the table above. The "1.0 🎯" entries close the gaps that are visible to a standard ACME client today.
 
 ## Pricing and feature gating
 

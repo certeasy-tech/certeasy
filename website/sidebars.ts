@@ -70,6 +70,7 @@ const sidebars: SidebarsConfig = {
         'administration/shutdown',
         'administration/audit',
         'administration/license-enforcement',
+        'administration/antivirus-edr',
       ],
     },
     {
@@ -78,6 +79,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'reference/full-example',
         'reference/standards-compliance',
+        'reference/test-coverage',
       ],
     },
     'changelog/index',

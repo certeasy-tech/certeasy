@@ -19,14 +19,10 @@ Certeasy implements the IETF ACME family of standards. This page documents which
 | `finalize` + CSR validation | §7.4 | ✅ |
 | `revoke-cert` signed with account key | §7.6 | ✅ (server-side — see limitations) |
 | Wildcard issuance (`*.zone`, mixed `zone + *.zone` in one order) | §7.1.4, §8.4 | ✅ |
-| `Location` headers and response URLs canonicalization | §7.4 and following | 🟡 finalize + main endpoints in place, full audit planned for V1.0 |
+| `Location` headers and response URLs canonicalization | §7.4 and following | ✅ |
 | External Account Binding (EAB) | §7.3.4 | 🔴 not supported in V0.9 / V1.0 — planned for V2.0 |
 
 ### Known limitations
-
-#### `Location` headers audit (planned for V1.0)
-
-The most common ACME endpoints (`newAccount`, `newOrder`, `finalize`) emit the `Location` header required by RFC 8555. The remaining endpoints (`POST-as-GET` on account, order, authz, challenge, certificate, plus key-change) are being reviewed systematically to confirm conformance with strict ACME clients.
 
 #### Server-side revocation only (full propagation planned for V1.0)
 

@@ -158,6 +158,16 @@ This still requires the database (the secret and the installation ID live there)
 - **After every restore** — confirm the audit file and the database secret are consistent.
 - **When investigating an incident** — confirm the timeline you are reading was not modified after the fact.
 
+## Listing nodes that wrote to the chain
+
+Each audit line carries the `server_id` of the node that wrote it (see [Node identity](./deployment-topology#node-identity)). To list every node that has ever booted against this database — useful when investigating who wrote which lines, or before decommissioning a host:
+
+```sh
+certeasy audit list-servers -f /etc/certeasy/config.yml
+```
+
+Output columns: `server_id`, `hostname`, `first_seen`, `last_seen` (UTC, RFC 3339). Sorted by `last_seen` descending so the most recently active node appears first.
+
 ## Storage and Backups
 
 The HMAC secret lives in the database. **Backing up the database is required** for the audit log to remain verifiable: the audit file alone is useless without the secret. Cover both in the same backup procedure — see the [Backup](../administration/backup) page.

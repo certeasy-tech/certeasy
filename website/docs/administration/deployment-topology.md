@@ -68,6 +68,21 @@ Expected switchover time: typically under a minute, including the standby's boot
 
 A reverse proxy or load balancer in front of a single Certeasy instance — for TLS termination, IP filtering, geo-routing, etc. — is fully supported. Forward the `Host` header and preserve the client IP if your audit log relies on it.
 
+## Node identity
+
+Each Certeasy instance has a stable identifier called `server_id`. It is materialised on first boot as a UUID v4 stored in `<workdir>/server_id` (file permissions `0o600`) and registered in the `servers` table of the database. Every subsequent boot of the same node reads back the same `server_id` and updates the `last_seen` timestamp; a background heartbeat refreshes it once per minute while the instance runs.
+
+Two operator-visible consequences:
+
+- **Each line of the audit log carries the `server_id` of the node that wrote it.** When a node opens its audit log at boot, it checks the last line. If that line was written by a different `server_id`, the node **refuses to start** with an explicit error message naming both identifiers. This is intentional: it prevents an operator from accidentally pointing two nodes at the same audit file and silently splicing two histories.
+- **Cold Active / Passive works naturally with this model.** Each node has its own workdir, its own `<workdir>/server_id`, and its own `<workdir>/audit.log`. The database is shared, but the audit chain is per-node. The `servers` table will accumulate one row per host that has ever booted against this database — useful for operators tracking which nodes participated in the cluster over time.
+
+Do **not** copy a workdir from one host to another. Each new host should generate its own `server_id` on first boot — that is the point of the marker file. If you ever need to inspect or decommission a known node, list them with:
+
+```
+certeasy audit list-servers -f config.yml
+```
+
 ## NOT supported — Active / Active
 
 Running two or more Certeasy instances **concurrently** against the same database **is not supported** in the current release. Several core mechanisms hold in-process state that does not coordinate across nodes:

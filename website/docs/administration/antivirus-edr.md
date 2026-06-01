@@ -18,6 +18,17 @@ deploying, and how to react if the EDR blocks something unexpectedly. The
 list below is a best-effort baseline — Certeasy is not certified against
 any specific EDR product, and your security team owns the final policy.
 
+:::info Planned for 1.0: no more `certreq.exe` spawn
+Certeasy 0.9 talks to ADCS by spawning `certreq.exe` / `certutil.exe` for each
+submit / retrieve. Even though these binaries ship with Windows, strict EDRs
+flag the parent-child chain because the same pattern appears in offensive
+ADCS tooling (Certify, Certipy). The 1.0 release replaces these spawns with
+in-process MS-WCCE (DCOM/RPC) calls — no more child processes, no more
+LOLBin behavioral signature. Track the work on the [public roadmap](../intro/roadmap.md)
+(*Native ADCS bridge*) — until then, the exclusions below are the supported
+mitigation.
+:::
+
 ## What Certeasy does on the host
 
 | Activity | When | Why an EDR may flag it |

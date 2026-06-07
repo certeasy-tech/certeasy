@@ -103,11 +103,20 @@ If no license is installed, Certeasy logs your **installation key** and the avai
 - run `certeasy license register` with your license key from the portal (online), or
 - import a `.lic` file with `certeasy license install` (offline-compatible)
 
-Startup fails by default without a license. Use `--grace` for a first-install grace window (7 days).
+Startup fails by default without a license. Use `--grace` for a first-install grace window (1 week).
 
 If a license is expired:
-- startup is still allowed for 14 days (post-expiry grace)
+- startup is still allowed for 7 days (post-expiry grace)
 - after that, startup fails with `license has expired`
+
+When the binary refuses to start for any license reason, it prints both a
+structured JSON log and a plain-text banner on stderr listing the recovery
+actions you can take. If you need to keep the binary running while you fix
+the underlying issue (renewal in progress, fresh install, portal outage,
+…), `certeasy license force-grace --confirm` opens a 7-day window that
+boots despite the error. See
+[License enforcement / Force-grace](../administration/license-enforcement.md#force-grace-one-shot-escape-hatch)
+for the full semantics.
 
 ## Online Checks and Auto-Renew
 
@@ -155,7 +164,12 @@ Get-Content "C:\ProgramData\certeasy\certeasy.log" -Tail 20
 tail -20 /var/lib/certeasy/certeasy.log
 ```
 
-On startup, Certeasy logs license details (`id`, `plan`, `max_cas`, holder, expiry, source).
+On startup, Certeasy logs license details (`id`, `plan`, holder, every
+enforcement limit — `max_cas`, `max_managed_servers`, `allowed_dbs`,
+`active_instances`, `passive_instances` —, expiry, source). Numeric
+limits are rendered as `unlimited` (the plan grants no cap),
+`<number>` (the cap), or `FORBIDDEN` (the plan grants no entitlement
+at all) so missing/zero fields are visible at a glance.
 
 ## Troubleshooting
 
@@ -166,10 +180,15 @@ No license is stored in the database. The startup logs print your **installation
 The provided `.lic` file is corrupted or was modified.
 
 **`license has expired`**  
-License is beyond the post-expiry startup grace window. Import a renewed license.
+License is beyond the 7-day post-expiry startup grace window. Import a
+renewed license, or open a temporary 7-day boot window with
+`certeasy license force-grace --confirm` (capped at the license expiry
+date + 3 weeks; see
+[License enforcement / Force-grace](../administration/license-enforcement.md#force-grace-one-shot-escape-hatch)).
 
 **`license has been revoked by the server`**  
-The server explicitly revoked the license. Contact `contact@certeasy.tech`.
+The server explicitly revoked the license. Contact support via the form on the portal.
+Force-grace is intentionally not available for revoked licenses.
 
 **`installation already registered under a different license`**  
 The installation key is already bound to a different license on the server. Go to [certeasy.tech/account](https://certeasy.tech/account) to migrate the installation before running `certeasy license register` again.

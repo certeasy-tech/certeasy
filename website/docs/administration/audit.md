@@ -91,7 +91,7 @@ The log is JSONL — one self-contained JSON object per line. Field order is fix
 | `ts` | yes | RFC 3339 timestamp with millisecond precision, in UTC |
 | `schema` | yes | Schema version string. Currently `"1"`. Bumped only on incompatible layout changes. |
 | `seq` | yes | Strictly increasing per installation. Resumes across restarts and rotations. |
-| `prev_mac` | yes | The `mac` of the previous line, prefixed with `hmac-sha256:`. The first line uses the **genesis MAC** anchored on the installation ID. |
+| `prev_mac` | yes | The `mac` of the previous line, prefixed with `hmac-sha256:`. The first line uses the **genesis MAC** anchored on the installation key. |
 | `event` | yes | Dot-namespaced event name (`order.create`, `certificate.revoke`, …) |
 | `account_id` | optional | ACME account identifier when the event is account-scoped |
 | `source_ip` | optional | Client IP (see RGPD note below) |
@@ -110,16 +110,16 @@ On the very first install, Certeasy generates a 32-byte random secret and stores
 The first line of every installation is anchored to a **genesis MAC** computed from the secret and the stable installation identifier:
 
 ```
-genesis_mac = HMAC-SHA-256(secret, "certeasy-audit-v1|" + installation_id)
+genesis_mac = HMAC-SHA-256(secret, "certeasy-audit-v1|" + installation_key)
 ```
 
 Each subsequent line carries the `mac` of the previous line in its `prev_mac` field, and computes its own `mac` as `HMAC-SHA-256(secret, line_bytes_without_mac)`. Tampering with any line invalidates that line's MAC; tampering with the chain (insertion, deletion, reordering) invalidates the next `prev_mac`.
 
-The genesis anchor matters: an audit file restored on a different installation (different `installation_id`) will not validate, even if the secret matches. This is intentional — it prevents a stolen audit file from being passed off as evidence on another system.
+The genesis anchor matters: an audit file restored on a different installation (different `installation_key`) will not validate, even if the secret matches. This is intentional — it prevents a stolen audit file from being passed off as evidence on another system.
 
 ### Why HMAC and not plain SHA-256
 
-A plain hash chain seeded from a publicly known value (the installation ID is visible in logs and the license portal) would let anyone with write access to the file rebuild the chain after modifying a line. HMAC requires the secret stored in the database — without DB access, the chain cannot be reforged.
+A plain hash chain seeded from a publicly known value (the installation key is visible in logs and the license portal) would let anyone with write access to the file rebuild the chain after modifying a line. HMAC requires the secret stored in the database — without DB access, the chain cannot be reforged.
 
 The threat model: filesystem compromise alone does not allow forgery. DB compromise is a higher bar; if an attacker has read/write access to the database, the audit log is no longer the weakest link.
 
@@ -150,7 +150,7 @@ You can override the file path:
 certeasy audit verify -f /etc/certeasy/config.yml --path /backups/2026-05/audit.log
 ```
 
-This still requires the database (the secret and the installation ID live there), so the override is for verifying a copy of the file alongside the live DB — not for verifying a backup on a different machine. To verify a snapshot offline, restore the DB backup alongside the audit file first.
+This still requires the database (the secret and the installation key live there), so the override is for verifying a copy of the file alongside the live DB — not for verifying a backup on a different machine. To verify a snapshot offline, restore the DB backup alongside the audit file first.
 
 ### When to verify
 

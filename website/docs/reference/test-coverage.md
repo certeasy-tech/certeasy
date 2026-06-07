@@ -71,10 +71,10 @@ pending-authorization cap.
 ### Audit log
 
 - Round-trip write + verify on every supported database backend.
-- HMAC chain anchoring on `installation_id`.
+- HMAC chain anchoring on the installation key.
 - Recovery across process restart, including rotated files.
 - Tampering detection (line removed, line modified, MAC altered, wrong
-  installation_id).
+  installation key).
 - Every protocol event (account create / key change / deactivate, order
   create / finalize / invalid, authorization & challenge validate,
   certificate issue / revoke, rate-limit deny, license deny) is asserted

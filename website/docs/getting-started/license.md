@@ -1,11 +1,20 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 title: License
 ---
 
 # License
 
-Certeasy requires a valid license file (`.lic`) to run.  
+`certeasy serve` will not start without an active license **or** an
+explicit cold-start window. You have three ways to get there from a
+fresh install — pick the one that matches your situation:
+
+| Situation | Use |
+|---|---|
+| You have a license key from your account page | [Online registration](#option-1--online-registration) |
+| You downloaded a `.lic` file (air-gapped or support-issued) | [Manual file import](#option-2--manual-file-import) |
+| You want to evaluate before purchasing / your license is in flight | [Cold-start](#option-3--cold-start-without-a-license-yet) |
+
 Free licenses are issued from [certeasy.tech/free](https://certeasy.tech/free). Paid licenses are sent by email after trial/purchase.
 
 ## License File Format
@@ -35,7 +44,7 @@ Both keys are five groups of six characters; the last character is a checksum (L
 
 ## Activation Methods
 
-There are two ways to activate Certeasy: online registration or manual file import.
+There are three ways to bring Certeasy up: online registration, manual file import, or — when no license has been issued yet — a cold-start window.
 
 ### Option 1 — Online Registration
 
@@ -94,20 +103,41 @@ Behavior of `certeasy license install`:
 
 If the import fails, the process exits with a non-zero code.
 
+### Option 3 — Cold-start (without a license yet)
+
+Use this when no license has been issued yet — typical during
+evaluation, or while a paid license is being procured. Cold-start opens
+a **1-week window** during which `certeasy serve` runs against the
+constraints of a plan you choose:
+
+```bash
+./certeasy cold-start init --plan=pro -f /etc/certeasy/config.yml
+```
+
+The plan determines the limits that apply (allowed database drivers,
+maximum authorities, managed-server cap) — pick the one that matches
+your intended deployment. See [Plans](../intro/plans.md) for the per-plan
+limits.
+
+The window can be extended for another 7 days at a time, capped at a
+3-week total once your installation has served any ACME client. After
+the cap, only installing a real license restores normal boot. See the
+[Cold-start page](../administration/cold-start.md) for the full action
+surface (`cold-start init`, `cold-start extend`, `cold-start status`)
+and the recovery actions if the window elapses.
+
+When the license arrives, install it with any of the methods above —
+the cold-start state is cleared automatically.
+
 ## Runtime Validation
 
 At startup, Certeasy validates the stored license offline (signature + expiry).  
 No internet access is required for this step.
 
-If no license is installed, Certeasy logs your **installation key** and the available activation options. To activate:
-- run `certeasy license register` with your license key from the portal (online), or
-- import a `.lic` file with `certeasy license install` (offline-compatible)
-
-Startup fails by default without a license. To bring the server up
-before a license is installed — typical during install or evaluation —
-open a 1-week cold-start window with
-`certeasy cold-start init --plan=<plan>` (see
-[Cold-start](../administration/cold-start.md)).
+If no license is installed and no cold-start window is open, `certeasy
+serve` refuses to start. The startup banner prints your **installation
+key** and the three available activation paths listed at the top of this
+page.
 
 If a license is expired:
 - startup is still allowed for 7 days (post-expiry grace)
@@ -196,3 +226,9 @@ Force-grace is intentionally not available for revoked licenses.
 
 **`installation already registered under a different license`**  
 The installation key is already bound to a different license on the server. Go to [certeasy.tech/account](https://certeasy.tech/account) to migrate the installation before running `certeasy license register` again.
+
+## Next step
+
+Once the license is active (or the cold-start window is open), start
+`certeasy serve` and follow the [First certificate](/getting-started/first-certificate)
+guide to verify the end-to-end flow with an ACME client.

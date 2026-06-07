@@ -5,7 +5,13 @@ title: Installation
 
 # Installation
 
-Certeasy runs as a single binary. It targets **Windows Server** (to run close to your ADCS), but can also run on Linux for test environments.
+Bringing Certeasy online is a three-step process:
+
+1. **Install the binary** on the host — download, place, create the work directory.
+2. **Activate Certeasy** — register a license (or open a cold-start window) and verify the first certificate end-to-end.
+3. **Deploy as a long-running service** — Windows service or `systemd` unit so the binary survives reboots and restarts.
+
+This page covers steps 1 and 3. Step 2 lives in the dedicated pages further in this section.
 
 ## Requirements
 
@@ -21,7 +27,9 @@ Certeasy runs as a single binary. It targets **Windows Server** (to run close to
 Certeasy is supported as a **single-instance** deployment, or as **cold Active / Passive** with manual switchover (PostgreSQL or SQL Server required, no SQLite). Running two Certeasy instances concurrently against the same database is **not supported** and produces silent failure modes (`badNonce` errors, drifting rate limits, etc.). See [Deployment topology](../administration/deployment-topology.md) before deploying.
 :::
 
-## Download
+## Step 1 — Install the binary
+
+### Download
 
 Download the latest release from the [releases page](https://github.com/certeasy-tech/certeasy/releases).
 
@@ -31,9 +39,9 @@ Each release ships three binaries — `certeasy-<version>-linux-amd64`, `certeas
 Each release ships a `SHA256SUMS` file. Verify the integrity of the binary before running it — see [Verifying release binaries](../security/verifying-binaries.md).
 :::
 
-## Directory Layout
+### Work directory
 
-Certeasy uses a **work directory** for runtime files (SQLite database, TLS cache, logs). The default locations are:
+Certeasy uses a **work directory** for runtime files (SQLite database, TLS cache, logs, identifiers). The default locations are:
 
 - **Windows**: `%ProgramData%\certeasy`
 - **Linux**: `/var/lib/certeasy`
@@ -50,9 +58,25 @@ New-Item -ItemType Directory -Path "C:\ProgramData\certeasy"
 mkdir -p /var/lib/certeasy
 ```
 
-## Running as a Windows Service
+At this point the binary is in place but the server is **not** running yet — you need a configuration file and an activated license before `certeasy serve` will accept to start. The next pages walk you through both.
 
-The recommended production setup is to run Certeasy as a Windows service using `sc.exe` or NSSM:
+## Step 2 — Activate Certeasy
+
+Follow the next three pages in order:
+
+1. [**Minimal configuration**](/getting-started/minimal-configuration) — write the smallest valid `config.yml`.
+2. [**License**](/getting-started/license) — register your license key from the portal, import a `.lic` file, or open a cold-start window if you want to evaluate before purchasing.
+3. [**First certificate**](/getting-started/first-certificate) — verify the end-to-end flow with an ACME client.
+
+Once `certeasy serve` runs cleanly and the first ACME client has obtained a certificate, come back to **Step 3** below to productize.
+
+## Step 3 — Deploy as a long-running service
+
+In production you do not want `certeasy serve` running from an interactive shell — it must restart with the host, survive operator sessions, and log to a managed sink. Wrap the binary in a service unit.
+
+### Windows service
+
+The recommended production setup is to run Certeasy as a Windows service using `sc.exe` or [NSSM](https://nssm.cc/):
 
 ```powershell
 # Using sc.exe
@@ -62,22 +86,52 @@ sc.exe start Certeasy
 ```
 
 The service account must have:
+
 - Write access to the work directory
 - Access to `certreq.exe` (usually `C:\Windows\System32\certreq.exe`)
 - Network access to the ADCS host
 
-## Running on Linux
+### Linux (systemd)
 
-```bash
-go run cmd/main.go -f config.yml
-# or
-./certeasy -f config.yml
+Create a unit file under `/etc/systemd/system/certeasy.service`:
+
+```ini
+[Unit]
+Description=Certeasy ACME server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/certeasy -f /etc/certeasy/config.yml
+Restart=on-failure
+RestartSec=5s
+User=certeasy
+Group=certeasy
+# Hardening — adjust to your environment
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/certeasy
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
 ```
 
-:::info
-The Linux binary cannot submit to ADCS (no `certreq.exe`). Use the **fake PKI** authority for local testing on Linux.
+Then enable and start:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now certeasy
+sudo journalctl -u certeasy -f
+```
+
+:::info Linux without ADCS
+The Linux binary cannot submit to ADCS (no `certreq.exe`). For local testing on Linux, use the **fake PKI** authority — see [Configuration / Authorities](../configuration/authorities).
 :::
 
-## Next Step
+### After deployment
 
-Once the binary is in place, [configure Certeasy](/getting-started/minimal-configuration).
+- Logs land in the OS log sink (Event Log on Windows, `journalctl` on systemd). See [Logging](../administration/logging.md) for tuning log format and per-service levels.
+- Make sure your monitoring picks up restarts and license-related warnings — see [License enforcement](../administration/license-enforcement.md) for the events emitted at boot and on every refused order.
+- Plan for backups of the work directory (database + audit log) — see [Backup and restore](../administration/backup.md).

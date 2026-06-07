@@ -1,6 +1,6 @@
 ---
-sidebar_position: 3
-title: First Certificate
+sidebar_position: 4
+title: First certificate
 ---
 
 # First Certificate

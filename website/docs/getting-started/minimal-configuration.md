@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: Minimal Configuration
+title: Minimal configuration
 ---
 
 # Minimal Configuration
@@ -100,7 +100,7 @@ The issuance policy must cover the server hostname — `.corp.internal/3` handle
 | `authorities` | Your ADCS backend |
 | `issuance-policies` | Which DNS names are allowed, key requirements |
 
-## Startup Checklist
+## Startup checklist
 
 Before starting:
 
@@ -110,6 +110,11 @@ Before starting:
 - [ ] The service account has enroll permission on the template
 - [ ] Work directory is writable
 
-## Next Step
+## Next step
 
-Once Certeasy starts successfully, follow the [First Certificate](/getting-started/first-certificate) guide to issue your first certificate.
+The configuration file is now in place, but `certeasy serve` will refuse to start without an active license — or an explicit **cold-start window** opened for evaluation. The [License](/getting-started/license) page covers both paths:
+
+- Register or import the license you received from the portal, or
+- Open a 1-week cold-start window with `certeasy cold-start init --plan=<plan>` to evaluate.
+
+Then proceed to the [First certificate](/getting-started/first-certificate) guide.

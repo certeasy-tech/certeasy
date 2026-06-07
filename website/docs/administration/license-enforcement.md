@@ -154,31 +154,26 @@ that any new degradation later requires a fresh, explicit acknowledgement.
 
 ## Installing a license that does not fit the configuration
 
-When you run `certeasy license install`, `certeasy license register`, or
-`certeasy license refresh`, the new license is pre-validated against the
-running configuration before being written to the database. If the
-license's entitlements do not match — for example a plan downgrade that
-disallows your current database driver, or grants fewer authorities than
-you have declared — the operation is **refused** and the previous state
-is preserved untouched.
+`certeasy license install <file>` and `certeasy license refresh` refuse
+to apply a new license whose entitlements do not match the running
+configuration. The previous state is preserved untouched. The CLI
+prints the reasons and three options:
 
-The CLI prints the mismatch and offers three options:
-
-- Fix the configuration to match the new license, then re-run the
-  command.
+- Fix the configuration, then re-run.
 - Pick a different license that fits.
-- Install the license anyway with `--force`. The new license is then
-  persisted but the next `certeasy serve` will refuse to start until you
-  also run `certeasy license acknowledge-degraded` (see above). This
-  path is meant for the case where the plan downgrade is intentional and
-  the configuration cleanup is scheduled as a follow-up.
+- Re-run with `--force` to install anyway. The next `certeasy serve`
+  will refuse to start until you also run
+  `certeasy license acknowledge-degraded` (see above).
 
-The watcher's online auto-refresh applies the same pre-validation: a
-renewed license that does not match the configuration is **not** silently
-applied; the previously installed payload remains in effect, an `ERROR`
-log line is emitted, and a `license.refresh_rejected` audit event is
-recorded (see [Audit events](#audit-events) below). To force-apply a
-mismatched refresh, run `certeasy license refresh --force` interactively.
+The watcher's online auto-refresh applies the same check — a renewed
+license that does not match is **not** silently applied; the previously
+installed payload remains in effect and a `license.refresh_rejected`
+audit event is recorded.
+
+`certeasy license register <license-key>` is validated at the portal
+before any binding happens. Mismatches are returned as a `400` with a
+clear message; you can immediately retry with a different key. There is
+no `--force` flag on `register`.
 
 ## Force-grace (one-shot escape hatch)
 

@@ -132,8 +132,8 @@ There is no `restore` subcommand in v1: the procedure is a few file moves.
 7. Start the service: `Start-Service Certeasy`.
 8. Tail the startup logs to confirm the license, schema migrations, and
    first request all succeed.
-9. (When implemented, ROADMAP #1) `certeasy audit verify` to confirm the
-   audit log MAC chain.
+9. `certeasy audit verify` to confirm the audit log MAC chain
+   end-to-end.
 
 ## 3-2-1-1 baseline
 

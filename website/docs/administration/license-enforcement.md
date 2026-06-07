@@ -45,24 +45,30 @@ acknowledgement (see below) is cleared.
 
 ### Cold start (no license yet)
 
-If you start with `--grace` and have no license installed yet, Certeasy
-applies a temporary cold-start plan (defaulting to **Free**) chosen with
-`--cold-start-plan`:
+Bringing the server up before a license is installed is an explicit
+action. You open a 1-week cold-start window against the plan you intend
+to evaluate under:
 
 ```
-certeasy serve --grace --cold-start-plan starter -f config.yml
+certeasy cold-start init --plan=starter -f config.yml
 ```
 
-In this mode, the boot only emits warnings — never refuses to start —
-because cold start is meant to give you time (1 week) to install your
-license:
+The constraints of the chosen plan (allowed database drivers, maximum
+authorities, managed-server cap) apply during the window — exactly as
+they would with a real license at that plan level. Once the window is
+open, `certeasy serve` boots normally.
+
+When the window is about to elapse and the license has not yet arrived,
+extend it for another 7 days:
 
 ```
-certeasy license install -f config.yml /path/to/your.lic
+certeasy cold-start extend --confirm -f config.yml
 ```
 
-If the initial grace window has elapsed but your license is still not
-ready, see [Force-grace](#force-grace-one-shot-escape-hatch) below.
+Extensions are bounded by a 3-week cumulative cap once your installation
+has served any ACME client. See the dedicated
+[Cold-start page](cold-start.md) for the full action surface,
+including the read-only `cold-start status` diagnostic.
 
 ### Degraded — boot refused until acknowledged
 
@@ -146,12 +152,39 @@ on its own.
 If a future boot is conforming, the stored acknowledgement is removed so
 that any new degradation later requires a fresh, explicit acknowledgement.
 
+## Installing a license that does not fit the configuration
+
+When you run `certeasy license install`, `certeasy license register`, or
+`certeasy license refresh`, the new license is pre-validated against the
+running configuration before being written to the database. If the
+license's entitlements do not match — for example a plan downgrade that
+disallows your current database driver, or grants fewer authorities than
+you have declared — the operation is **refused** and the previous state
+is preserved untouched.
+
+The CLI prints the mismatch and offers three options:
+
+- Fix the configuration to match the new license, then re-run the
+  command.
+- Pick a different license that fits.
+- Install the license anyway with `--force`. The new license is then
+  persisted but the next `certeasy serve` will refuse to start until you
+  also run `certeasy license acknowledge-degraded` (see above). This
+  path is meant for the case where the plan downgrade is intentional and
+  the configuration cleanup is scheduled as a follow-up.
+
+The watcher's online auto-refresh applies the same pre-validation: a
+renewed license that does not match the configuration is **not** silently
+applied; the previously installed payload remains in effect, an `ERROR`
+log line is emitted, and a `license.refresh_rejected` audit event is
+recorded (see [Audit events](#audit-events) below). To force-apply a
+mismatched refresh, run `certeasy license refresh --force` interactively.
+
 ## Force-grace (one-shot escape hatch)
 
-When a license problem keeps the binary from starting and you need
-immediate breathing room — a renewal is in flight, the portal had an
-outage, a fresh install hit an issue, etc. — you can open a 7-day boot
-window with:
+When your installed license has expired beyond the 7-day post-expiry
+window and you need immediate breathing room — a renewal is in flight,
+the portal had an outage, etc. — you can open a 7-day boot window with:
 
 ```
 certeasy license force-grace -f config.yml             # preview, nothing is written
@@ -159,41 +192,32 @@ certeasy license force-grace -f config.yml --confirm   # actually opens the wind
 ```
 
 Without `--confirm`, the command only **previews** what would happen and
-exits without writing anything. The preview shows the underlying license
-state, the chosen anchor, the global cap, and the window the binary
-would receive.
+exits without writing anything. The preview shows the anchor, the global
+cap, and the window the binary would receive.
 
-### What it covers
+Force-grace is intentionally narrow: it is only for a real license that
+has expired past its grace. Other situations have their own dedicated
+paths and are not covered:
 
-Force-grace covers the following fatal startup errors:
-
-- No license installed.
-- Initial grace period expired.
-- License expired beyond the 7-day post-expiry window.
-
-It is **not** available for:
-
-- `license has been revoked` — revocation is an explicit decision from
-  the portal; contact support instead.
-- `license signature invalid` — the stored file is corrupted or tampered
-  with; this should be investigated, not bypassed.
-- A degraded configuration with a valid license — use
-  `acknowledge-degraded` instead. Force-grace is for license problems,
-  not configuration problems.
+- **No license installed yet** — open a cold-start window with
+  `certeasy cold-start init --plan=<plan>` (see [Cold-start](cold-start.md)).
+- **License revoked** — revocation is an explicit decision from the
+  portal; contact support instead.
+- **License signature invalid** — the stored file is corrupted or
+  tampered with; this should be investigated, not bypassed.
+- **Degraded configuration with a valid license** — use
+  `certeasy license acknowledge-degraded` instead. Force-grace is for
+  license problems, not configuration problems.
 
 ### The 3-week cap
 
 Each force-grace invocation grants up to **7 days**, and may be
 re-invoked weekly. The cumulative time the binary can run under
-force-grace is capped at **3 weeks**:
-
-- For an installation that is already running in the field, the cap is
-  measured from the **license expiry date** signed in your `.lic`
-  (tamper-proof). Once your license has been expired for more than three
-  weeks, only installing a fresh license restores normal boot.
-- For a fresh installation that has not yet onboarded any ACME client,
-  there is no cumulative cap — the operator can re-invoke force-grace
-  while completing setup.
+force-grace is capped at **3 weeks** measured from the license expiry
+date signed in your `.lic` (tamper-evident: the signature cannot be
+rewritten without breaking verification). Once your license has been
+expired for more than three weeks, only installing a fresh license
+restores normal boot.
 
 ### Safety properties
 
@@ -257,12 +281,13 @@ and how to recover from each.
 
 | Banner title | When you see it | How to recover |
 |---|---|---|
-| `BOOT REFUSED (NO LICENSE)` | No `.lic` has been installed yet on this server. | Run `certeasy license register <license-key>` to register online, `certeasy license install <path>` to import a downloaded `.lic`, or start with `certeasy serve --grace` for a 1-week install window. |
-| `BOOT REFUSED (GRACE PERIOD EXPIRED)` | The 1-week initial grace window has elapsed without a license being installed. | Same options as above. If you need extra time to fix the situation, `certeasy license force-grace --confirm` opens a 7-day window (capped at 3 weeks total since first usage). |
-| `BOOT REFUSED (LICENSE EXPIRED)` | Your installed license has been expired for more than the 7-day post-expiry grace. | Pull the renewed license with `certeasy license refresh`, install the new file manually with `certeasy license install`, or open a 7-day window with `certeasy license force-grace --confirm`. |
+| `BOOT REFUSED (NO LICENSE, NO COLD-START)` | Fresh installation: no license has been installed and no cold-start window has been opened. | Open a cold-start window with `certeasy cold-start init --plan=<plan>` while you procure a license, or install one directly with `certeasy license register <license-key>` or `certeasy license install <path>`. See [Cold-start](cold-start.md). |
+| `BOOT REFUSED (COLD-START WINDOW EXPIRED)` | A cold-start window had been opened but elapsed without a license being installed. | Open a new 7-day window with `certeasy cold-start extend --confirm`, or install your license now with `certeasy license register` / `... install`. The extend command may be refused once the 3-week cumulative cap has been reached — installing a license is then the only path forward. |
+| `BOOT REFUSED (COLD-START PLAN MISMATCH)` | A cold-start window is open but the running configuration cannot be honored by the chosen plan (database driver not allowed, or too many authorities declared). | Reduce the configuration to fit the plan (e.g. switch to SQLite, drop an authority), or re-bootstrap with a plan that matches the configuration. |
+| `BOOT REFUSED (LICENSE EXPIRED)` | Your installed license has been expired for more than the 7-day post-expiry grace. | Pull the renewed license with `certeasy license refresh`, install the new file manually with `certeasy license install`, register a fresh key with `certeasy license register`, or open a 7-day window with `certeasy license force-grace --confirm`. |
 | `BOOT REFUSED (LICENSE DEGRADED)` | A valid license is installed, but the current configuration exceeds what your plan allows (CAs declared, database driver, managed-server count). | Either fix the configuration, upgrade your plan at the portal, or acknowledge the situation with `certeasy license acknowledge-degraded` to start in degraded mode (renewals continue, new orders are refused). |
 | `BOOT REFUSED (LICENSE ERROR)` | Catch-all for an unrecognised license problem. | Check the structured log line just above the banner for context; `certeasy license refresh` is a safe first attempt. |
-| `RUNNING IN FORCE-GRACE` | Information banner — the server is booting under an open force-grace window. | Resolve the underlying license problem before the window closes (`certeasy license refresh` or `... install`). The window is one-shot per cap period.|
+| `RUNNING IN FORCE-GRACE` | Information banner — the server is booting under an open force-grace window. | Resolve the underlying license problem before the window closes (`certeasy license refresh`, `... install`, or `... register` with a renewed key). The window is one-shot per cap period.|
 
 Other banner titles exist for situations that indicate license file
 tampering or revocation by the portal. If you encounter one of those,
@@ -306,14 +331,20 @@ events are emitted:
 
 | Event | When | Decision | Key details |
 |---|---|---|---|
-| `license.boot_refused` | The server refused to start because the configuration is degraded and no acknowledgement matches. | `deny` | `reasons` |
+| `license.boot_refused` | The server refused to start. Emitted with one of several reasons: a configuration degraded against a valid license with no acknowledgement, a cold-start window that has elapsed, a cold-start plan mismatch, or "no license and no cold-start window" on a fresh install. | `deny` | `reason`, `reasons` (when degraded), `plan` / `driver` / `configured_cas` (when cold-start) |
 | `license.boot_degraded` | The server started in degraded mode against a valid acknowledgement. One event per boot. | `allow` (`reason=ack_active`) | `reasons`, `hash`, `acknowledged_at` |
 | `license.acknowledge` | An operator ran `certeasy license acknowledge-degraded`. | `allow` (`reason=operator_ack`) | `reasons`, `hash`, `hostname` |
+| `license.install_rejected` | `certeasy license install` or `... register` refused to persist a new license because its entitlements do not match the running configuration. The `--force` flag overrides this refusal. | `deny` (`reason=config_mismatch`) | `source`, `plan`, `driver`, `configured_cas`, `reasons` |
+| `license.refresh_rejected` | A refreshed license was rejected because it does not match the running configuration. Emitted both for the manual `certeasy license refresh` path and for the watcher's online auto-refresh path; the `source` field distinguishes them. | `deny` (`reason=config_mismatch`) | `source` (`cli` or `watcher`), `plan`, `driver`, `configured_cas`, `reasons` |
+| `license.installation_mismatch` | A stored license is bound to a different installation than this one. The server refuses to use it. | `deny` (`reason=installation_key_mismatch`) | `license_key`, `installation_key` |
 | `license.force_grace` | An operator consumed a force-grace window via `certeasy license force-grace --confirm`. | `allow` (`reason=operator_forced`) | `state`, `expires_at`, `cap_at` |
 | `license.force_grace_boot` | The server booted under an active force-grace window. One event per boot. | `allow` (`reason=force_grace_active`) | `state`, `expires_at` |
 | `license.force_grace_expired` | The active force-grace window elapsed mid-run; the server is stopping. | `deny` (`reason=force_grace_window_elapsed`) | `expired_at` |
 | `license.deny` | A new order was refused at runtime because of a license limit. One event per refused request. | `deny` (`reason` = the failing limit) | `reasons` and the offending values (driver, current count, max, etc.) |
 | `license.change` | The license state transitioned (`valid` ↔ `grace` ↔ `expired` ↔ `revoked` ↔ `no_license`). | `allow` | `from`, `to` |
+| `cold_start.init` | An operator ran `certeasy cold-start init --plan=<plan>` and the window opened. | `allow` (`reason=operator_init`) | `plan`, `expires_at`, `installation_key` |
+| `cold_start.init_rejected` | `cold-start init` was refused because the configuration does not match the chosen plan. | `deny` (`reason=config_mismatch`) | `plan`, `driver`, `configured_cas`, `reasons` |
+| `cold_start.extend` | An operator opened a new 7-day window via `certeasy cold-start extend --confirm`. | `allow` (`reason=operator_extend`) | `plan`, `anchor`, `cap_at`, `expires_at` |
 
 The audit log is tamper-evident (HMAC chain anchored on the installation
 identifier). Use `certeasy audit verify` to validate it. See the

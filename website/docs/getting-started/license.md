@@ -103,7 +103,11 @@ If no license is installed, Certeasy logs your **installation key** and the avai
 - run `certeasy license register` with your license key from the portal (online), or
 - import a `.lic` file with `certeasy license install` (offline-compatible)
 
-Startup fails by default without a license. Use `--grace` for a first-install grace window (1 week).
+Startup fails by default without a license. To bring the server up
+before a license is installed — typical during install or evaluation —
+open a 1-week cold-start window with
+`certeasy cold-start init --plan=<plan>` (see
+[Cold-start](../administration/cold-start.md)).
 
 If a license is expired:
 - startup is still allowed for 7 days (post-expiry grace)
@@ -111,10 +115,10 @@ If a license is expired:
 
 When the binary refuses to start for any license reason, it prints both a
 structured JSON log and a plain-text banner on stderr listing the recovery
-actions you can take. If you need to keep the binary running while you fix
-the underlying issue (renewal in progress, fresh install, portal outage,
-…), `certeasy license force-grace --confirm` opens a 7-day window that
-boots despite the error. See
+actions you can take. If your installed license has expired past its
+post-expiry grace and you need to keep the binary running while a
+renewal is in flight, `certeasy license force-grace --confirm` opens a
+7-day window that boots despite the error. See
 [License enforcement / Force-grace](../administration/license-enforcement.md#force-grace-one-shot-escape-hatch)
 for the full semantics.
 
@@ -174,7 +178,7 @@ at all) so missing/zero fields are visible at a glance.
 ## Troubleshooting
 
 **`WARNING: PRODUCT NOT REGISTERED`**  
-No license is stored in the database. The startup logs print your **installation key** (`INST-…`) and the registration URL — use it to activate via `certeasy license register <license-key>` or download a `.lic` from the portal and import it with `certeasy license install`. Use `--grace` for an initial bootstrap grace period.
+No license is stored in the database. The startup logs print your **installation key** (`INST-…`) and the registration URL — use it to activate via `certeasy license register <license-key>` or download a `.lic` from the portal and import it with `certeasy license install`. To start the server before the license is installed, open a cold-start window with `certeasy cold-start init --plan=<plan>` (see [Cold-start](../administration/cold-start.md)).
 
 **`invalid license: invalid license signature`**  
 The provided `.lic` file is corrupted or was modified.

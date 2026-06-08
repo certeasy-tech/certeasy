@@ -35,7 +35,7 @@ For production environments and larger organizations.
 - **Unlimited managed servers**
 - **3 ADCS production authorities**
 - PostgreSQL database
-- SQL Server support *(coming in V2)*
+- SQL Server support
 - Dashboard *(coming in V4)*
 - Monitoring & alerting *(coming in V4)*
 

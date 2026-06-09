@@ -39,7 +39,8 @@ later.
 - A license is already installed — uninstall it first if you really want
   to start over, or use one of the regular license commands.
 - Cold-start has already been initialised on this installation —
-  see "Extending the window" below.
+  see "Extending the window" to renew the deadline, or
+  "Correcting the plan" if you picked the wrong plan.
 - The running configuration cannot be honored by the chosen plan.
 
 Example:
@@ -65,6 +66,40 @@ cold-start no longer applies.
 
 Use it whenever you want to confirm what mode the server is in and how
 much time is left before the next deadline.
+
+## Correcting the plan
+
+If you picked the wrong plan at `cold-start init` (typically a typo
+between `pro` and `enterprise`, or a misjudged sizing during evaluation),
+you can change it without waiting out the window:
+
+```bash
+certeasy cold-start switch --plan=<free|starter|pro|enterprise> -f config.yml
+```
+
+`cold-start switch` updates the active plan and leaves the window
+deadline untouched. There is no `--confirm` flag — the action is
+atomic and has no preview side-effect.
+
+The new plan's constraints take effect at the next `certeasy serve`
+boot (and at the next online check for already-running instances).
+
+`cold-start switch` refuses when:
+
+- A license is already installed — use `license install` / `register`
+  / `refresh` instead, which can replace the plan entirely.
+- Cold-start was never initialised on this installation — run
+  `cold-start init` first.
+- The requested plan equals the current plan — nothing to do.
+- The configuration cannot be honored by the requested plan
+  (e.g. switching from `pro` to `starter` while the configured
+  database driver is `postgres`, or while you have declared more
+  authorities than the target plan allows). Adjust your config or
+  pick a different plan.
+
+The window deadline is **never reset** by a switch — that protects
+against using `switch` as a way to renew the window indefinitely.
+Use `cold-start extend` for that, which has its own 3-week cap.
 
 ## Extending the window
 
@@ -137,6 +172,8 @@ the install operation — there is no separate clean-up command.
 |---|---|---|---|
 | `cold_start.init` | An operator ran `cold-start init --plan=<plan>`. One event per successful initialisation. | `allow` (`reason=operator_init`) | `plan`, `expires_at`, `installation_key` |
 | `cold_start.init_rejected` | `cold-start init` was refused because the configuration does not fit the chosen plan. | `deny` (`reason=config_mismatch`) | `plan`, `driver`, `configured_cas`, `reasons` |
+| `cold_start.switch` | An operator ran `cold-start switch --plan=<plan>`. One event per successful switch. The window deadline is unchanged. | `allow` (`reason=operator_switch`) | `from_plan`, `to_plan`, `expires_at` |
+| `cold_start.switch_rejected` | `cold-start switch` was refused. The `reason` field tells you which precondition failed. | `deny` (`reason=license_installed` \| `not_initialised` \| `same_plan` \| `unknown_plan` \| `config_mismatch`) | `plan`, plus on `config_mismatch`: `driver`, `configured_cas`, `reasons` |
 | `cold_start.extend` | An operator ran `cold-start extend --confirm`. | `allow` (`reason=operator_extend`) | `plan`, `anchor`, `cap_at`, `expires_at` |
 
 Runtime refusals (`license.deny`, `license.boot_refused`, …) use the same

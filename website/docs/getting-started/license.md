@@ -123,7 +123,7 @@ The window can be extended for another 7 days at a time, capped at a
 3-week total once your installation has served any ACME client. After
 the cap, only installing a real license restores normal boot. See the
 [Cold-start page](../administration/cold-start.md) for the full action
-surface (`cold-start init`, `cold-start extend`, `cold-start status`)
+surface (`cold-start init`, `cold-start switch`, `cold-start extend`, `cold-start status`)
 and the recovery actions if the window elapses.
 
 When the license arrives, install it with any of the methods above —

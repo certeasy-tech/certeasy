@@ -12,7 +12,7 @@ The `workers` section configures the **async job engine** that runs challenge va
 ```yaml
 workers:
   worker-id: "worker-1"
-  workers: 4
+  workers: 16
   lease: 30s
   idle-min: 50ms
   idle-max: 200ms
@@ -20,6 +20,7 @@ workers:
   max-backoff: 2m
   queue-size: 4
   drain-timeout: 30s
+  max-job-duration: 5m
 ```
 
 ## Fields
@@ -27,7 +28,7 @@ workers:
 | Field | Default | Description |
 |---|---|---|
 | `worker-id` | `worker` | Unique identifier for this worker instance. Useful in multi-node deployments. |
-| `workers` | `4` | Number of concurrent worker goroutines. |
+| `workers` | `16` | Number of concurrent worker goroutines. Goroutines are essentially free in Go (~2 KB stack each), so the default is generous; raise it further only if you observe the queue backed up. |
 | `lease` | `30s` | How long a worker holds a job lock. If processing takes longer, the lease is renewed automatically. |
 | `idle-min` | `50ms` | Minimum polling interval when the queue is empty. |
 | `idle-max` | `200ms` | Maximum polling interval when the queue is empty. Caps the empty-queue exponential backoff so the first job that arrives after a long quiet period is picked up within this delay. |
@@ -35,6 +36,7 @@ workers:
 | `max-backoff` | `2m` | Maximum backoff after repeated failures. |
 | `queue-size` | value of `workers` | In-memory job queue buffer size. |
 | `drain-timeout` | `30s` | Maximum graceful-stop wait time for in-flight jobs before forced worker cancellation. Must be ≥ `server.shutdown-timeout`. See [Graceful shutdown](../administration/shutdown.md). |
+| `max-job-duration` | `lease × 10` (i.e. `5m` at default lease) | Hard cap on a single handler invocation (one `Submit` or one `Check`, **not** the total job lifetime — polling jobs run their handler many times). When it elapses, the handler's context is cancelled (the deadline propagates through every ctx-aware network/command call), the heartbeat stops renewing the lease, and the job is requeued or failed depending on `max-attempts`. It is a wedge-recovery backstop for a handler stuck on a dead socket or deadlocked syscall, **not** a per-job SLA — keep it well above the longest legitimate invocation. Must exceed `lease`. Set to a negative value to disable. |
 
 ## How the Job Engine Works
 

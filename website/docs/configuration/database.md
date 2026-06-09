@@ -24,6 +24,8 @@ database:
   ping-timeout-sec: 5
   max-idle-conn: 5
   max-conn: 10
+  conn-max-lifetime: 2m
+  conn-max-idle-time: 1m
 ```
 
 ### SQLite (default)
@@ -63,6 +65,8 @@ database:
 | `ping-timeout-sec` | `10` | Timeout for the startup connectivity check |
 | `max-idle-conn` | `2` (SQLite), `5` (others) | Maximum idle connections |
 | `max-conn` | `10` | Maximum open connections |
+| `conn-max-lifetime` | `2m` (PostgreSQL / SQL Server), unset for SQLite | Hard cap on a pooled connection's total lifetime. The default sits **strictly below** typical firewall / NAT idle timeouts (5–15 min) so the pool recycles **before** the network drops a stale connection — otherwise the next use surfaces as `Read: EOF`. `0` disables the cap. |
+| `conn-max-idle-time` | `1m` (PostgreSQL / SQL Server), unset for SQLite | A connection idle in the pool longer than this is closed. Complements `conn-max-lifetime` for hosts that drop idle sockets aggressively. `0` disables. |
 
 ## Migrations
 

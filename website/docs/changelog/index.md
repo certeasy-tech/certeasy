@@ -5,6 +5,31 @@ title: Changelog
 
 # Changelog
 
+## v0.9.1 - 2026-06-10
+
+### New features
+
+- `certeasy init` command — interactive (and scriptable) wizard to generate a `config.yml`.
+- Database connection: new `conn-max-lifetime` and `conn-max-idle-time` options.
+
+### Improvements
+
+- Readable text output for one-shot subcommands (`license`, `backup`, `audit`, `cold-start`). The `serve` daemon keeps its structured JSON output.
+- All displayed and logged dates are in UTC.
+- Richer startup banner: installation ID and license ID.
+
+### Changes
+
+- The `--grace` and `--cold-start-plan` flags are removed. The boot mode (valid license, post-expiration, cold-start, refusal) is now determined automatically from persistent state.
+- License registration is validated by the portal; a portal refusal is surfaced verbatim to the operator.
+- A license retired by the portal enters a grace window before boot is refused.
+
+### Fixes
+
+- Shutdown stability: removed a possible SQLite panic and a goroutine leak on the ACME rate limiter.
+
+---
+
 ## v0.9.0 - 2026-05-31
 
 Initial public release.

@@ -17,6 +17,7 @@ const sidebars: SidebarsConfig = {
       label: 'Getting Started',
       items: [
         'getting-started/installation',
+        'getting-started/wizard',
         'getting-started/license',
         'getting-started/minimal-configuration',
         'getting-started/first-certificate',

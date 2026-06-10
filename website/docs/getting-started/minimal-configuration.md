@@ -1,11 +1,17 @@
 ---
-sidebar_position: 2
+sidebar_position: 4
 title: Minimal configuration
 ---
 
 # Minimal Configuration
 
 Certeasy is configured with a single YAML file. This page shows the smallest valid configuration to get started.
+
+:::tip Quick start
+If you'd rather have a working configuration generated for you, the
+[Quick start with the wizard](wizard.md) walks you through the same fields
+interactively and writes the YAML file for you.
+:::
 
 ## Config File Location
 

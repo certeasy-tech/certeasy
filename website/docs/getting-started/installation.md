@@ -8,7 +8,7 @@ title: Installation
 Bringing Certeasy online is a three-step process:
 
 1. **Install the binary** on the host — download, place, create the work directory.
-2. **Activate Certeasy** — register a license (or open a cold-start window) and verify the first certificate end-to-end.
+2. **Configure and activate** — the fastest path is [`certeasy init`](wizard.md), an interactive wizard that asks a few questions, writes a valid configuration, and offers to open a cold-start window or install your license on the spot. If you prefer to write the YAML yourself, follow [Minimal configuration](minimal-configuration.md) + [License](license.md).
 3. **Deploy as a long-running service** — Windows service or `systemd` unit so the binary survives reboots and restarts.
 
 This page covers steps 1 and 3. Step 2 lives in the dedicated pages further in this section.
@@ -60,13 +60,14 @@ mkdir -p /var/lib/certeasy
 
 At this point the binary is in place but the server is **not** running yet — you need a configuration file and an activated license before `certeasy serve` will accept to start. The next pages walk you through both.
 
-## Step 2 — Activate Certeasy
+## Step 2 — Configure and activate
 
-Follow the next three pages in order:
+The recommended path is:
 
-1. [**Minimal configuration**](/getting-started/minimal-configuration) — write the smallest valid `config.yml`.
-2. [**License**](/getting-started/license) — register your license key from the portal, import a `.lic` file, or open a cold-start window if you want to evaluate before purchasing.
-3. [**First certificate**](/getting-started/first-certificate) — verify the end-to-end flow with an ACME client.
+1. [**Quick start with the wizard**](/getting-started/wizard) — `certeasy init` produces a valid configuration and offers to either open a cold-start window or install / register your license.
+2. [**First certificate**](/getting-started/first-certificate) — verify the end-to-end flow with an ACME client.
+
+If you'd rather assemble the YAML by hand, the same content is covered in [Minimal configuration](/getting-started/minimal-configuration) and [License](/getting-started/license).
 
 Once `certeasy serve` runs cleanly and the first ACME client has obtained a certificate, come back to **Step 3** below to productize.
 

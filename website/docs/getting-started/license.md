@@ -5,6 +5,13 @@ title: License
 
 # License
 
+:::tip If you're just getting started
+Most operators don't need this page in detail —
+[`certeasy init`](wizard.md) walks you through license setup
+interactively. This page is for fine-grained control or when you need
+to script the activation yourself.
+:::
+
 `certeasy serve` will not start without an active license **or** an
 explicit cold-start window. You have three ways to get there from a
 fresh install — pick the one that matches your situation:

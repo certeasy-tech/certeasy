@@ -43,19 +43,18 @@ For production environments and larger organizations.
 
 For organizations with advanced requirements.
 
-- Everything in Pro
+- Everything in Pro, plus:
 - **Up to 5 ADCS production authorities**
-- Split deployment: ADCS connector on Tier 0 + ACME responder on separate host *(coming in V2)*
+- Beyond 5 CAs — [contact us](https://certeasy.tech/contact)
+- Split deployment: ADCS connector on Tier 0 + ACME responder on separate server *(coming in V2)*
 - Active/Active high availability (multi-node, requires PostgreSQL) *(coming in V2)*
-- Distributed validation agents (segmented networks) *(coming in V3)*
+- Distributed validators (segmented networks) *(coming in V3)*
+- TLS service discovery *(coming in V4)*
+- Optional SLA
 
 :::tip Active/Passive high availability
 Active/Passive HA is a supported deployment pattern available to all Pro and above users — run two Certeasy instances against the same PostgreSQL database with a load balancer or keepalived in front. No additional license required.
 :::
-- TLS service discovery *(coming in V4)*
-- Optional SLA
-
-Beyond 5 CAs — [contact us](https://certeasy.tech/contact).
 
 :::note License required
 A license file (`certeasy.lic`) is required to run Certeasy, including on the Free plan. Registration takes 30 seconds and delivers the file by email.

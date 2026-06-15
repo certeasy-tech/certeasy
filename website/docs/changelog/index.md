@@ -23,6 +23,7 @@ title: Changelog
 ### Fixes
 
 - `certeasy init` generated an ADCS authority block with incorrect field names; it now emits the correct `ca-name` / `certificate-template` schema.
+- **SQL Server backends**: upgraded the SQL Server driver (go-mssqldb v1.10.0), fixing a data race in the driver's response reader when a query is cancelled or times out. The previous version could leave a pooled connection in an inconsistent state (corruption or hang) under load. Recommended for all SQL Server deployments.
 
 ---
 

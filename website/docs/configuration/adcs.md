@@ -9,6 +9,12 @@ title: ADCS Configuration
 This page is not yet complete. Content and best practices will be added shortly.
 :::
 
+:::tip Connector choice
+Certeasy reaches ADCS through a **native in-process connector by default**
+(`type: adcs`), with a `certreq.exe` fallback (`type: adcs-cli`). See
+[Authorities → Connector](/configuration/authorities#connector-native-default-or-certreqexe).
+:::
+
 This page will cover:
 
 - Prerequisites on the ADCS host

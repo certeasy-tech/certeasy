@@ -5,40 +5,44 @@ title: Antivirus & EDR
 
 # Antivirus &amp; EDR
 
-Certeasy on Windows ADCS spawns `certreq.exe`, writes transient CSR and
-certificate files, reads ADCS template metadata, and binds an HTTPS listener.
-Endpoint Detection and Response (EDR) products (Microsoft Defender for
-Endpoint, CrowdStrike Falcon, SentinelOne, ESET, Sophos, …) and traditional
-antivirus tools sometimes interpret this combination as suspicious activity,
-because the same primitives appear in credential-theft and lateral-movement
-playbooks.
+:::tip Native connector (default): no `certreq.exe` spawn
+Since **v0.9.2** the default ADCS connector (`type: adcs` / `adcs-native`)
+enrolls **in-process** — Certeasy launches no child process. The LOLBin
+parent-child signature that strict EDRs used to flag (the same pattern as
+offensive ADCS tooling such as Certify / Certipy) is simply not produced. For a
+default deployment, the certreq-specific guidance on this page **does not
+apply** — the remaining host activity (an HTTPS listener, a local database, an
+append-only log) is benign.
+
+The certreq.exe details below apply **only if you explicitly chose the
+`adcs-cli` connector** (see [Authorities](/configuration/authorities)).
+:::
+
+With the **native connector (default)**, Certeasy on a Windows ADCS host binds
+an HTTPS listener, writes to a local database, and appends to an audit log — no
+child process, no transient certificate files on disk.
+
+With the **`adcs-cli` connector**, Certeasy additionally spawns `certreq.exe`
+and writes transient CSR / certificate files for each issuance. Endpoint
+Detection and Response (EDR) products (Microsoft Defender for Endpoint,
+CrowdStrike Falcon, SentinelOne, ESET, Sophos, …) sometimes flag that
+parent-child chain, because the same primitives appear in offensive playbooks.
 
 This page lists what Certeasy does on the host, what to allow-list before
-deploying, and how to react if the EDR blocks something unexpectedly. The
-list below is a best-effort baseline — Certeasy is not certified against
-any specific EDR product, and your security team owns the final policy.
-
-:::info Planned for 1.0: no more `certreq.exe` spawn
-Certeasy 0.9 talks to ADCS by spawning `certreq.exe` / `certutil.exe` for each
-submit / retrieve. Even though these binaries ship with Windows, strict EDRs
-flag the parent-child chain because the same pattern appears in offensive
-ADCS tooling (Certify, Certipy). The 1.0 release replaces these spawns with
-in-process MS-WCCE (DCOM/RPC) calls — no more child processes, no more
-LOLBin behavioral signature. Track the work on the [public roadmap](../intro/roadmap.md)
-(*Native ADCS bridge*) — until then, the exclusions below are the supported
-mitigation.
-:::
+deploying, and how to react if the EDR blocks something unexpectedly. It is a
+best-effort baseline — Certeasy is not certified against any specific EDR
+product, and your security team owns the final policy.
 
 ## What Certeasy does on the host
 
-| Activity | When | Why an EDR may flag it |
-|---|---|---|
-| Spawns `certreq.exe -submit`, `-retrieve`, `-config` | Every ACME order finalize, every status poll, every revocation | New parent → `certreq.exe` chains are uncommon outside auto-enrolment, EDRs often score them |
-| Writes `*.csr`, `*.cer`, `*.req` to `<workdir>/adcs/` | Transient, deleted within seconds of each issuance | File-creation+deletion bursts of certificate-looking content |
-| Reads `HKLM\SYSTEM\CurrentControlSet\Services\CertSvc` keys (indirectly via `certutil`) | Boot and per-request | Registry reads on PKI services trigger some heuristics |
-| Binds `0.0.0.0:443` (or configured port) | Boot | A non-IIS process binding `:443` on a Windows server is unusual |
-| Writes to the SQLite database file in `<workdir>` | Continuous | Large write rate to an opaque file format |
-| Appends to `<workdir>/audit.log` | Every protocol event | Log file growth is usually benign |
+| Activity | When | Connector | Why an EDR may flag it |
+|---|---|---|---|
+| Binds `0.0.0.0:443` (or configured port) | Boot | both | A non-IIS process binding `:443` on a Windows server is unusual |
+| Writes to the SQLite database file in `<workdir>` | Continuous | both | Large write rate to an opaque file format |
+| Appends to `<workdir>/audit.log` | Every protocol event | both | Log file growth is usually benign |
+| Enrolls in-process via the Windows certificate API | Every order finalize / status poll | native (default) | No child process; indistinguishable from a normal enrollment client |
+| Spawns `certreq.exe -submit`, `-retrieve`, `-config` | Every order finalize, every status poll | `adcs-cli` only | New parent → `certreq.exe` chains are uncommon outside auto-enrolment, EDRs often score them |
+| Writes `*.csr`, `*.cer`, `*.req` to `<workdir>/adcs/` | Transient, deleted within seconds of each issuance | `adcs-cli` only | File-creation+deletion bursts of certificate-looking content |
 
 ## Recommended exclusions
 
@@ -49,16 +53,19 @@ with your actual install path.
 ### Process exclusions
 
 - `C:\Program Files\Certeasy\certeasy.exe` — the Certeasy binary itself.
-- `C:\Windows\System32\certreq.exe` — invoked by Certeasy. Usually already
-  trusted by Defender, but third-party EDRs may not whitelist it by default
-  in non-standard parent-child relationships.
+- `C:\Windows\System32\certreq.exe` — **`adcs-cli` connector only.** Invoked by
+  Certeasy in that mode. Usually already trusted by Defender, but third-party
+  EDRs may not whitelist it by default in non-standard parent-child
+  relationships. The default native connector launches no child process, so this
+  exclusion is unnecessary there.
 
 ### Path exclusions
 
 - `<workdir>\` — the entire Certeasy work directory. Subpaths to focus on if
   blanket exclusion is not acceptable:
-  - `<workdir>\adcs\` — transient CSR / certificate scratch space (high
-    file-creation rate).
+  - `<workdir>\adcs\` — **`adcs-cli` connector only:** transient CSR /
+    certificate scratch space (high file-creation rate). The native connector
+    writes no such files.
   - `<workdir>\db.sqlite`, `<workdir>\db.sqlite-wal`, `<workdir>\db.sqlite-shm`
     — SQLite database files (frequent writes).
   - `<workdir>\audit.log` — append-only audit log.
@@ -71,7 +78,8 @@ If your EDR has an outbound-connection monitor, allow:
 - The ACME listening port (default `:443` or whatever you configured under
   `server.port`).
 - Traffic to the ADCS CA host (typically port `135` for RPC + dynamic high
-  ports for the actual call — same configuration as a normal `certreq`).
+  ports for the actual call — the same RPC/DCOM ports any Windows enrollment
+  client uses, whether native or `certreq`).
 - Traffic to your DNS resolver(s) configured under
   `dns-validation-profiles`.
 
@@ -93,12 +101,12 @@ If your environment uses Windows SmartScreen or AppLocker:
 Symptoms to look for:
 
 - Certeasy exits immediately at startup with `access denied` errors on its
-  workdir or on `certreq.exe`.
-- ACME orders fail at finalize with a backend error mentioning `certreq` not
-  found or terminated; the audit log will show repeated `certificate.issue`
-  failures with the same reason.
-- A long latency on every order (the EDR is intercepting and analysing each
-  `certreq.exe` spawn before letting it run).
+  workdir (or, with `adcs-cli`, on `certreq.exe`).
+- ACME orders fail at finalize with a backend error; the audit log shows
+  repeated `certificate.issue` failures with the same reason. With `adcs-cli`
+  the error typically mentions `certreq` not found or terminated.
+- (`adcs-cli` only) A long latency on every order, because the EDR intercepts
+  and analyses each `certreq.exe` spawn before letting it run.
 
 To diagnose:
 
@@ -125,10 +133,10 @@ because Linux EDRs do not generally weight `:443` binders the same way.
 These behaviours are normal and should not be reported to your security
 team as a Certeasy issue:
 
-- Brief CPU bursts on the host during a batch of finalize calls — each
-  `certreq.exe` spawn does cryptographic work.
-- A new `<workdir>\adcs\` file appearing and disappearing within a second
-  during issuance — the file is the live CSR, deleted as soon as the ADCS
-  response is parsed.
+- Brief CPU bursts on the host during a batch of finalize calls — enrollment
+  does cryptographic work (and, with `adcs-cli`, each `certreq.exe` spawn).
+- (`adcs-cli` only) A new `<workdir>\adcs\` file appearing and disappearing
+  within a second during issuance — the file is the live CSR, deleted as soon
+  as the ADCS response is parsed.
 - An audit-log line per protocol event — the audit log is append-only by
   design and meant to grow.

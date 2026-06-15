@@ -25,7 +25,7 @@ Legend: ✅ shipped · 🎯 next release in flight.
 | License enforcement (strict boot + acknowledgement) | 0.9 ✅ | All | Predictable cost ceiling, no surprise billing |
 | Graceful HTTP shutdown | 0.9 ✅ | All | Zero in-flight cert lost on `systemctl restart` |
 | RFC 8555 `Location` headers audit complete | 0.9 ✅ | All | Conformance with strict-RFC ACME clients (NativeClient, Caddy) |
-| Native ADCS bridge (drop `certreq.exe` / `certutil.exe` spawn, talk MS-WCCE directly) | 1.0 🎯 | All | Removes the LOLBin process chain that strict EDRs flag (Defender for Endpoint, CrowdStrike, SentinelOne) — eligible for stricter deployment perimeters |
+| Native ADCS connector (in-process enrollment by default — no `certreq.exe` child process; `certreq.exe` stays available as the `adcs-cli` fallback) | 0.9.2 🎯 | All | Removes the LOLBin process chain that strict EDRs flag (Defender for Endpoint, CrowdStrike, SentinelOne) — eligible for stricter deployment perimeters |
 | Real ADCS revocation (CRL / OCSP propagation) | 1.0 🎯 | All | A revoked certificate is actually revoked end-to-end |
 | Cleanup / retention of expired ACME records | 1.0 🎯 | All | Long-term operations: the database stops growing forever |
 | Health / metrics endpoints (`/healthz`, `/readyz`, Prometheus `/metrics`) | 1.0 🎯 | All | Drop-in integration with existing supervision (Zabbix, Centreon, Prometheus, Grafana) |

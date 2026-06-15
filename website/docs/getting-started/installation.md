@@ -19,7 +19,7 @@ This page covers steps 1 and 3. Step 2 lives in the dedicated pages further in t
 |---|---|
 | **OS** | Windows Server 2016+ (production), Linux (dev/test) |
 | **ADCS** | Active Directory Certificate Services, accessible from the Certeasy host |
-| **certreq.exe** | Available on Windows, used to submit CSRs to ADCS |
+| **certreq.exe** | Not required by the default native connector. Only needed if you select the `adcs-cli` connector (ships with Windows). |
 | **Network** | Certeasy must be reachable by ACME clients (HTTPS, port 443 or custom) |
 | **Database** | SQLite (default, no setup), PostgreSQL, or SQL Server |
 
@@ -89,8 +89,9 @@ sc.exe start Certeasy
 The service account must have:
 
 - Write access to the work directory
-- Access to `certreq.exe` (usually `C:\Windows\System32\certreq.exe`)
+- Enroll permission on the ADCS certificate template
 - Network access to the ADCS host
+- (only with the `adcs-cli` connector) Access to `certreq.exe`, usually `C:\Windows\System32\certreq.exe`
 
 ### Linux (systemd)
 
@@ -128,7 +129,7 @@ sudo journalctl -u certeasy -f
 ```
 
 :::info Linux without ADCS
-The Linux binary cannot submit to ADCS (no `certreq.exe`). For local testing on Linux, use the **fake PKI** authority — see [Configuration / Authorities](../configuration/authorities).
+The Linux binary cannot submit to ADCS — ADCS enrollment is Windows-only (both connectors). For local testing on Linux, use the **fake PKI** authority — see [Configuration / Authorities](../configuration/authorities).
 :::
 
 ### After deployment

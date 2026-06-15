@@ -30,7 +30,7 @@ ACME Client (certbot, acme.sh, Caddy…)
 │  │  Policy Engine  │    │
 │  └────────┬────────┘    │
 └───────────┼─────────────┘
-            │  certreq.exe
+            │  enroll (in-process)
             ▼
     ┌───────────────┐
     │  Your ADCS    │
@@ -63,7 +63,7 @@ The issuance policy defines:
 - which ADCS authority handles the request
 
 ### 5. Certificate Issuance
-Certeasy submits the validated CSR to the configured ADCS authority using `certreq.exe`. The authority issues the certificate according to the configured template.
+Certeasy submits the validated CSR to the configured ADCS authority through its native in-process connector (or `certreq.exe` if you selected the `adcs-cli` connector). The authority issues the certificate according to the configured template.
 
 This step is asynchronous — Certeasy polls ADCS until the certificate is ready.
 

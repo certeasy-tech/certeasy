@@ -5,6 +5,27 @@ title: Changelog
 
 # Changelog
 
+## v0.9.2 — upcoming
+
+### New features
+
+- **Native ADCS connector** (now the default for `type: adcs`): Certeasy enrolls against ADCS **in-process**, without launching `certreq.exe`. This removes the child-process (LOLBin) signature that strict EDRs flag, making Certeasy eligible for more hardened deployment perimeters. Existing `type: adcs` configurations switch to it automatically on upgrade — no change required.
+
+### Improvements
+
+- `certeasy init` now lets you choose the ADCS connector (native in-process, or `certreq.exe`) when generating a configuration.
+
+### Changes
+
+- The `certreq.exe`-based integration remains available as an opt-in fallback under `type: adcs-cli`.
+- The unused `cert-util-timeout` ADCS option is no longer documented; it is still accepted in existing configurations but has no effect.
+
+### Fixes
+
+- `certeasy init` generated an ADCS authority block with incorrect field names; it now emits the correct `ca-name` / `certificate-template` schema.
+
+---
+
 ## v0.9.1 - 2026-06-10
 
 ### New features

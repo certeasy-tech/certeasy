@@ -26,7 +26,7 @@ Certeasy implements the IETF ACME family of standards. This page documents which
 
 #### Server-side revocation only (full propagation planned for V1.0)
 
-`POST /acme/revoke-cert` marks the certificate revoked in Certeasy's database and emits an audit event. **The underlying ADCS CRL / OCSP responder is not yet updated** — a client validating chain status against ADCS will still see the certificate as valid until the CRL is published. Cabling the revocation all the way to ADCS (`certreq -revoke`) lands in V1.0.
+`POST /acme/revoke-cert` marks the certificate revoked in Certeasy's database and emits an audit event. **The underlying ADCS CRL / OCSP responder is not yet updated** — a client validating chain status against ADCS will still see the certificate as valid until the CRL is published. Cabling the revocation all the way to ADCS lands in a future release.
 
 #### External Account Binding (EAB) — planned for V2.0
 

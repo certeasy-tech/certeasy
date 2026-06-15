@@ -63,7 +63,7 @@ Both fields accept Go duration syntax (`s`, `m`, `h`).
 
 ## Tuning
 
-- **Slow PKI backend (ADCS, long `certutil` calls).** Raise both timeouts
+- **Slow PKI backend (ADCS enrollment latency).** Raise both timeouts
   together (e.g. `60s` / `60s`) so a final issuance has time to complete
   before the engine is forced down.
 - **Fast rotation, ephemeral instances.** The defaults are appropriate; don't

@@ -37,7 +37,7 @@ This page tracks security mitigations that are **claimed in the documentation bu
 
 **Claim in docs**: "Enrollment permissions restricted to service account."
 
-**Reality**: Architectural — Certeasy calls `certreq.exe` under its own service account, so clients never authenticate to ADCS directly. However, Certeasy cannot verify or enforce what permissions the service account has on the ADCS template. A misconfigured service account with Write/Manage permissions on the template would be a risk Certeasy cannot detect.
+**Reality**: Architectural — Certeasy enrolls under its own service account (in-process with the native connector, or via `certreq.exe` with `adcs-cli`), so clients never authenticate to ADCS directly. However, Certeasy cannot verify or enforce what permissions the service account has on the ADCS template. A misconfigured service account with Write/Manage permissions on the template would be a risk Certeasy cannot detect.
 
 **Gap**: No validation of service account permissions.
 

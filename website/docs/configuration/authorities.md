@@ -12,13 +12,11 @@ Authorities are the PKI backends that Certeasy submits certificate requests to. 
 ```yaml
 authorities:
   - name: ca1
-    type: adcs
+    type: adcs                 # native connector (default) — see "Connector" below
     configuration:
       ca-name: "PKI\\LAB-RootCA"
       certificate-template: "ACME-Template-Server"
-      certreq-path: "C:\\Windows\\System32\\certreq.exe"
       default-timeout: 10m
-      cert-util-timeout: 30s
 ```
 
 ## Fields
@@ -26,21 +24,36 @@ authorities:
 | Field | Required | Description |
 |---|---|---|
 | `name` | Yes | Unique authority name. Referenced in policy bindings. |
-| `type` | Yes | Authority type: `adcs` or `fake` |
+| `type` | Yes | Authority type: `adcs` / `adcs-native` (native connector, default) · `adcs-cli` (certreq.exe connector) · `fake` (testing) |
 | `policies` | No | Remote authority policy constraints (advanced). If omitted, all local policies are candidates. |
 | `configuration` | Yes | Type-specific configuration block (see below) |
 
 ## ADCS Authority
 
+### Connector: native (default) or certreq.exe
+
+Certeasy talks to ADCS through one of two interchangeable connectors. Both issue
+the same certificates from the same `ca-name` and `certificate-template` — only
+the integration method differs.
+
+| `type` | Connector | Notes |
+|---|---|---|
+| `adcs` (default), `adcs-native` | **Native** — Certeasy enrolls in-process through the built-in Windows certificate API. No external program is launched. | Recommended. Nothing extra to install, and the cleanest fit for hardened, EDR-monitored hosts (see [Antivirus &amp; EDR](/administration/antivirus-edr)). |
+| `adcs-cli` | **certreq.exe** — Certeasy drives the standard Windows `certreq.exe` tool. | Choose this if you prefer the classic `certreq.exe` integration, or want it as a fallback. |
+
+`type: adcs` resolves to the native connector, so an existing configuration moves
+to it automatically on upgrade — no change required. Both connectors are
+Windows-only: ADCS enrollment runs on a Windows host joined to, or able to reach,
+the CA.
+
 ### Configuration Fields
 
-| Field | Default | Description |
-|---|---|---|
-| `ca-name` | — | Full CA name as shown by `certutil -CA` (e.g. `PKI\LAB-RootCA`) |
-| `certificate-template` | — | ADCS certificate template name for ACME issuance |
-| `certreq-path` | `certreq.exe` | Full path to `certreq.exe` |
-| `default-timeout` | `10m` | Maximum wait time for ADCS to issue the certificate |
-| `cert-util-timeout` | — | Timeout for `certutil` operations |
+| Field | Default | Applies to | Description |
+|---|---|---|---|
+| `ca-name` | — | both | Full CA name as shown by `certutil -CA` (e.g. `PKI\LAB-RootCA`) |
+| `certificate-template` | — | both | ADCS certificate template name for ACME issuance |
+| `default-timeout` | `10m` | both | Maximum wait time for ADCS to issue the certificate |
+| `certreq-path` | `certreq.exe` | `adcs-cli` only | Full path to `certreq.exe`. Ignored by the native connector. |
 
 ### Finding your CA Name
 

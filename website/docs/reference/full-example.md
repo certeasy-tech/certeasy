@@ -103,13 +103,12 @@ dns-validation-profiles:
 # ── Authorities ───────────────────────────────────────────────────────────────
 authorities:
   - name: ca1
-    type: adcs                         # adcs | fake
+    type: adcs                         # adcs/adcs-native (in-process, default) | adcs-cli (certreq.exe) | fake
     configuration:
       ca-name: "PKI\\LAB-RootCA"       # as shown by certutil -CA
       certificate-template: "ACME-Template-Server"
-      certreq-path: "certreq.exe"      # full path if not in PATH
       default-timeout: 10m
-      cert-util-timeout: 30s
+      # certreq-path: "certreq.exe"    # adcs-cli connector only (path if not in PATH)
 
   # Fake PKI for local testing — do not use in production
   # - name: test-ca

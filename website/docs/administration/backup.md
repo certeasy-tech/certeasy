@@ -21,8 +21,9 @@ and SQL Server users should follow their standard DBA tooling — see the
 | `config.yml` | Server configuration | File copy |
 | Let&#39;s Encrypt cache | `tls-certificate-manager.lets-encrypt.cache-dir`, may be outside workdir | File copy if configured |
 
-The `<workdir>/adcs/` directory is **transient** (CSRs and certutil scratch
-files recreated on demand) and must not be in your backup set.
+The `<workdir>/adcs/` directory is **transient** (CSR scratch files written by
+the `adcs-cli` connector, recreated on demand; the native connector writes
+nothing here) and must not be in your backup set.
 
 The DB file itself must never be copied raw with the server running: the
 `-wal` and `-shm` companion files contain uncommitted writes and the result

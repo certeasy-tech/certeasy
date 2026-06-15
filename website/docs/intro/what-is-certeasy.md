@@ -25,7 +25,7 @@ Certeasy sits between your ACME clients and your ADCS. It:
 
 1. Exposes a standard ACME endpoint that any ACME client can talk to
 2. Validates the DNS challenge to confirm ownership of the requested domain
-3. Submits the CSR to your ADCS authority using `certreq.exe`
+3. Submits the CSR to your ADCS authority in-process (no child process), with a `certreq.exe` connector available as a fallback
 4. Returns the signed certificate to the ACME client
 
 Your ADCS never changes. Your ACME clients don't know they're talking to an internal CA. Everything stays inside your network.
@@ -36,7 +36,7 @@ Your ADCS never changes. Your ACME clients don't know they're talking to an inte
 |---|---|
 | **100% on-premise** | No data leaves your network |
 | **Standard protocol** | RFC 8555 ACME + RFC 9773 ARI (read-only) — works with any ACME client. See [Standards & RFC support](../reference/standards-compliance.md) for the detailed conformance matrix. |
-| **ADCS-native** | Uses `certreq.exe`, no ADCS changes required |
+| **ADCS-native** | Connects to ADCS in-process — no `certreq.exe` child process, no ADCS changes required (a `certreq.exe` connector remains available as a fallback) |
 | **Secure by default** | Conservative defaults: RSA 3072-bit minimum, strict algorithm allow-list |
 | **Hardened against ADCS attacks** | Certificate identity limited to validated DNS names — prevents ESC1–ESC13 by design |
 | **Isolated networks** | Supports segmented environments (v2) |

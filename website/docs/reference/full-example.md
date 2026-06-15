@@ -107,7 +107,7 @@ authorities:
     configuration:
       ca-name: "PKI\\LAB-RootCA"       # as shown by certutil -CA
       certificate-template: "ACME-Template-Server"
-      default-timeout: 10m
+      default-timeout: 4m              # keep below workers.max-job-duration (default 5m)
       # certreq-path: "certreq.exe"    # adcs-cli connector only (path if not in PATH)
 
   # Fake PKI for local testing — do not use in production

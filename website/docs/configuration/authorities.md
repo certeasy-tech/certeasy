@@ -16,7 +16,7 @@ authorities:
     configuration:
       ca-name: "PKI\\LAB-RootCA"
       certificate-template: "ACME-Template-Server"
-      default-timeout: 10m
+      default-timeout: 4m
 ```
 
 ## Fields
@@ -52,7 +52,7 @@ the CA.
 |---|---|---|---|
 | `ca-name` | — | both | Full CA name as shown by `certutil -CA` (e.g. `PKI\LAB-RootCA`) |
 | `certificate-template` | — | both | ADCS certificate template name for ACME issuance |
-| `default-timeout` | `10m` | both | Maximum wait time for ADCS to issue the certificate |
+| `default-timeout` | `4m` | both | Maximum wait time for a single ADCS request. Keep it **below** `workers.max-job-duration` (default `5m`) so the ADCS timeout — not the surrounding job deadline — bounds the call; Certeasy warns at startup if it is greater than or equal to `max-job-duration`. |
 | `certreq-path` | `certreq.exe` | `adcs-cli` only | Full path to `certreq.exe`. Ignored by the native connector. |
 
 ### Finding your CA Name

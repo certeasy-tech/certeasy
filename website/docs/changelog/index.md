@@ -19,6 +19,7 @@ title: Changelog
 
 - The `certreq.exe`-based integration remains available as an opt-in fallback under `type: adcs-cli`.
 - The unused `cert-util-timeout` ADCS option is no longer documented; it is still accepted in existing configurations but has no effect.
+- **ADCS request timeout**: `default-timeout` now defaults to **4 minutes** and is honored as configured. Previously a legacy behavior capped the effective ADCS wait at **30 seconds** regardless of `default-timeout`; that cap is removed. Keep `default-timeout` below `workers.max-job-duration` (default 5m) — Certeasy warns at startup if it is greater than or equal.
 
 ### Fixes
 

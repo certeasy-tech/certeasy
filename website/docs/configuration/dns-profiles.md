@@ -51,7 +51,7 @@ Each zone entry defines which DNS zones this profile handles and how to resolve 
 | `dns-server` | — | List string                         | Explicit DNS server address (overrides system)   |
 | `authoritative` | — | boolean                             | Require authoritative responses                  |
 | `dnssec` | — | boolean                             | Require DNSSEC validation                        |
-| `protocol` | — | string | DNS protocol: `udp` or `tcp`                     |
+| `protocol` | `udp` | string | DNS transport. `tcp` queries TCP directly (no UDP attempt, no fallback) — use it on networks where UDP/53 is blocked. `udp` (default; empty means `udp`) queries UDP first and falls back to TCP only if the reply is truncated. |
 
 ### Resolved IP Policy
 

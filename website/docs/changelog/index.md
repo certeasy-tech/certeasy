@@ -10,6 +10,7 @@ title: Changelog
 ### New features
 
 - **Native ADCS connector** (now the default for `type: adcs`): Certeasy enrolls against ADCS **in-process**, without launching `certreq.exe`. This removes the child-process (LOLBin) signature that strict EDRs flag, making Certeasy eligible for more hardened deployment perimeters. Existing `type: adcs` configurations switch to it automatically on upgrade — no change required.
+- **`certeasy validate`** — a configuration check in the spirit of `nginx -t`. `certeasy validate -f <config>` parses and validates a configuration statically, with no side effects (no database, no network, no file writes). `serve` now runs the same validation as a fail-fast boot gate, so an invalid configuration is rejected before startup instead of failing halfway through.
 
 ### Improvements
 
@@ -25,6 +26,7 @@ title: Changelog
 
 - `certeasy init` generated an ADCS authority block with incorrect field names; it now emits the correct `ca-name` / `certificate-template` schema.
 - **SQL Server backends**: upgraded the SQL Server driver to go-mssqldb v1.10.0, which improves connection handling when a query is cancelled or times out. Recommended for all SQL Server deployments.
+- **DNS validation profiles**: the zone `protocol` field (`udp` / `tcp`) is now honored. It was previously parsed but ignored (DNS lookups were always UDP-first with a TCP fallback); set `protocol: tcp` to force DNS validation over TCP on networks where UDP/53 is unavailable.
 
 ---
 

@@ -104,11 +104,13 @@ dns-validation-profiles:
 authorities:
   - name: ca1
     type: adcs                         # adcs/adcs-native (in-process, default) | adcs-cli (certreq.exe) | fake
+    disable-ca-revocation: false       # default — propagate revocations to the CA (needs the Certificate Manager role)
     configuration:
       ca-name: "PKI\\LAB-RootCA"       # as shown by certutil -CA
       certificate-template: "ACME-Template-Server"
       default-timeout: 4m              # keep below workers.max-job-duration (default 5m)
       # certreq-path: "certreq.exe"    # adcs-cli connector only (path if not in PATH)
+      # certutil-path: "certutil.exe"  # adcs-cli connector only (used for revocation)
 
   # Fake PKI for local testing — do not use in production
   # - name: test-ca
@@ -117,7 +119,8 @@ authorities:
   #     common-name: "Certeasy Test CA"
   #     password: "testpassword"
   #     key-size: 2048
-  #     validity: 8760h
+  #     validity: 3650                 # CA certificate lifetime, in days
+  #     certificate-validity: 2160h    # issued-certificate lifetime (default 90 days)
 
 # ── Issuance Policies ─────────────────────────────────────────────────────────
 issuance-policies:

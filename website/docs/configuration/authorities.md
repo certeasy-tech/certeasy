@@ -26,6 +26,7 @@ authorities:
 | `name` | Yes | Unique authority name. Referenced in policy bindings. |
 | `type` | Yes | Authority type: `adcs` / `adcs-native` (native connector, default) · `adcs-cli` (certreq.exe connector) · `fake` (testing) |
 | `policies` | No | Remote authority policy constraints (advanced). If omitted, all local policies are candidates. |
+| `disable-ca-revocation` | No (default `false`) | When `true`, keep ACME revocations local to Certeasy instead of propagating them to the backing CA (CRL/OCSP). Leave unset (or `false`) to propagate. See [Revocation](#revocation). |
 | `configuration` | Yes | Type-specific configuration block (see below) |
 
 ## ADCS Authority
@@ -53,7 +54,8 @@ the CA.
 | `ca-name` | — | both | Full CA name as shown by `certutil -CA` (e.g. `PKI\LAB-RootCA`) |
 | `certificate-template` | — | both | ADCS certificate template name for ACME issuance |
 | `default-timeout` | `4m` | both | Maximum wait time for a single ADCS request. Keep it **below** `workers.max-job-duration` (default `5m`) so the ADCS timeout — not the surrounding job deadline — bounds the call; Certeasy warns at startup if it is greater than or equal to `max-job-duration`. |
-| `certreq-path` | `certreq.exe` | `adcs-cli` only | Full path to `certreq.exe`. Ignored by the native connector. |
+| `certreq-path` | `certreq.exe` | `adcs-cli` only | Full path to `certreq.exe` (enrollment). Ignored by the native connector. |
+| `certutil-path` | `certutil.exe` | `adcs-cli` only | Full path to `certutil.exe`, used for **revocation** (`certutil -revoke`). `certutil` is a different binary from `certreq`. Ignored by the native connector. Only relevant when revocation propagation is enabled (i.e. `disable-ca-revocation` is not set). |
 
 ### Finding your CA Name
 
@@ -74,6 +76,57 @@ The ADCS template must:
 Create a dedicated template for Certeasy (e.g. `ACME-Template-Server`) rather than reusing an existing one. This isolates the configuration and simplifies auditing.
 :::
 
+### Revocation
+
+When an ACME client revokes a certificate (RFC 8555 §7.6), Certeasy marks it
+revoked in its own database and, by default, **propagates the revocation to the
+backing CA** so the certificate also appears revoked in the CA's CRL/OCSP.
+
+```yaml
+authorities:
+  - name: ca1
+    type: adcs
+    disable-ca-revocation: false   # default — propagate to the CA's CRL/OCSP
+    configuration:
+      ca-name: "PKI\\LAB-RootCA"
+      certificate-template: "ACME-Template-Server"
+```
+
+**Revocation requires higher privileges than enrollment.** Issuing certificates
+needs only *Read* + *Enroll* on the template and *Request Certificates* on the
+CA. Revoking requires the **Certificate Manager** role — the *Issue and Manage
+Certificates* permission on the CA. If the Certeasy service account lacks it,
+enrollment keeps working but revocation fails with an *Access Denied* error
+(surfaced in the audit log as `certificate.revoke.publish_failed`).
+
+Revocation is **asynchronous**: the ACME client receives its `200` immediately,
+and Certeasy publishes to the CA in the background, retrying with an escalating
+backoff (minutes to hours) if the CA is temporarily unreachable. RFC 8555 §7.6
+does not require publication to be confirmed before responding.
+
+Set `disable-ca-revocation: true` to keep revocation **local to Certeasy** (no CA
+propagation). This is appropriate when:
+
+- the service account cannot be granted the Certificate Manager role,
+- the deployment is air-gapped from the CA's revocation infrastructure, or
+- you intentionally rely on short-lived certificates and local revocation only.
+
+With propagation disabled, the audit log records `certificate.revoke.skipped`
+instead of `certificate.revoke.published`.
+
+Two authorization modes are accepted, per RFC 8555 §7.6:
+
+- **Account key** — the account that owns the certificate signs the request.
+- **Certificate key** — the request is signed with the certificate's own private
+  key (the canonical "the key has leaked, revoke it" path). This works even
+  without the issuing account, since possession of the private key is the proof.
+
+The following CRL reason codes are accepted: `0` unspecified, `1` keyCompromise,
+`2` cACompromise, `3` affiliationChanged, `4` superseded, `5`
+cessationOfOperation, `9` privilegeWithdrawn, `10` aACompromise. The stateful
+codes `6` (certificateHold) and `8` (removeFromCRL) are rejected, because
+Certeasy revocation is terminal (no hold/un-revoke lifecycle).
+
 ## Fake PKI Authority (Testing)
 
 The `fakepki` authority type is a built-in self-signed CA for local testing. It does not connect to any external system.
@@ -86,7 +139,8 @@ authorities:
       common-name: "Certeasy Test CA"
       password: "testpassword"
       key-size: 2048
-      validity: 8760h
+      validity: 3650            # CA certificate lifetime, in days
+      certificate-validity: 2160h   # issued-certificate lifetime (default 90 days)
 ```
 
 ### Fake PKI Configuration Fields
@@ -96,7 +150,8 @@ authorities:
 | `common-name` | CN of the fake CA certificate |
 | `password` | Password for the CA key store |
 | `key-size` | RSA key size for the CA |
-| `validity` | Validity period for issued certificates |
+| `validity` | Lifetime of the **CA** certificate, in days |
+| `certificate-validity` | Lifetime of **issued** certificates (Go duration, e.g. `2160h`). Also bounds the CRL: a revoked serial is purged at `RevocationTime + certificate-validity` (it would be expired anyway), so the CRL cannot grow without bound. Default 90 days. |
 
 :::warning
 The `fake` authority is for development and testing only. Do not use it in production.

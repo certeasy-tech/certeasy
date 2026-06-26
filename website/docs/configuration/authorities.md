@@ -47,6 +47,15 @@ to it automatically on upgrade — no change required. Both connectors are
 Windows-only: ADCS enrollment runs on a Windows host joined to, or able to reach,
 the CA.
 
+:::tip Prefer the native connector at scale
+On large or high-throughput deployments, **use the native connector** (`adcs` /
+`adcs-native`). It runs in-process and bounds concurrency to the worker pool,
+whereas `adcs-cli` **spawns a child process per operation** (`certreq.exe` to
+issue, `certutil.exe` to revoke) — process-creation overhead, temp-file churn and
+OS process limits add up under load. Keep `adcs-cli` for compatibility or as a
+fallback, not for heavy issuance/revocation volume.
+:::
+
 ### Configuration Fields
 
 | Field | Default | Applies to | Description |

@@ -47,6 +47,7 @@ For an external name you can use a Let's Encrypt certificate; for an internal na
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `authority` | string | Yes | Name of the authority to use for auto-issuance and renewal |
+| `key` | object | No | Key algorithm/size for the generated CSR. Defaults to ECDSA P-256. See [Key type](#key-type). |
 
 
 ## Modes
@@ -89,6 +90,36 @@ This is the recommended mode for fully automated certificate management.
 | `renew-before` | `720h` (30 days) | How early to start renewal before expiry |
 | `pki-poll-interval` | `2s` | Polling interval when waiting for PKI issuance |
 | `local-pki-cache-dir` | `%WORKDIR%/server-certificate-cache` | Directory to cache PKI-issued server certificates |
+
+#### Key type
+
+By default Certeasy generates an **ECDSA P-256** key for its own server
+certificate. If the backing CA rejects that key — most commonly an **ADCS
+certificate template that mandates RSA** (e.g. minimum key size 4096, RSA
+provider only) — set an explicit `key:` on the bundle so the generated CSR
+matches what the template requires:
+
+```yaml
+bundles:
+  - name: public
+    mode: pki
+    authority: ca1
+    key:
+      type: rsa      # "ecdsa" (default) or "rsa"
+      size: 4096     # RSA: modulus bits (default 3072). ECDSA: curve 256/384/521 (default 256)
+```
+
+| Field | Values | Default | Description |
+|---|---|---|---|
+| `key.type` | `ecdsa`, `rsa` | `ecdsa` | Key algorithm for the generated CSR |
+| `key.size` | RSA: `2048`–`8192`; ECDSA: `256`, `384`, `521` | RSA `3072`, ECDSA `256` | Key size |
+
+:::note
+If the CA rejects the key type, issuance of the server certificate fails and
+Certeasy does not start. With an RSA-only ADCS template you will see the CA
+deny the request (`CERTSRV_E_KEY_LENGTH`) unless `key: { type: rsa }` is set.
+See [ADCS authorities](./adcs.md).
+:::
 
 ## Multiple Bundles
 

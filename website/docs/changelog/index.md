@@ -109,11 +109,11 @@ Initial public release.
 ---
 
 :::note
-Certeasy is in **public beta**. Known limitations in this release:
+Certeasy v0.9.x is a **stable release**, used for day-to-day issuance, renewal and revocation. The full **production-ready** label is reserved for the upcoming **v1.0**, which closes the known, non-blocking limitations below:
 
-- **No health or metrics HTTP endpoints yet.** Operational monitoring is limited to log scraping and database introspection in this release; dedicated `/health` and metrics endpoints are planned.
-- **No automatic data retention or cleanup.** ACME tables (orders, authorizations, challenges, …) grow without bound. Operators running long-lived deployments should plan for manual maintenance until automated retention ships.
-- **RFC 9773 `replaces` field is accepted but not yet honored.** Clients can supply `replaces` on new orders without error, but the linkage to the previous certificate is not applied. The `renewalInfo` endpoint itself is fully functional.
+- **No health or metrics HTTP endpoints yet.** Operational monitoring is limited to log scraping and database introspection for now; dedicated `/health` and metrics endpoints are planned for v1.0.
+- **No automatic data retention or cleanup.** ACME tables (orders, authorizations, challenges, …) grow without bound. Operators running long-lived deployments should plan for manual maintenance until automated retention ships in v1.0.
+- **RFC 9773 `replaces` field is accepted but not yet honored.** Clients can supply `replaces` on new orders without error, but the linkage to the previous certificate is not applied. The `renewalInfo` endpoint itself is fully functional; full `replaces` semantics are planned for v1.1.
 - **External Account Binding (EAB)** is not supported and is not planned for v1.0. Single-tenant enterprise deployments do not need it; see the [roadmap](../intro/roadmap.md) for v2.0 timing.
 - **Caddy** interoperability has not been formally validated in this release.
 :::

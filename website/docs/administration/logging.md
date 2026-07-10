@@ -65,13 +65,16 @@ logs:
 | Service Name | Description |
 |---|---|
 | `DB-Driver` | Database driver and query logs |
-| `adcs` | ADCS authority operations |
 | `Certeasy-acme-server` | ACME HTTP request handling |
 | `Async-Acme-Pki-Handler` | Async PKI job processing |
 | `Async-Acme-Challenges` | Async challenge validation |
 | `JWKS` | JWS key validation |
 | `worker` | Job engine (lease, dispatch, backoff) |
 | `http-server` | HTTP server lifecycle |
+| `adcs-native` | ADCS authority operations — native in-process connector (default) |
+| `adcs-cli` | ADCS authority operations — `certreq.exe` connector (`adcs-cli`) |
+| `license` | License lifecycle (install, refresh, enforcement) |
+| `node` | Node identity (`server_id`, servers table) |
 
 ## Tags (Grafana/Loki labels)
 

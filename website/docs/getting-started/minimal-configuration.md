@@ -80,7 +80,7 @@ The authority `ca1` plays **two roles** here: it secures Certeasy's own HTTPS en
 
 ## Workers
 
-Certeasy processes certificate orders (validation, CSR submission, renewals) through an internal job queue. By default, **4 workers** consume that queue in the background. You don't need to configure this for a standard deployment — the default handles the load of most environments. Workers are only worth tuning if you have a very high volume of concurrent requests.
+Certeasy processes certificate orders (validation, CSR submission, renewals) through an internal job queue. By default, **16 workers** consume that queue in the background. You don't need to configure this for a standard deployment — the default handles the load of most environments. Workers are only worth tuning if you have a very high volume of concurrent requests.
 
 ## Implicit policy binding
 

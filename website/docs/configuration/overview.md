@@ -57,7 +57,7 @@ Certeasy avoids requiring explicit configuration for common cases:
 - If `database` is omitted → SQLite at `%WORKDIR%/db.sqlite`
 - If `license` is omitted → online license mode with defaults (`certeasy.tech`, `30s`)
 - If `license.offline: true` → offline license mode
-- If `workers` is omitted → 4 workers with sensible backoff settings
+- If `workers` is omitted → 16 workers with sensible backoff settings
 - If only one DNS profile exists → policies don't need to reference it explicitly
 - If exactly one policy and one authority exist → `policy-bindings` can be omitted entirely
 - If `rate-limiting` is omitted → safe defaults: 200 req/min/IP, 5 accounts/h/IP, 20 orders/h/account, 5 same-FQDN issuances per 7 days, 5 failed validations per (account, hostname) per hour, 30 in-flight pending authzs per account

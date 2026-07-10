@@ -5,7 +5,7 @@ title: First certificate
 
 # First Certificate
 
-Goal: prove your Certeasy instance works end-to-end by issuing one certificate. We use **certbot** with **HTTP-01** because it's the safest "out of the box" combination — certbot's defaults (RSA 4096 key, `serverAuth` only EKU) line up with Certeasy's default policy without any tuning.
+Goal: prove your Certeasy instance works end-to-end by issuing one certificate. We use **certbot** with **HTTP-01** because it's the safest "out of the box" combination — certbot (2.x and later) defaults to an **ECDSA P-256** key and a `serverAuth`-only EKU, which line up with Certeasy's default policy without any tuning. (On an older certbot that still defaults to RSA 2048, add `--key-type ecdsa` — RSA 2048 is below the default `min-rsa-bits: 3072` and would be refused.)
 
 If you already know which client you want to use, skip straight to its fiche:
 

@@ -99,7 +99,7 @@ The CRA (applicable from 2027) requires software vendors to:
 NIS2 applies to operators of essential and important entities. If your organization falls under NIS2, deploying Certeasy for internal certificate automation contributes to:
 
 - **Supply chain security**: all dependencies are open source and auditable
-- **Incident response**: structured audit log (`acme_audit_logs`) records all certificate operations
+- **Incident response**: tamper-evident audit log (JSONL + HMAC chain) records all certificate operations
 - **Patch management**: single binary deployment simplifies updates
 
 ### Go Supply Chain Security
@@ -121,6 +121,6 @@ go mod verify
 Certeasy is designed for a minimal attack surface:
 
 - **Single binary** — no installer, no runtime dependencies, no package manager
-- **No external network calls** at runtime (except to your own ADCS and DNS servers)
+- **Minimal outbound network** at runtime — your own ADCS and DNS servers, plus Certeasy's licensing backend over HTTPS in the default online mode (`license: offline: true` removes it entirely). See [Outbound connections & licensing](./outbound-connections.md).
 - **No telemetry** — Certeasy does not call home
 - **Standard library first** — cryptographic operations use Go's standard `crypto/x509` and `crypto/tls`; no custom crypto implementations

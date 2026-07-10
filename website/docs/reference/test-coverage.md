@@ -14,10 +14,10 @@ the time of writing.
 
 | Category | Tests | What it verifies |
 |---|---|---|
-| Unit (TU) | **586** | Pure logic: configuration parsing and validation, policy resolution, JWS signing and verification, anti-replay nonces, DNS scope matching, CSR validation, key handling, the asynchronous job engine, licensing decisions, rate-limit decision tables, audit-line encoding. No I/O, no database. |
+| Unit (TU) | **595** | Pure logic: configuration parsing and validation, policy resolution, JWS signing and verification, anti-replay nonces, DNS scope matching, CSR validation, key handling, the asynchronous job engine, licensing decisions, rate-limit decision tables, audit-line encoding. No I/O, no database. |
 | Integration (IT) | **105** | Real database (SQLite, PostgreSQL, SQL Server), real audit file on disk, real PKI request store, full ACME handler stack wired against the storage layer. Each test runs against every supported database backend. |
-| End-to-end (E2E) | **95** | The full Certeasy binary running as a subprocess. Two flavours: (1) CLI black-box — every subcommand (`serve`, `init`, `validate`, `license`, `cold-start`, `backup`, `audit`, `adcs check`), exit codes, error messages. (2) ACME protocol — real third-party clients (lego, certbot, acme.sh) plus a RFC-strict native client driving certificate issuance, renewal, revocation, account lifecycle, key rollover, and the full error/security path. |
-| **Total** | **786** | |
+| End-to-end (E2E) | **109** | The full Certeasy binary running as a subprocess. Two flavours: (1) CLI black-box — every subcommand (`serve`, `init`, `validate`, `license`, `cold-start`, `backup`, `audit`, `adcs check`), exit codes, error messages. (2) ACME protocol — real third-party clients (lego, certbot, acme.sh) plus a RFC-strict native client driving certificate issuance, renewal, revocation, account lifecycle, key rollover, and the full error/security path. |
+| **Total** | **809** | |
 
 Numbers are refreshed at every release. The most recent count above reflects
 the **v0.9.3** line.

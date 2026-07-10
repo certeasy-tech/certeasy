@@ -39,7 +39,7 @@ Your ADCS never changes. Your ACME clients don't know they're talking to an inte
 | **ADCS-native** | Connects to ADCS in-process — no `certreq.exe` child process, no ADCS changes required (a `certreq.exe` connector remains available as a fallback) |
 | **Secure by default** | Conservative defaults: RSA 3072-bit minimum, strict algorithm allow-list |
 | **Hardened against ADCS attacks** | Certificate identity limited to validated DNS names — prevents ESC1–ESC13 by design |
-| **Isolated networks** | Supports segmented environments (v2) |
+| **Isolated networks** | Supports segmented environments (v2.0) |
 | **Auditable** | Full audit log of all certificate operations |
 
 ## What Certeasy Is Not

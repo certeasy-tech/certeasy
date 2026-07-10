@@ -19,7 +19,7 @@ tls-certificate-manager:
       mode: files
       local-cert-file: "C:\\certeasy\\tls\\fullchain.pem"
       local-key-file: "C:\\certeasy\\tls\\privkey.pem"
-  file-watch-interval: 60s
+  file-watch-interval: 5s
 ```
 
 ## Bundles
@@ -33,7 +33,7 @@ For an external name you can use a Let's Encrypt certificate; for an internal na
 |---|---|---|---|
 | `name` | string | Yes | Bundle identifier |
 | `hosts` | list of strings | Conditional | Hostnames this bundle serves. Can be omitted if there is only one bundle. |
-| `mode` | string | Yes | Certificate source: `files` or `pki` |
+| `mode` | string | Yes | Certificate source: `files`, `pki`, or `letsencrypt` (beta) |
 
 ### `files` mode fields
 
@@ -127,6 +127,46 @@ Certeasy does not start. With an RSA-only ADCS template you will see the CA
 deny the request (`CERTSRV_E_KEY_LENGTH`) unless `key: { type: rsa }` is set.
 See [ADCS authorities](./adcs.md).
 :::
+
+### `letsencrypt` — Public CA (Let's Encrypt) — beta
+
+:::warning Beta
+Let's Encrypt mode works but is not yet part of the formally supported release
+surface. Use it for an **internet-facing** Certeasy endpoint that can answer a
+public HTTP-01 challenge; for internal names use `files` or `pki`.
+:::
+
+For a **publicly resolvable** hostname, Certeasy obtains and auto-renews its own
+HTTPS certificate directly from Let's Encrypt (via the built-in ACME `autocert`
+client). Set the bundle to `mode: letsencrypt` and enable the manager-level
+`letsencrypt:` account block; the bundle's `hosts` become the issuance whitelist.
+
+```yaml
+tls-certificate-manager:
+  bundles:
+    - name: public
+      hosts:
+        - "acme.example.com"       # must be publicly resolvable
+      mode: letsencrypt
+
+  letsencrypt:
+    enabled: true                  # required when any bundle uses letsencrypt mode
+    email: "pki@example.com"       # ACME account / expiry notices
+    http-addr: ":80"               # where the HTTP-01 challenge is answered
+    cache-dir: "%WORKDIR%/autocert"
+```
+
+The Let's Encrypt Terms of Service are accepted automatically. The `hosts` must be
+publicly resolvable and reachable on `http-addr` (default `:80`) from the internet.
+If a bundle uses `mode: letsencrypt` while `letsencrypt.enabled` is `false`, the
+server refuses to start.
+
+| Field | Default | Description |
+|---|---|---|
+| `letsencrypt.enabled` | `false` | Master switch; must be `true` when any bundle uses `letsencrypt` mode |
+| `letsencrypt.email` | — | ACME account email (renewal / expiry notices) |
+| `letsencrypt.http-addr` | `:80` | Address where the HTTP-01 challenge server listens |
+| `letsencrypt.cache-dir` | — | Directory caching issued certificates and the account key (set explicitly, e.g. `%WORKDIR%/autocert`) |
 
 ## Multiple Bundles
 

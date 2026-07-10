@@ -114,7 +114,7 @@ Before matching, all DNS names are:
 - Trailing dot removed
 - Rejected if they contain empty labels (`..`) or whitespace
 
-Pa## CSR Extension Whitelist (Extended Key Usage)
+## CSR Extension Whitelist (Extended Key Usage)
 
 Certeasy validates the contents of the CSR's `extensionRequest` strictly: only DNS-typed SANs and the Extended Key Usage extension (EKU, OID `2.5.29.37`) are accepted. By default the **only EKU value tolerated is `serverAuth`** (OID `1.3.6.1.5.5.7.3.1`) — the appropriate purpose for a public-server TLS certificate.
 

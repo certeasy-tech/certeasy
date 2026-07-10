@@ -55,7 +55,7 @@ server:
   shutdown-timeout: 30s
 
 workers:
-  workers: 4
+  workers: 16
   drain-timeout: 30s
 ```
 

@@ -111,7 +111,6 @@ Initial public release.
 :::note
 Certeasy is in **public beta**. Known limitations in this release:
 
-- **Revocation is server-side only.** A revoked certificate is marked revoked in Certeasy's database and an audit event is emitted, but the ADCS CRL / OCSP responder is not updated. Clients validating chain status against ADCS will still see the certificate as valid until the CRL is republished. Full propagation lands in v1.0.
 - **No health or metrics HTTP endpoints yet.** Operational monitoring is limited to log scraping and database introspection in this release; dedicated `/health` and metrics endpoints are planned.
 - **No automatic data retention or cleanup.** ACME tables (orders, authorizations, challenges, …) grow without bound. Operators running long-lived deployments should plan for manual maintenance until automated retention ships.
 - **RFC 9773 `replaces` field is accepted but not yet honored.** Clients can supply `replaces` on new orders without error, but the linkage to the previous certificate is not applied. The `renewalInfo` endpoint itself is fully functional.

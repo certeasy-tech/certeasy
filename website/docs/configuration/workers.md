@@ -18,7 +18,7 @@ workers:
   idle-max: 200ms
   base-backoff: 1s
   max-backoff: 2m
-  queue-size: 4
+  queue-size: 16
   drain-timeout: 30s
   max-job-duration: 5m
 ```
@@ -60,7 +60,7 @@ Jobs are persistent — if Certeasy restarts mid-processing, workers resume from
 
 ## Tuning
 
-The default settings (4 workers, 1s–2m backoff) work well for most deployments. Consider adjusting if:
+The default settings (16 workers, 1s–2m backoff) work well for most deployments. Consider adjusting if:
 
 - **High certificate volume**: increase `workers` and `queue-size`
 - **Slow ADCS**: increase `max-backoff` and `lease` to tolerate longer processing times

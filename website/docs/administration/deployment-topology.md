@@ -101,7 +101,7 @@ Running two or more Certeasy instances **concurrently** against the same databas
 
 A load balancer with session affinity (cookie-based) does **not** solve the nonce problem in practice : the standard ACME clients (lego, certbot, acme.sh, native Go clients) do not enable an HTTP cookie jar for their ACME requests, so a `Set-Cookie` from the load balancer is ignored. Source-IP affinity is more reliable but breaks the moment clients sit behind a NAT, a corporate proxy, or a CGNAT.
 
-If you need true multi-node availability today, use **cold Active / Passive** above and accept the manual switchover. True warm Active / Passive and Active / Active deployments are tracked on the [public roadmap](../intro/roadmap.md) for V2.0 Enterprise.
+If you need true multi-node availability today, use **cold Active / Passive** above and accept the manual switchover. True warm Active / Passive and Active / Active deployments are tracked on the [public roadmap](../intro/roadmap.md) for v2.0 Enterprise.
 
 ## Database backend behind a single instance
 

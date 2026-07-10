@@ -34,7 +34,7 @@ server:
   write-timeout: 30s
   idle-timeout: 60s
   max-body-bytes: 1048576            # 1 MB
-  shutdown-timeout: 10s
+  shutdown-timeout: 30s
   remote-ip-header: "X-Forwarded-For"  # Only used when trusted-proxies is set
   trusted-proxies:
     - "10.0.0.0/8"
@@ -68,11 +68,17 @@ tls-certificate-manager:
   pki-poll-interval: 2s                # pki mode only
   file-watch-interval: 5s              # files mode only
   local-pki-cache-dir: "%WORKDIR%\\server-certificate-cache"  # pki mode only
+  # letsencrypt mode (beta) — public CA for an internet-facing host:
+  letsencrypt:
+    enabled: false                     # set true when a bundle uses mode: letsencrypt
+    email: "pki@example.com"           # ACME account / expiry notices
+    http-addr: ":80"                   # HTTP-01 challenge listener
+    cache-dir: "%WORKDIR%\\autocert"   # issued-cert + account-key cache
   bundles:
     - name: public
       hosts:
         - "acme.corp.internal"
-      mode: pki                        # files | pki
+      mode: pki                        # files | pki | letsencrypt (beta)
       authority: ca1                   # pki mode — authority name
       # files mode fields (use instead of authority):
       # local-cert-file: "C:\\certeasy\\tls\\fullchain.pem"
@@ -175,13 +181,13 @@ policy-bindings:
 # ── Workers ───────────────────────────────────────────────────────────────────
 workers:
   worker-id: "worker"
-  workers: 4
+  workers: 16
   lease: 30s
   idle-min: 50ms
   idle-max: 200ms
   base-backoff: 1s
   max-backoff: 2m
-  queue-size: 4                        # defaults to value of workers
+  queue-size: 16                       # defaults to value of workers
 
 # ── Rate Limiting ─────────────────────────────────────────────────────────────
 # Omit this section entirely to apply the defaults shown below.

@@ -179,9 +179,9 @@ The enforced rules prevent entire classes of ADCS certificate-based attacks (ESC
 **Attack**: Misissued certificates remain valid for long periods.
 
 **Mitigations**:
-- All certificate operations are recorded in the audit log (`acme_audit_logs`) *(enforced)*
+- All certificate operations are recorded in the tamper-evident [audit log](../administration/audit.md) (JSONL + HMAC chain) *(enforced)*
 - ACME protocol supports automated renewal — clients can request new certificates before expiry *(architectural)*
-- ⚠️ **Operator responsibility**: configure the ADCS template with a short validity period (30–90 days recommended). Certeasy does not currently enforce a maximum validity on ADCS-issued certificates. See [Security TODO](/security/TODO).
+- ⚠️ **Shared responsibility**: certificate validity comes from your ADCS template — configure it with a short validity period (30–90 days recommended); Certeasy honors the template's validity as-is. See [ADCS hardening & shared responsibility](/security/hardening).
 
 ---
 

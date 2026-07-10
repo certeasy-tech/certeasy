@@ -36,8 +36,8 @@ For production environments and larger organizations.
 - **3 ADCS production authorities**
 - PostgreSQL database
 - SQL Server support
-- Dashboard *(coming in V4)*
-- Monitoring & alerting *(coming in V4)*
+- Dashboard *(coming in v4.0)*
+- Monitoring & alerting *(coming in v4.0)*
 
 ### Enterprise — €999 / year *(excl. VAT)*
 
@@ -46,10 +46,10 @@ For organizations with advanced requirements.
 - Everything in Pro, plus:
 - **Up to 5 ADCS production authorities**
 - Beyond 5 CAs — [contact us](https://certeasy.tech/contact)
-- Split deployment: ADCS connector on Tier 0 + ACME responder on separate server *(coming in V2)*
-- Active/Active high availability (multi-node, requires PostgreSQL) *(coming in V2)*
-- Distributed validators (segmented networks) *(coming in V3)*
-- TLS service discovery *(coming in V4)*
+- Split deployment: ADCS connector on Tier 0 + ACME responder on separate server *(coming in v2.0)*
+- Active/Active high availability (multi-node, requires PostgreSQL) *(coming in v2.0)*
+- Distributed validators (segmented networks) *(coming in v3.0)*
+- TLS service discovery *(coming in v4.0)*
 - Optional SLA
 
 :::tip Active/Passive high availability

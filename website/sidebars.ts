@@ -57,7 +57,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'security/certificate-model',
         'security/dependencies',
-        'security/TODO',
+        'security/hardening',
       ],
     },
     {

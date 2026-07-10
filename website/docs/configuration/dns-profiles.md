@@ -85,7 +85,8 @@ dns-validation-profiles:
     zones:
       - suffixes: 
         - "dmz.example.com"
-        dns-server: "192.168.100.1"
+        dns-server:
+          - "192.168.100.1"
     resolved-ip-policy:
       allow-cidrs: 
        - "172.16.0.0/12"

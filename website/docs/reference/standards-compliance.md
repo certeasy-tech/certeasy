@@ -20,7 +20,7 @@ Certeasy implements the IETF ACME family of standards. This page documents which
 | `revoke-cert` signed with the account key (`kid`) or the certificate key (`jwk`) | §7.6 | ✅ (propagates to the ADCS CA — see notes) |
 | Wildcard issuance (`*.zone`, mixed `zone + *.zone` in one order) | §7.1.4, §8.4 | ✅ |
 | `Location` headers and response URLs canonicalization | §7.4 and following | ✅ |
-| External Account Binding (EAB) | §7.3.4 | 🔴 not supported in V0.9 / V1.0 — planned for V2.0 |
+| External Account Binding (EAB) | §7.3.4 | 🔴 not supported in v0.9 / v1.0 — planned for v2.0 |
 
 ### Known limitations
 
@@ -31,9 +31,9 @@ Since **0.9.3**, `POST /acme/revoke-cert` propagates to the backing ADCS CA — 
 - Revoking on the CA requires the **Certificate Manager** role on the ADCS service account — a higher privilege than enrollment. If the account only holds enrollment rights (or the deployment is air-gapped), turn propagation off per authority with `disable-ca-revocation: true`; revocation then stays server-side only, as before.
 - Propagation to the CA is immediate, but a client validating chain status still sees the certificate as valid until the CA **publishes its next CRL** (or its OCSP responder refreshes). That cadence is governed by your ADCS CRL publication schedule, not by Certeasy.
 
-#### External Account Binding (EAB) — planned for V2.0
+#### External Account Binding (EAB) — planned for v2.0
 
-EAB lets you bind a new ACME account to an out-of-band identity (HMAC key shared via your provisioning system). Useful for multi-tenant DevOps deployments where each team is given its own credentials. Not implemented in V0.9 / V1.0 — single-tenant enterprise deployments do not need it. Tracked on the [roadmap](../intro/roadmap.md) for V2.0.
+EAB lets you bind a new ACME account to an out-of-band identity (HMAC key shared via your provisioning system). Useful for multi-tenant DevOps deployments where each team is given its own credentials. Not implemented in v0.9 / v1.0 — single-tenant enterprise deployments do not need it. Tracked on the [roadmap](../intro/roadmap.md) for v2.0.
 
 ## RFC 9773 — ACME Renewal Information (ARI)
 
@@ -43,11 +43,11 @@ EAB lets you bind a new ACME account to an out-of-band identity (HMAC key shared
 |---|---|---|
 | `renewalInfo` directory entry | §3 | ✅ |
 | `GET /acme/renewal-info/<certID>` with suggested window + `Retry-After` | §4 | ✅ |
-| `newOrder.replaces` validation + persistence + `renewalInfo` window collapse on the replaced cert | §5 | 🟡 field accepted silently — full semantics planned for V1.1 |
+| `newOrder.replaces` validation + persistence + `renewalInfo` window collapse on the replaced cert | §5 | 🟡 field accepted silently — full semantics planned for v1.1 |
 
 ### Known limitations
 
-#### `replaces` semantics (planned for V1.1)
+#### `replaces` semantics (planned for v1.1)
 
 ARI-aware clients (recent lego, certbot) can send `newOrder.replaces` without seeing a `400 malformed` — Certeasy accepts the field. However the server does not yet:
 

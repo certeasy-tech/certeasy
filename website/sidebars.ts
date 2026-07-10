@@ -79,6 +79,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Reference',
       items: [
+        'reference/faq',
         'reference/full-example',
         'reference/standards-compliance',
         'reference/test-coverage',

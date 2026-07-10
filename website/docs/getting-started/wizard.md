@@ -11,8 +11,10 @@ on, which database, which authority, which DNS zones you'll be issuing
 certificates for, how the server's own TLS cert should be obtained — and
 writes a valid `config.yml` you can `serve` immediately.
 
-It's not a black box: every prompt shows you a sensible default in brackets,
-explains what the field does, and never hits the network until you're done.
+It's not a black box: every prompt shows you a sensible default in brackets and
+explains what the field does. With an ADCS authority it runs a quick, read-only
+check against your CA (is it reachable, is the template published, what key does
+it require); in `--script` mode it stays fully offline.
 
 ## Run it
 
@@ -34,10 +36,10 @@ The flow is roughly:
 | **Network** | Listen address, public URL(s) as seen by your ACME clients |
 | **Database** | sqlite (default, all plans) / postgres / sqlserver (Pro and Enterprise plans). Connection details are turned into the right DSN — leave the password blank to get a `${...}` placeholder. |
 | **Workdir** | Where the runtime files live |
-| **Authority** | `fake` (built-in lab PKI — generates its own root) or `adcs` (Microsoft ADCS — fields are written as commented placeholders for you to fill in) |
+| **Authority** | `adcs` (Microsoft ADCS — the default) or `fake` (built-in lab PKI — generates its own root). For ADCS it asks for the CA name and template, **lists the CA's published templates so you pick the exact one** (no typos), and reads the template's key requirement to set the server certificate key for you. |
 | **DNS zones** | One zone at a time: zone name, maximum subdomain depth (with worked examples), wildcard policy. Add as many zones as you need. |
 | **clientAuth EKU** | Opt-in relaxation needed only if you plan to use `acme.sh` (which emits CSRs with an extra `clientAuth` EKU). Off by default. |
-| **Server's own TLS** | Issue from the authority above (`pki`), Let's Encrypt automatically, or supply your own files |
+| **Server's own TLS** | Issue from the authority above (`pki`), Let's Encrypt automatically, or supply your own files. With an ADCS authority the key type (RSA size / ECDSA curve) is set to match what the template requires. |
 | **Plan sizing** | Three quick questions (how many authorities, how many client servers, which DB) — the wizard suggests the cold-start plan that fits and offers to open the window for you on the spot |
 
 ## What it generates
@@ -49,7 +51,7 @@ A YAML file equivalent to `config-minimal.yml` plus the choices you made:
 - `workdir`
 - `tls-certificate-manager.bundles[0]` (auto-filled hosts list from the public URL)
 - `dns-validation-profiles[0]` with each zone you declared
-- `authorities[0]` (fully configured for `fake`, placeholder for `adcs`)
+- `authorities[0]` (fully configured, `fake` or `adcs`)
 - `issuance-policies[0]` with the depth/wildcard rules you chose, plus an
   explicit `=<public_host>` allow so the server can always issue its own cert
 - `policy-bindings` written explicitly so the relationship is obvious

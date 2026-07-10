@@ -106,13 +106,20 @@ bundles:
     authority: ca1
     key:
       type: rsa      # "ecdsa" (default) or "rsa"
-      size: 4096     # RSA: modulus bits (default 3072). ECDSA: curve 256/384/521 (default 256)
+      size: 4096     # RSA only: modulus bits (default 3072)
+      # For ECDSA use `curve:` instead of `size:`, e.g.:
+      #   type: ecdsa
+      #   curve: P-384   # P-256 (default) | P-384 | P-521
 ```
+
+`size` and `curve` are mutually exclusive: `size` applies to RSA, `curve` to
+ECDSA. The curve names match `allowed-ec-curves` in issuance policies.
 
 | Field | Values | Default | Description |
 |---|---|---|---|
 | `key.type` | `ecdsa`, `rsa` | `ecdsa` | Key algorithm for the generated CSR |
-| `key.size` | RSA: `2048`–`8192`; ECDSA: `256`, `384`, `521` | RSA `3072`, ECDSA `256` | Key size |
+| `key.size` | `2048`–`8192` | `3072` | RSA modulus bits (RSA only) |
+| `key.curve` | `P-256`, `P-384`, `P-521` | `P-256` | ECDSA curve (ECDSA only) |
 
 :::note
 If the CA rejects the key type, issuance of the server certificate fails and

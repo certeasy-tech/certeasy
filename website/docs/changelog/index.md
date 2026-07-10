@@ -5,6 +5,25 @@ title: Changelog
 
 # Changelog
 
+## v0.9.3 - 2026-07-09
+
+### New features
+
+- **ADCS certificate revocation**: ACME revocations now propagate to the backing Microsoft ADCS CA (CRL / OCSP), not just Certeasy's own database. RFC 8555 §7.6 authorization is supported with both the account key (`kid`) and the certificate key (`jwk`). Propagation can be turned off per authority with `disable-ca-revocation: true` (for service accounts without the required CA role, or air-gapped deployments). Note: revoking on the CA needs the **Certificate Manager** role — a higher privilege than enrollment.
+- **`certeasy adcs check`** — a read-only preflight for ADCS authorities: checks that the CA is reachable, that the certificate template is published, and reports the template's key requirement. Use it to diagnose ADCS setup before starting the server (or to hand support a clear status).
+- **Configurable server-certificate key**: a `pki`-mode bundle in the TLS certificate manager now accepts an explicit `key:` — `type: rsa` with `size:` (bits), or `type: ecdsa` with `curve:` (`P-256`/`P-384`/`P-521`). Set it when the CA template mandates a specific key. In particular, an ADCS template that requires **RSA 4096** previously rejected Certeasy's default ECDSA key and prevented startup; `key: { type: rsa, size: 4096 }` resolves it. The default is unchanged (ECDSA P-256).
+
+### Improvements
+
+- **`certeasy init` — ADCS onboarding**: the wizard now defaults to ADCS, lists the CA's published certificate templates so you select the exact one (no typos, only published templates), and reads the template's key requirement to set the server-certificate key automatically — falling back to asking you when the template cannot be read.
+- **Clearer ADCS denial messages**: when the CA denies a request, Certeasy now surfaces the actual reason (for example, "the public key does not meet the template's key size requirement", `CERTSRV_E_KEY_LENGTH`) with an actionable hint, instead of an opaque `CR_DISP_DENIED`. The diagnosis is keyed on the CA's error code, so it stays accurate regardless of the CA's display language.
+
+### Security
+
+- Updated the Go toolchain to **1.26.5** to address **GO-2026-5856** (an Encrypted Client Hello privacy leak in the standard library's `crypto/tls`).
+
+---
+
 ## v0.9.2 - 2026-06-17
 
 ### New features

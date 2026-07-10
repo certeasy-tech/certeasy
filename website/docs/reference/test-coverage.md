@@ -14,13 +14,13 @@ the time of writing.
 
 | Category | Tests | What it verifies |
 |---|---|---|
-| Unit (TU) | **474** | Pure logic: configuration parsing, policy resolution, JWS signing primitives, DNS scope matching, CSR validation, crypto helpers, rate-limit decision tables, audit-line encoding. No I/O, no database. |
-| Integration (IT) | **63** | Real database (SQLite, PostgreSQL, SQL Server), real audit file on disk, real PKI request store, full ACME handler stack wired against the storage layer. Each test runs against every supported database backend. |
-| End-to-end (E2E) | **68** | The full Certeasy binary running as a subprocess. Two flavours: (1) CLI black-box — every subcommand (`serve`, `license`, `backup`, `audit verify`), exit codes, error messages. (2) ACME protocol — real third-party clients (lego, certbot, acme.sh) plus a RFC-strict native client driving certificate issuance, renewal, revocation, account lifecycle, key rollover, and the full error/security path. |
-| **Total** | **605** | |
+| Unit (TU) | **586** | Pure logic: configuration parsing and validation, policy resolution, JWS signing and verification, anti-replay nonces, DNS scope matching, CSR validation, key handling, the asynchronous job engine, licensing decisions, rate-limit decision tables, audit-line encoding. No I/O, no database. |
+| Integration (IT) | **105** | Real database (SQLite, PostgreSQL, SQL Server), real audit file on disk, real PKI request store, full ACME handler stack wired against the storage layer. Each test runs against every supported database backend. |
+| End-to-end (E2E) | **95** | The full Certeasy binary running as a subprocess. Two flavours: (1) CLI black-box — every subcommand (`serve`, `init`, `validate`, `license`, `cold-start`, `backup`, `audit`, `adcs check`), exit codes, error messages. (2) ACME protocol — real third-party clients (lego, certbot, acme.sh) plus a RFC-strict native client driving certificate issuance, renewal, revocation, account lifecycle, key rollover, and the full error/security path. |
+| **Total** | **786** | |
 
 Numbers are refreshed at every release. The most recent count above reflects
-the **v0.9** line.
+the **v0.9.3** line.
 
 ## What is covered, by area
 
@@ -35,7 +35,8 @@ the **v0.9** line.
 - Renewal information (ARI): suggested window, `Retry-After`, revoked-cert
   collapse to immediate renewal.
 - Revocation: client-signed and account-key-signed paths, double-revoke
-  rejection.
+  rejection, and — against Microsoft ADCS — real propagation to the
+  certificate authority (see below).
 - URL and header conformance: every endpoint where RFC 8555 requires a
   `Location` header is asserted on the wire.
 
@@ -45,9 +46,30 @@ E2E suite runs the full happy-path issuance against:
 - **lego** — HTTP-01, DNS-01, TLS-ALPN-01.
 - **certbot** — HTTP-01, DNS-01.
 - **acme.sh** — HTTP-01, DNS-01, TLS-ALPN-01.
-- A built-in RFC-strict native client (`golang.org/x/crypto/acme`) for paths
-  the third-party CLIs do not exercise: error-path, security probes,
-  account lifecycle ops, RFC URL/header conformance.
+- A built-in, RFC-strict native client for the paths the third-party CLIs do
+  not exercise: error-path, security probes, account lifecycle operations, and
+  RFC URL/header conformance.
+
+### Microsoft ADCS integration
+
+When an ADCS lab is available, Certeasy is validated against a real Active
+Directory Certificate Services authority:
+
+- **Issuance** through both supported ADCS connectors, so an upgrade never
+  changes behaviour silently.
+- **Revocation propagated to the CA**, then confirmed on the authority itself
+  — a revoked certificate is verified as revoked at the source, not only in
+  Certeasy's own records.
+- **Onboarding checks** — the `adcs check` command and the setup wizard verify
+  that the CA is reachable, that the certificate template is published, and
+  read the template's key requirements, so common misconfigurations surface
+  at setup time instead of as opaque startup failures.
+- **Clear diagnostics** — when the CA refuses a request, the underlying reason
+  is surfaced with actionable guidance (for example, a key that does not meet
+  the template's requirements), independent of the CA's display language.
+- **Server-certificate key selection** — Certeasy's own certificate can be
+  issued as RSA or ECDSA at the strength the CA template mandates, and this
+  selection is verified end to end.
 
 ### Database support
 
@@ -60,6 +82,45 @@ backend:
 Schema migrations, concurrent-writer behaviour (serialisable retry), and
 dialect-specific edge cases (UUID handling, NULL semantics in unique
 indexes, cascade chain restrictions on SQL Server) are all covered.
+
+### Asynchronous issuance &amp; revocation
+
+Certificate signing and revocation against a CA run through an asynchronous
+job engine, and its reliability guarantees are tested:
+
+- Retries with escalating back-off when the CA is momentarily unavailable,
+  up to a bounded window before a request is marked failed.
+- Idempotent processing — a job that is retried, or replayed after a crash,
+  never issues or revokes twice.
+- The full issuance and revocation job lifecycle, including the audit record
+  emitted at each terminal outcome.
+
+### Server certificate management
+
+Certeasy manages its own TLS certificate, and each source is exercised:
+
+- **Static files** — loaded from disk and hot-reloaded when they change.
+- **Internal PKI** — issued and automatically renewed from a configured
+  authority, with the key algorithm and strength selectable to match the CA
+  template (see [Microsoft ADCS integration](#microsoft-adcs-integration)).
+- **Let's Encrypt** — automatic ACME issuance.
+- Startup acquisition, renewal timing, and local caching are all covered.
+
+### Resilience &amp; recovery
+
+- **Node identity** — each server instance has a stable identity that anchors
+  its audit trail; work in flight is recovered correctly across a process
+  restart.
+- **Graceful shutdown** — in-flight requests and jobs drain within the
+  configured window, and terminal database writes survive a shutdown signal.
+
+### Configuration
+
+- The configuration parser is covered for strict schema checking (unknown
+  fields are rejected), quoting and escaping, and Windows path handling.
+- `certeasy validate` runs exactly the same static validation as the server's
+  fail-fast boot gate, with no side effects — an invalid configuration is
+  caught before startup rather than halfway through it.
 
 ### Rate limiting
 
@@ -82,18 +143,16 @@ pending-authorization cap.
 
 ### License enforcement
 
-- Boot-strict refusal (no license, expired license, wrong environment).
-- Runtime per-order enforcement (`max_managed_servers`, `max_cas`,
-  `allowed_dbs`, `max_managed_servers=0`).
-- Renewal escape hatch (an order for a domain already covered by an
-  active certificate is not counted against the cap).
-- Acknowledgement path for boot-degraded states.
+Licensing is enforced at startup and at runtime, including the recovery paths
+that keep a server running through a degraded or expired state.
 
 ### CLI
 
-Every subcommand and flag is exercised in the E2E suite: argument
-validation, exit codes, error messages on missing file / bad format /
-incompatible flag combinations, help output for every command level.
+Every subcommand and flag is exercised in the E2E suite — including
+`serve`, `init`, `validate`, `license`, `backup`, `audit verify`, and the
+ADCS preflight `adcs check`: argument validation, exit codes, error
+messages on missing file / bad format / incompatible flag combinations,
+help output for every command level.
 
 ### Backup &amp; restore
 
@@ -104,9 +163,11 @@ incompatible flag combinations, help output for every command level.
 
 ### Cross-platform
 
-The suite is run on Linux for every release. The protocol suite is
-additionally run on Windows when an ADCS lab is available (the ADCS
-backend variant is gated on a Windows host with `certreq.exe`).
+The suite runs on Linux for every release. On Windows, when an ADCS lab is
+available, the protocol suite additionally runs against a real Active
+Directory Certificate Services authority — covering both certificate
+issuance and revocation, and both ADCS connectors (see
+[Microsoft ADCS integration](#microsoft-adcs-integration)).
 
 ## How the categories are defined
 
@@ -125,7 +186,7 @@ A test that touches both a database and a real subprocess counts as E2E
 
 ## Where the numbers come from
 
-The full suite is launched from the repository root with a single
-script that records pass/fail/skip per module and writes per-module logs
-for diagnostics. The headline numbers above are produced by enumerating
-`go test -list` per module and classifying each test by its package path.
+The full suite is launched from the repository root with a single command
+that records pass / fail / skip per module and writes per-module logs for
+diagnostics. The headline numbers above come from enumerating the whole test
+suite and classifying each test by an objective, path-based rule.

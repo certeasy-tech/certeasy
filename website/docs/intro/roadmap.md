@@ -25,8 +25,11 @@ Legend: ✅ shipped · 🎯 next release in flight.
 | License enforcement (strict boot + acknowledgement) | 0.9 ✅ | All | Predictable cost ceiling, no surprise billing |
 | Graceful HTTP shutdown | 0.9 ✅ | All | Zero in-flight cert lost on `systemctl restart` |
 | RFC 8555 `Location` headers audit complete | 0.9 ✅ | All | Conformance with strict-RFC ACME clients (NativeClient, Caddy) |
-| Native ADCS connector (in-process enrollment by default — no `certreq.exe` child process; `certreq.exe` stays available as the `adcs-cli` fallback) | 0.9.2 🎯 | All | Removes the LOLBin process chain that strict EDRs flag (Defender for Endpoint, CrowdStrike, SentinelOne) — eligible for stricter deployment perimeters |
-| Real ADCS revocation (CRL / OCSP propagation) | 1.0 🎯 | All | A revoked certificate is actually revoked end-to-end |
+| Native ADCS connector (in-process enrollment by default — no `certreq.exe` child process; `certreq.exe` stays available as the `adcs-cli` fallback) | 0.9.2 ✅ | All | Removes the LOLBin process chain that strict EDRs flag (Defender for Endpoint, CrowdStrike, SentinelOne) — eligible for stricter deployment perimeters |
+| Configuration validation (`certeasy validate`, `nginx -t`-style) + fail-fast boot gate | 0.9.2 ✅ | All | Catch a bad configuration before startup, not halfway through |
+| Real ADCS revocation (CRL / OCSP propagation) | 0.9.3 ✅ | All | A revoked certificate is actually revoked end-to-end |
+| Configurable server-certificate key (RSA / ECDSA — e.g. RSA 4096 for RSA-only ADCS templates) | 0.9.3 ✅ | All | Start against CA templates that mandate a specific key type or size |
+| ADCS setup preflight (`certeasy adcs check` + guided `init`: template picker, key-requirement detection, clear denial reasons) | 0.9.3 ✅ | All | Diagnose ADCS onboarding before go-live — fewer support tickets at setup |
 | Cleanup / retention of expired ACME records | 1.0 🎯 | All | Long-term operations: the database stops growing forever |
 | Health / metrics endpoints (`/healthz`, `/readyz`, Prometheus `/metrics`) | 1.0 🎯 | All | Drop-in integration with existing supervision (Zabbix, Centreon, Prometheus, Grafana) |
 | PKI health checks + load-balanced CAs (Ping at boot + runtime) | 1.0 🎯 | All | Mis-configured CAs fail loudly at boot; `round_robin` policy actually skips unhealthy CAs |
@@ -42,7 +45,7 @@ Legend: ✅ shipped · 🎯 next release in flight.
 
 ## Compliance and RFC gaps
 
-The RFC gaps documented in [Standards & RFC support](../reference/standards-compliance.md) (ADCS revocation propagation, EAB) are tracked in the table above. The "1.0 🎯" entries close the gaps that are visible to a standard ACME client today.
+The RFC and integration gaps documented in [Standards & RFC support](../reference/standards-compliance.md) are tracked in the table above. ADCS revocation propagation closed in **0.9.3 ✅**; the remaining "1.0 🎯" entries close the operational gaps still visible to a standard ACME client today. External Account Binding (EAB) is planned for 2.0.
 
 ## Pricing and feature gating
 

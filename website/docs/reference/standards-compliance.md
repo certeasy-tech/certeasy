@@ -17,16 +17,19 @@ Certeasy implements the IETF ACME family of standards. This page documents which
 | `newOrder` and order state machine | §7.4 | ✅ |
 | Authorization + challenge dispatch (HTTP-01, DNS-01, TLS-ALPN-01) | §7.5, §8 | ✅ |
 | `finalize` + CSR validation | §7.4 | ✅ |
-| `revoke-cert` signed with account key | §7.6 | ✅ (server-side — see limitations) |
+| `revoke-cert` signed with the account key (`kid`) or the certificate key (`jwk`) | §7.6 | ✅ (propagates to the ADCS CA — see notes) |
 | Wildcard issuance (`*.zone`, mixed `zone + *.zone` in one order) | §7.1.4, §8.4 | ✅ |
 | `Location` headers and response URLs canonicalization | §7.4 and following | ✅ |
 | External Account Binding (EAB) | §7.3.4 | 🔴 not supported in V0.9 / V1.0 — planned for V2.0 |
 
 ### Known limitations
 
-#### Server-side revocation only (full propagation planned for V1.0)
+#### ADCS revocation propagation (shipped in 0.9.3)
 
-`POST /acme/revoke-cert` marks the certificate revoked in Certeasy's database and emits an audit event. **The underlying ADCS CRL / OCSP responder is not yet updated** — a client validating chain status against ADCS will still see the certificate as valid until the CRL is published. Cabling the revocation all the way to ADCS lands in a future release.
+Since **0.9.3**, `POST /acme/revoke-cert` propagates to the backing ADCS CA — the certificate is revoked on the CA itself, not only in Certeasy's database. Two things to know:
+
+- Revoking on the CA requires the **Certificate Manager** role on the ADCS service account — a higher privilege than enrollment. If the account only holds enrollment rights (or the deployment is air-gapped), turn propagation off per authority with `disable-ca-revocation: true`; revocation then stays server-side only, as before.
+- Propagation to the CA is immediate, but a client validating chain status still sees the certificate as valid until the CA **publishes its next CRL** (or its OCSP responder refreshes). That cadence is governed by your ADCS CRL publication schedule, not by Certeasy.
 
 #### External Account Binding (EAB) — planned for V2.0
 

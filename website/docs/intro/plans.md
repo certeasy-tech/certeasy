@@ -31,7 +31,7 @@ For small production environments.
 
 For production environments and larger organizations.
 
-- **1 production installation** (Active/Passive included)
+- **1 production installation** (cold Active/Passive supported)
 - **Unlimited managed servers**
 - **3 ADCS production authorities**
 - PostgreSQL database
@@ -47,13 +47,13 @@ For organizations with advanced requirements.
 - **Up to 5 ADCS production authorities**
 - Beyond 5 CAs — [contact us](https://certeasy.tech/contact)
 - Split deployment: ADCS connector on Tier 0 + ACME responder on separate server *(coming in v2.0)*
-- Active/Active high availability (multi-node, requires PostgreSQL) *(coming in v2.0)*
+- Warm Active/Passive and Active/Active high availability (multi-node, requires PostgreSQL or SQL Server) *(coming in v2.0)*
 - Distributed validators (segmented networks) *(coming in v3.0)*
 - TLS service discovery *(coming in v4.0)*
 - Optional SLA
 
-:::tip Active/Passive high availability
-Active/Passive HA is a supported deployment pattern available to all Pro and above users — run two Certeasy instances against the same PostgreSQL database with a load balancer or keepalived in front. No additional license required.
+:::tip High availability
+Today, Certeasy supports **cold Active/Passive** with manual switchover (Pro and above): install it on two hosts sharing a PostgreSQL or SQL Server database, keep the standby fully stopped, and fail over by stopping the active node and starting the standby. Running two instances concurrently against the same database is **not supported** (see [Deployment topology](../administration/deployment-topology.md)). Warm Active/Passive and Active/Active high availability are planned for **v2.0 (Enterprise)**.
 :::
 
 :::note License required

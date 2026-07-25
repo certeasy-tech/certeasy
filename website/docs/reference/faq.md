@@ -45,9 +45,18 @@ with a clear message rather than forwarded and denied opaquely by the CA:
 issuance-policies:
   - name: adcs-rsa
     signature:
-      allowed-algorithms: ["RSA-SHA256", "RSA-SHA384", "RSA-SHA512"]
+      allowed-algorithms:
+        - "RSA-SHA256"
+        - "RSA-SHA384"
+        - "RSA-SHA512"
       min-rsa-bits: 4096
 ```
+
+:::note
+Lists must be written as block sequences (one `-` item per line). Certeasy's
+configuration parser does not accept YAML flow sequences (`["a", "b"]`) and
+will refuse to start with `expected sequence (use '-' items)`.
+:::
 
 :::tip
 Use a certificate template **dedicated** to Certeasy — it lets the key

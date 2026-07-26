@@ -116,9 +116,12 @@ does not require publication to be confirmed before responding.
 Set `disable-ca-revocation: true` to keep revocation **local to Certeasy** (no CA
 propagation). This is appropriate when:
 
-- the service account cannot be granted the Certificate Manager role,
-- the deployment is air-gapped from the CA's revocation infrastructure, or
+- the service account cannot be granted the Certificate Manager role, or
 - you intentionally rely on short-lived certificates and local revocation only.
+
+Note that this is a **privilege** decision, not a connectivity one: revocation
+targets the same CA host and channel as enrollment, so a CA reachable enough to
+issue is reachable enough to revoke.
 
 With propagation disabled, the audit log records `certificate.revoke.skipped`
 instead of `certificate.revoke.published`.

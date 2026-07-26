@@ -23,16 +23,20 @@ Without ARI, every client picks its own renewal threshold (typically "30 days be
 
 ```yaml
 renewal-info:
-  lifetime-fraction: 0.66
+  lifetime-fraction: 2/3
   window-width: 48h
   retry-after: 6h
 ```
 
 Omitting this section applies the defaults.
 
+`lifetime-fraction` accepts either a decimal (`0.75`) or a fraction (`2/3`,
+`4/5`). The fraction form is usually clearer: the default really is two thirds,
+which no decimal writes exactly.
+
 | Field | Default | Meaning |
 |---|---|---|
-| `lifetime-fraction` | `0.66` | Fraction of the cert lifetime past which the suggested window opens. `0.66` means renewal is suggested in the last third of the certificate's validity. |
+| `lifetime-fraction` | `2/3` | Fraction of the cert lifetime past which the suggested window opens — `2/3` suggests renewal during the last third of the certificate's validity. Accepts a decimal or a fraction; must be strictly between 0 and 1. |
 | `window-width` | `48h` | Width of the suggested window. Spreads renewals over this interval to avoid thundering-herd reissue. |
 | `retry-after` | `6h` | Sent as the HTTP `Retry-After` header — tells clients how long to wait before polling `renewal-info` again. |
 

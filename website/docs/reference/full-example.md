@@ -234,7 +234,8 @@ rate-limiting:
 # Always active — endpoint advertised in /directory as renewalInfo.
 # Omit this section to apply the defaults.
 renewal-info:
-  lifetime-fraction: 0.66              # Window opens at notBefore + lifetime*0.66
+  lifetime-fraction: 2/3               # Window opens at notBefore + lifetime*2/3
+                                       # Decimal (0.75) or fraction (2/3) both accepted
   window-width: 48h                    # Spread renewals across this duration
   retry-after: 6h                      # Sent as Retry-After header on responses
 

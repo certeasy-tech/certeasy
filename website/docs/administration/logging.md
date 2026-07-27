@@ -14,7 +14,7 @@ logs:
   level: info
   format: json
   output: file
-  file: "/var/log/certeasy/certeasy.log"
+  file: "C:\\ProgramData\\certeasy\\logs\\certeasy.log"
   rotate:
     max-size-mb: 100
     max-backups: 10
@@ -33,11 +33,54 @@ logs:
 | `level` | `info` | Global log level: `debug`, `info`, `warn`, `error`, `off`. `off` (alias `none`) fully suppresses logs and is most useful as a per-service override. |
 | `format` | `json` | Log format: `json` or `text` |
 | `output` | `stderr` | Output destination: `stderr`, `stdout`, or `file` |
-| `file` | — | Log file path. Required if `output: file`. |
-| `rotate.max-size-mb` | — | Max log file size in MB before rotation |
-| `rotate.max-backups` | — | Number of rotated log files to keep |
+| `file` | — | Log file path. Required if `output: file`. With rotation enabled it is a **naming base**, not a file — see [Rotation](#rotation). |
+| `rotate.max-size-mb` | `0` | Size at which a new segment is started. `0` disables rotation: a single file grows indefinitely. |
+| `rotate.max-backups` | `5` | Number of **closed** segments kept. `0` keeps only the one being written; `-1` never deletes. |
 | `services` | empty | Per-service log level overrides |
 | `tags` | empty | User-defined labels added to every log entry — useful for Grafana/Loki filtering |
+
+## Rotation
+
+When `output: file` and `rotate.max-size-mb` is greater than zero, `file` is a
+**naming base**, not a file. Certeasy writes dated segments beside it and never
+renames them:
+
+```
+file: C:\ProgramData\certeasy\logs\certeasy.log
+
+C:\ProgramData\certeasy\logs\
+    certeasy.20260726T091702Z.ms123.log     <- closed
+    certeasy.20260726T104417Z.ms008.log     <- being written
+```
+
+The suffix is a UTC timestamp, so the alphabetical order of the file names is
+their chronological order. A closed segment is never reopened, which is what
+makes it safe to copy or archive.
+
+**Configure your log collector with the folder and a `*.log` pattern**, not with
+the path in `file`. To follow the live file interactively:
+
+```powershell
+Get-Content -Wait (Get-ChildItem C:\ProgramData\certeasy\logs\certeasy.*.log |
+    Sort-Object Name | Select-Object -Last 1)
+```
+
+If a rotation cannot complete — an antivirus holding the file, a full disk, a
+permissions problem — Certeasy keeps writing to the current segment, reports the
+reason on stderr (captured by the Windows service manager), and retries later.
+Nothing is lost.
+
+`max-backups` bounds disk usage at roughly `max-backups × max-size-mb`. It
+defaults to **5**; before v0.9.4 it defaulted to `0`, which meant "keep nothing",
+so enabling rotation silently discarded the log at each rotation.
+
+:::note Permissions
+On Windows, access to the log files is governed by the **NTFS permissions
+inherited from the containing folder** — set that folder's ACL at install time.
+On Linux and macOS, files are created `0600` and the directory `0700`, so a
+collector running under its own account cannot read them without being granted
+access out of band.
+:::
 
 ## Per-Service Log Levels
 

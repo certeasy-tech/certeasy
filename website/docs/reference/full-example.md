@@ -44,10 +44,13 @@ logs:
   level: info             # debug | info | warn | error
   format: json            # json | text
   output: file            # stderr | stdout | file
+  # With rotation enabled, `file` is a NAMING BASE, not a file: segments are
+  # written beside it as <name>.<UTC timestamp>.<discriminant>.log and are never
+  # renamed. Point log collectors at the directory glob, not at this path.
   file: "C:\\ProgramData\\certeasy\\certeasy.log"
   rotate:
     max-size-mb: 100
-    max-backups: 10
+    max-backups: 10                    # closed segments kept; 0 = none, -1 = never delete
   services:               # Per-service log level overrides
     DB-Driver: warn
     adcs: info
@@ -200,10 +203,15 @@ rate-limiting:
                                        # - "127.0.0.1"
                                        # - "10.42.0.0/16"
 
-  global:                              # Per-IP token bucket on every endpoint
-    enabled: true
-    requests-per-minute: 200
-    burst: 20
+  global:                              # Per-IP token bucket on every endpoint.
+    enabled: true                      # Comfort ceiling — sized so a legitimate
+    requests-per-minute: 1200          # client is never the one it stops.
+    burst: 100
+
+  abuse:                               # Per-IP marking, not a request ceiling.
+    enabled: true                      # A marked IP is refused on EVERYTHING,
+    abuses-before-block: 10            # not only on further misbehaviour.
+    recovery-per-minute: 20            # Gradual recovery, not a fixed ban.
 
   account-creation:                    # Per-IP cap on new-account
     enabled: true
@@ -246,6 +254,9 @@ audit:
   enabled: true
   path: ""                             # Empty → <workdir>/audit.log
   rotate:
-    max-size-mb: 0                     # 0 → no in-process rotation (let logrotate / Task Scheduler handle it)
-    max-backups: 0                     # Ignored when max-size-mb is 0
+    # 0 → a single segment that grows indefinitely. Above 0, Certeasy starts a
+    # new dated segment at that size. External rotation (logrotate, Scheduled
+    # Task) on this file is NOT supported: it breaks the tamper-evident chain.
+    # There is no max-backups here — Certeasy never deletes an audit segment.
+    max-size-mb: 0
 ```

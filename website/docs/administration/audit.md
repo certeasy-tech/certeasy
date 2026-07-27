@@ -17,7 +17,6 @@ audit:
   path: ""
   rotate:
     max-size-mb: 0
-    max-backups: 0
 ```
 
 Omitting the `audit` block applies the defaults shown above.
@@ -25,15 +24,52 @@ Omitting the `audit` block applies the defaults shown above.
 | Field | Default | Meaning |
 |---|---|---|
 | `enabled` | `true` | Set to `false` to disable the audit writer entirely. No file is created and `Audit()` calls are dropped silently. |
-| `path` | `""` | Absolute path to the audit log file. Empty resolves to `<workdir>/audit.log`. |
-| `rotate.max-size-mb` | `0` | When greater than zero, Certeasy rotates the file in-process once it exceeds this size (using the same writer as `logs.rotate`). `0` means "no in-process rotation" — let the OS handle it (logrotate on Linux, Task Scheduler on Windows). |
-| `rotate.max-backups` | `0` | Number of rotated backups to keep when in-process rotation is active. `0` deletes the previous file on rotation. Ignored when `max-size-mb` is `0`. |
+| `path` | `""` | Base path for the audit log. Empty resolves to `<workdir>/audit.log`. With rotation enabled this is a **naming base**, not a file — see below. |
+| `rotate.max-size-mb` | `0` | When greater than zero, Certeasy starts a new segment once the current one exceeds this size. `0` means a single segment that grows indefinitely. |
 
-### Choosing in-process vs OS-managed rotation
+:::danger Removed in v0.9.4 — `rotate.max-backups`
+This field no longer exists, and **a configuration that still contains it is
+refused at startup**. Remove it before upgrading.
 
-In-process rotation is convenient on Windows where logrotate is not available out of the box. It uses the same `logx.RotatingFileWriter` as the application log: rotated files are renamed `<path>.1`, `<path>.2`, …, with `.1` being the most recent backup.
+The audit log is a compliance artifact, not a log: its value lies in being
+complete. Deleting it by file count is not a setting, so the option was removed
+rather than validated against. Retention will return expressed as a **duration**,
+which is the unit a compliance requirement is actually written in.
+:::
 
-OS-managed rotation is the recommended setup on Linux: drop a logrotate snippet that uses `copytruncate` so Certeasy's append-mode handle is not invalidated mid-rotation. Either way, `certeasy audit verify` walks rotated files automatically — the chain is preserved across rotations.
+### Rotation is internal, and external rotation is not supported
+
+:::danger Do not point logrotate at the audit file
+Earlier versions of this page recommended a `logrotate` snippet with
+`copytruncate`. **That recommendation was wrong and is withdrawn.**
+
+A third party renaming or truncating the file breaks the HMAC chain, and
+Certeasy cannot distinguish that from tampering. Remove any `logrotate` rule,
+Scheduled Task or backup job that rotates, truncates or moves `audit.path`.
+Copying the closed segments elsewhere is fine — see below.
+:::
+
+Certeasy segments the file itself. Each segment is named after the instant it
+was opened and is **never renamed**:
+
+```
+audit.path: C:\ProgramData\certeasy\audit\audit.log
+  ->  C:\ProgramData\certeasy\audit\audit.20260726T091702Z.ms123.log
+```
+
+Two consequences worth knowing:
+
+- **A closed segment is immutable.** It is never reopened for writing, so an
+  archiver can copy or move closed segments with no risk of catching a file
+  mid-rotation. Leave the newest one alone: it is the one being written.
+- **Certeasy never deletes an audit segment.** Disk growth is bounded by your
+  archival policy, not by the product. Sizing: at `max-size-mb: 100`, a busy
+  enterprise CA produces on the order of a few segments per year.
+
+If a rotation cannot complete — an antivirus holding the file, a full disk, a
+permissions problem — Certeasy keeps writing to the current segment and reports
+the reason on stderr (captured by systemd and the Windows service manager). It
+retries later. Nothing is lost and no history is touched.
 
 ## What Is Logged
 
@@ -131,7 +167,7 @@ The chain is only useful if you actually verify it. Run:
 certeasy audit verify -f /etc/certeasy/config.yml
 ```
 
-The command walks rotated predecessors (`audit.log.1`, `.2`, …) chronologically, then the active file. It validates:
+The command walks every segment in write order, then the active one. It validates:
 
 1. Each line's `mac` against `HMAC(secret, line_bytes_without_mac)`.
 2. Each `prev_mac` against the previous line's `mac` (or the genesis MAC for line 1).
@@ -188,4 +224,4 @@ There is no PII redaction option in v1: the goal of the audit log is forensic, a
 
 - **Failures do not block business flow.** If a write to the audit file fails (full disk, permission error), the failure is logged via the `audit` log service and the operation continues. Audit gaps are detected by `audit verify`, not by ACME clients.
 - **Line size cap.** Lines are capped at 1 MiB. Events that would produce a larger line are dropped with a log entry. The cap is a defence against a misbehaving event source — legitimate events are well below 1 KiB.
-- **No auto-purge.** Even when in-process rotation is enabled, Certeasy never deletes lines based on age. Retention is purely a function of how many rotated backups you keep (`max-backups` or your OS rotator).
+- **No auto-purge, by design.** Certeasy never deletes an audit segment, whatever the configuration. Retention is entirely a function of your archival policy — copy closed segments to your long-term store and remove them there, never through a rotator pointed at the live directory. A duration-based retention setting is planned; until then, deleting evidence remains a deliberate operator action.

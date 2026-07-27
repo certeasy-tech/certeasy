@@ -124,7 +124,15 @@ ECDSA. The curve names match `allowed-ec-curves` in issuance policies.
 :::note
 If the CA rejects the key type, issuance of the server certificate fails and
 Certeasy does not start. With an RSA-only ADCS template you will see the CA
-deny the request (`CERTSRV_E_KEY_LENGTH`) unless `key: { type: rsa }` is set.
+deny the request (`CERTSRV_E_KEY_LENGTH`) unless the bundle sets `key.type` to
+`rsa`:
+
+```yaml
+    key:
+      type: rsa
+      size: 4096
+```
+
 See [ADCS authorities](./adcs.md).
 :::
 

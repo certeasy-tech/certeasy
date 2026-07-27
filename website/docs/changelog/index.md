@@ -5,13 +5,202 @@ title: Changelog
 
 # Changelog
 
+## v0.9.4 - unreleased
+
+We re-review the Certeasy codebase internally whenever materially more capable
+code-analysis tooling becomes available. This release is the outcome of such a
+review, run in July 2026 with the then-current generation of Claude and triaged
+by hand. Every finding was assessed, and the ones that could affect a running
+deployment are fixed here. Two breaking changes had to be introduced in the
+product's configuration along the way; both are described below.
+
+The review also recorded what was attacked and held. That part never appears in
+a changelog, which is a shame, because it is what a security review is actually
+for:
+
+- **No finding permits private key compromise, customer data exfiltration, or
+  remote code execution.**
+- **CSR validation verifies the signature** rather than assuming proof of
+  possession, and parses the request **twice** — once with the standard library,
+  once with a strict hand-written ASN.1 pass — then compares the resulting SAN
+  sets byte for byte, as a defence against parser differentials. Subject
+  Alternative Names are restricted to `dNSName`: `otherName`/UPN, `rfc822Name`,
+  URI and IP addresses are refused outright. This makes the ESC1/ESC6
+  escalation vector **structurally impossible rather than filtered** — a
+  distinction that matters on an ADCS deployment.
+- **JWS algorithm confusion has no landing point.** The verifier is selected on
+  key type, each verifier re-reads the protected header and requires an exact
+  algorithm with a matching curve, and there is **no HMAC verifier and no `none`
+  verifier anywhere in the code** — so the classic "sign with HS256 using the
+  public key as the secret" attack has nothing to reach.
+- **No IDOR.** Every endpoint that takes an object identifier — account, order,
+  finalize, authorization, challenge, certificate — compares the object's owning
+  account against the authenticated one before returning anything. No handler
+  fetches by identifier without that check. The single unscoped lookup in the
+  codebase is reachable only on the certificate-key revocation path — which
+  RFC 8555 §7.6 requires — and only after the embedded key has been matched byte
+  for byte against the certificate's public key.
+- **No SQL injection.** Every query is a compile-time constant with
+  placeholders; there is no `LIKE` query anywhere in the repository and every
+  `ORDER BY` is a literal.
+
+A dedicated security page covering the threat model and host hardening is in
+preparation.
+
+### Security
+
+This release resolves findings from an internal security review. Details of the
+underlying mechanisms are deliberately omitted while deployments upgrade.
+
+- **A specially crafted request could cause a denial of service** (remote,
+  unauthenticated). Fixed. No data exposure and no authentication bypass.
+- **Order identifiers are now canonicalised when the order is created**, and
+  non-DNS identifier types are rejected explicitly. Previously an identifier was
+  stored as submitted, so what was validated could differ from what was stored.
+  This is a conformance fix (RFC 8555 §8.4) rather than an exploitable one:
+  reaching the divergent case required write access to the DNS zone, which
+  already allows obtaining the same certificate through the normal `dns-01`
+  path. It is corrected because a stored value that diverges from the validated
+  one is a hazard for future changes, not because it granted anything.
+- **Valid requests could be rejected under normal operation.** A defect in the
+  replay-protection bookkeeping refused nonces that were still valid. **Any
+  deployment with two or more concurrent ACME clients was affected
+  continuously**, without anyone attacking it — clients recovered by retrying as
+  the protocol requires, so the symptom was extra round-trips and latency rather
+  than visible failures. Single-client deployments were never affected.
+- **Log and audit files are now owner-only** (`0600`, directories `0700`),
+  matching the rest of the product. This matters as soon as `audit.path` points
+  outside the working directory: the audit trail records account identifiers,
+  source IPs, user agents and decisions. **On Windows this has no effect**:
+  access there is governed by the NTFS permissions inherited from the containing
+  folder — set that folder's ACL at install time. The mode bits apply on Linux
+  and macOS.
+- **Audit log rotation could destroy history.** A failed rotation — an antivirus
+  holding the file, a full disk, a permissions problem — could discard a
+  generation of history without archiving anything, and without reporting it.
+  Rotation was rewritten: it now fails without touching existing files, reports
+  the reason on stderr, and retries later. See *Breaking changes* for the
+  consequence on file naming.
+- Updated `golang.org/x/text` and `golang.org/x/crypto`.
+
+### Rate limiting
+
+Two changes here, and the second is new behaviour rather than a new setting.
+
+- **The per-IP request ceiling now applies to every endpoint**, and is checked
+  before any cryptographic work. Previously only four endpoints consulted it;
+  the rest — including the polling a client does while waiting for validation —
+  were unmetered. Because the ceiling now sees a client's full traffic, its
+  defaults were raised accordingly: `requests-per-minute` from `200` to `1200`,
+  `burst` from `20` to `100`. If you had tuned these values down, review them:
+  issuing a single 3-name certificate costs at least 18 requests.
+- **New `abuse` limiter, enabled by default.** It does not cap requests; it
+  *marks* an IP that behaves in a way no conformant client does — a signature
+  that does not verify, or an attempt on a resource belonging to another
+  account. A marked IP is then refused on everything until it recovers, which
+  takes about thirty seconds of good behaviour. Ten such events are tolerated
+  first, so a client that slips once is unaffected.
+
+  Marks are **weighted**. A request for an identifier that simply does not exist
+  counts a quarter, because it has an innocent reading — a client returning to a
+  URL whose resource has since been cleaned up gets the same answer as someone
+  probing at random. Four such misses make one abuse, so occasional ones cost
+  nothing while systematic probing still blocks. Routine outcomes count nothing
+  at all, `badNonce` in particular: it happens to every client whenever the
+  server restarts. See the configuration reference for the full table.
+
+If your clients reach Certeasy through a reverse proxy, set `trusted-proxies` in
+the `server` section so the limiters see real client addresses. Whitelisting the
+proxy would exempt every client behind it.
+
+### Breaking changes
+
+- **`audit.rotate.max-backups` no longer exists and a configuration containing
+  it is refused at startup.** The audit log is a compliance artifact: deleting it
+  by file count is not a setting. Remove the key from your configuration before
+  upgrading. Retention will return as a *duration*, which is the unit a
+  compliance requirement is actually written in.
+- **External rotation of the audit file (logrotate, Scheduled Task) is no longer
+  supported.** A third party renaming or truncating the file breaks the
+  tamper-evident chain, and Certeasy cannot distinguish that from tampering.
+  Certeasy segments the file itself; remove any logrotate rule targeting
+  `audit.path`. Earlier documentation recommended `copytruncate` here — that
+  recommendation was wrong and is withdrawn.
+- **With rotation enabled, `logs.file` and `audit.path` are naming bases, not
+  files.** Segments are written beside them as
+  `<name>.<UTC timestamp>.<discriminant>.<ext>` — for example
+  `certeasy.20260726T091702Z.ms123.log` — and are **never renamed**. Configure log
+  collectors with the containing folder and a `*.log` pattern rather than the
+  path in `file`; following the live file interactively now means picking the
+  newest segment.
+  This also means existing `logrotate` rules on `logs.file` become inert.
+  Rationale: a rotation now creates exactly one file and mutates nothing else,
+  and a closed segment is immutable — which is what makes archival, and the
+  audit chain, safe. It also removes a long-standing annoyance for log
+  collectors, which previously saw duplicate or missing lines at every rotation.
+
+### Fixes
+
+- **A database hiccup during challenge validation produced two responses.** If
+  the database was briefly unreachable at the moment a client answered a
+  challenge, the server wrote an error response and then carried on, writing a
+  second one over it. The client received a malformed reply instead of a clean
+  `500`, and the underlying database problem was harder to spot in the logs than
+  it should have been.
+
+- **A partial configuration block silently disabled controls.** Writing only
+  part of a section — for example `audit:` with just a `path:`, or
+  `rate-limiting:` with a single limiter — reset every unspecified field of that
+  section to zero. In practice a server could run with its audit log disabled,
+  its six rate limiters off, or its HTTP timeouts removed, while looking
+  perfectly healthy. Defaults are now applied by the configuration loader itself,
+  so what it returns is the effective configuration. An **explicitly** written
+  `0` on a timeout or a quota is now **refused** with an explanatory message
+  rather than quietly replaced by a default: a value you wrote is either honored
+  or rejected, never silently substituted.
+- **`renewal-info.lifetime-fraction` had no effect.** The configuration parser
+  did not support decimal values, so the setting was silently ignored and the
+  default (2/3) always applied. Decimal values are now supported, and a value
+  outside the valid range is refused rather than clamped.
+- **`certeasy validate` missed several sections.** Configuration errors in
+  `database`, `logs`, `renewal-info`, `license`, `workdir` and the rate-limiting
+  whitelist were only detected at startup — sometimes *after* database
+  migrations had run. `validate` and `serve` now share one validator, so a
+  configuration `serve` would reject is rejected by `validate` too.
+- **Enabling log rotation discarded history.** `logs.rotate.max-backups`
+  defaulted to `0`, meaning "keep nothing", so turning on rotation deleted the
+  log at every rotation. The default is now `5`. A negative value means "never
+  delete" and is honored as such (it previously meant the opposite).
+- `certeasy audit verify` now reports files left over from the previous rotation
+  naming scheme instead of skipping them silently, so you know when history
+  exists outside what was just verified.
+
+### Documentation
+
+- The rate-limiting page described the whitelist incorrectly: it stated that
+  `order-creation` still applied to a whitelisted IP. It does not — a whitelisted
+  IP also bypasses that limiter. The behaviour is unchanged; only the
+  documentation was wrong. The limits that remain in force for a whitelisted IP
+  are the account-scoped ones: `duplicate-certificate`, `failed-validation` and
+  `pending-authorizations`.
+
+### Improvements
+
+- **Security controls that are switched off are now announced at startup.**
+  Disabling the audit log or a rate limiter is a legitimate choice; doing it
+  without a trace is not. Certeasy logs one warning per disabled control, naming
+  the setting and its consequence. A default configuration stays silent — a
+  warning that fires on a healthy install is noise.
+
+---
+
 ## v0.9.3 - 2026-07-09
 
 ### New features
 
 - **ADCS certificate revocation**: ACME revocations now propagate to the backing Microsoft ADCS CA (CRL / OCSP), not just Certeasy's own database. RFC 8555 §7.6 authorization is supported with both the account key (`kid`) and the certificate key (`jwk`). Propagation can be turned off per authority with `disable-ca-revocation: true` (for service accounts without the required CA role, or air-gapped deployments). Note: revoking on the CA needs the **Certificate Manager** role — a higher privilege than enrollment.
 - **`certeasy adcs check`** — a read-only preflight for ADCS authorities: checks that the CA is reachable, that the certificate template is published, and reports the template's key requirement. Use it to diagnose ADCS setup before starting the server (or to hand support a clear status).
-- **Configurable server-certificate key**: a `pki`-mode bundle in the TLS certificate manager now accepts an explicit `key:` — `type: rsa` with `size:` (bits), or `type: ecdsa` with `curve:` (`P-256`/`P-384`/`P-521`). Set it when the CA template mandates a specific key. In particular, an ADCS template that requires **RSA 4096** previously rejected Certeasy's default ECDSA key and prevented startup; `key: { type: rsa, size: 4096 }` resolves it. The default is unchanged (ECDSA P-256).
+- **Configurable server-certificate key**: a `pki`-mode bundle in the TLS certificate manager now accepts an explicit `key:` — `type: rsa` with `size:` (bits), or `type: ecdsa` with `curve:` (`P-256`/`P-384`/`P-521`). Set it when the CA template mandates a specific key. In particular, an ADCS template that requires **RSA 4096** previously rejected Certeasy's default ECDSA key and prevented startup; setting `key.type: rsa` with `key.size: 4096` resolves it. The default is unchanged (ECDSA P-256).
 
 ### Improvements
 

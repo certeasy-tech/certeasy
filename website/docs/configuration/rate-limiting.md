@@ -15,8 +15,13 @@ rate-limiting:
 
   global:
     enabled: true
-    requests-per-minute: 200
-    burst: 20
+    requests-per-minute: 1200
+    burst: 100
+
+  abuse:
+    enabled: true
+    abuses-before-block: 10
+    recovery-per-minute: 20
 
   account-creation:
     enabled: true
@@ -46,13 +51,14 @@ rate-limiting:
 
 ## How It Works
 
-Rate limits are enforced at five layers, in order:
+Rate limits are enforced at six layers, in order:
 
-1. **Global per-IP** — token bucket on every entry endpoint (`new-account`, `new-order`, `revoke-cert`, `renewal-info`).
-2. **Operation-specific** — tighter caps on account creation (per IP) and order creation (per account).
-3. **Duplicate Certificate** — DB-backed defense against repeat issuance for the same FQDN set.
-4. **Failed Validation** — in-memory defense against clients with broken DNS / unreachable challenge targets.
-5. **Pending Authorizations** — DB-backed cap on in-flight authzs per account.
+1. **Global per-IP** — token bucket on **every** endpoint, checked before any cryptographic work.
+2. **Abuse per-IP** — marks an IP that behaves in a way no conformant client does.
+3. **Operation-specific** — tighter caps on account creation (per IP) and order creation (per account).
+4. **Duplicate Certificate** — DB-backed defense against repeat issuance for the same FQDN set.
+5. **Failed Validation** — in-memory defense against clients with broken DNS / unreachable challenge targets.
+6. **Pending Authorizations** — DB-backed cap on in-flight authzs per account.
 
 When a limit is hit, the server replies with HTTP 429 (`urn:ietf:params:acme:error:rateLimited`) and a `Retry-After` header.
 
@@ -70,9 +76,16 @@ rate-limiting:
     - "2001:db8::/32"
 ```
 
-Any client whose IP matches a whitelist entry bypasses **all** IP-based limits (`global`, `account-creation`). Account-scoped limits (`order-creation`, `duplicate-certificate`, `failed-validation`, `pending-authorizations`) still apply — whitelisting an IP does not grant unlimited issuance to the account behind it.
+Any client whose IP matches a whitelist entry bypasses `global`, `account-creation` **and `order-creation`**. The limits that remain in force are the ones that do not consult the source IP at all: `duplicate-certificate`, `failed-validation` and `pending-authorizations` — all account-scoped and database- or account-keyed. Whitelisting therefore removes the per-IP request and order ceilings, but not the issuance safeguards behind them.
 
-Use this sparingly: typical setups don't need a whitelist at all. The most common use case is whitelisting a known reverse-proxy CIDR when many clients share a frontend IP, so a single proxy doesn't get throttled by aggregate request volume.
+Use this sparingly: typical setups don't need a whitelist at all.
+
+In particular, **a shared frontend IP is not a reason to whitelist it**. If clients
+reach Certeasy through a reverse proxy, set `trusted-proxies` in the [`server`](./server.md)
+section instead, so the limiters key on the real client address. Whitelisting the
+proxy CIDR would exempt *every* client behind it — the aggregate volume stops
+being throttled, but so does each individual client. Reserve the whitelist for a
+source you control end to end, such as a monitoring probe.
 
 ## Global
 
@@ -81,10 +94,75 @@ Per-IP token bucket applied to every ACME endpoint that accepts a connection.
 | Field | Default | Meaning |
 |---|---|---|
 | `enabled` | `true` | Set to `false` to disable the global limiter entirely |
-| `requests-per-minute` | `200` | Sustained rate per source IP |
-| `burst` | `20` | Maximum tokens accumulated when idle |
+| `requests-per-minute` | `1200` | Sustained rate per source IP |
+| `burst` | `100` | Maximum tokens accumulated when idle |
 
-A burst of `20` and a sustained rate of `200/min` lets a client issue 20 quick requests, then refill at ~3.3/sec.
+This is a **comfort ceiling**, sized so a legitimate client is never the one it
+stops. It now applies to every endpoint, including the polling a client does
+while it waits for validation — issuing a 3-name certificate costs at least 18
+requests, and considerably more when DNS propagation is slow. The defaults were
+`200`/`20` in earlier versions, when the limiter only saw the four entry points.
+
+Because it must stay generous, this bucket is not what stops abuse. That is the
+next one.
+
+## Abuse
+
+Per-IP marking, not a request ceiling. An IP that behaves in a way **no
+conformant client does** is marked, and a marked IP is then refused on
+*everything* — not merely on further misbehaviour.
+
+| Field | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` | Set to `false` to disable marking entirely |
+| `abuses-before-block` | `10` | Abuses tolerated before the IP is marked |
+| `recovery-per-minute` | `20` | How fast a marked IP recovers |
+
+Recovery is gradual rather than a fixed ban: an IP that stops misbehaving is
+back to normal within roughly thirty seconds, and a client that slips once is
+never marked at all. A fixed ban would take a misconfigured client out of
+service with no way to release it.
+
+**What marks an IP**
+
+Not every mark weighs the same. The unit is one *confirmed* abuse, which is what
+`abuses-before-block` counts.
+
+| Weight | Situation |
+|---|---|
+| **1** — confirmed | A JWS whose signature does not verify, or whose envelope is malformed. |
+| **1** — confirmed | Acting on a resource that exists and belongs to **another account** — authorization, challenge, certificate, account. |
+| **¼** — suspected | An identifier that does not exist. |
+
+The reduced weight is deliberate. A missing resource usually means someone is
+probing identifiers at random, but not always: a client coming back to a URL
+whose resource has since been cleaned up gets the same answer. Rather than try
+to tell the two apart, the server makes the distinction unnecessary — a handful
+of misses costs almost nothing, while systematic probing still blocks (four
+misses make one abuse).
+
+A dangling internal reference — the resource exists but what it points to does
+not — marks **nothing at all**. That is our data being inconsistent, not the
+client misbehaving.
+
+**What deliberately does not**
+
+- `badNonce`. It is routine: restarting the server invalidates every nonce in
+  flight, and RFC 8555 requires clients to fetch a new one and retry. Counting
+  it would throttle every client after each restart.
+- An expired order or authorization, and any refusal that comes from your
+  licence — those are not the client's doing.
+- Policy refusals such as a rejected identifier or a rejected CSR. A correctly
+  written but misconfigured client produces them repeatedly; they have their own
+  limiters.
+
+Marking is per address, so clients sharing one egress address share the mark: a
+single misbehaving client can have the others refused with it. Where that address
+belongs to a reverse proxy, `trusted-proxies` resolves it properly by exposing
+the real client addresses. Where it is genuine NAT and the real addresses are
+unrecoverable, weigh disabling `abuse` against whitelisting the address — both
+give up the protection for that whole population, so the choice is which of the
+two limiters you keep.
 
 ## Account Creation
 

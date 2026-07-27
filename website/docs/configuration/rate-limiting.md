@@ -25,8 +25,8 @@ rate-limiting:
 
   account-creation:
     enabled: true
-    per-ip-per-hour: 5
-    burst: 2
+    per-ip-per-hour: 10
+    burst: 10
 
   order-creation:
     enabled: true
@@ -171,8 +171,20 @@ Per-IP token bucket applied at `new-account`. Prevents an IP from registering an
 | Field | Default | Meaning |
 |---|---|---|
 | `enabled` | `true` | |
-| `per-ip-per-hour` | `5` | Sustained rate of new accounts per IP |
-| `burst` | `2` | Initial burst |
+| `per-ip-per-hour` | `10` | Sustained rate of new accounts per IP |
+| `burst` | `10` | Accounts that may be registered back to back |
+
+The burst deliberately **equals** the hourly allowance. Creating an account is a
+once-per-machine-for-life event — the client keeps its account key — so
+legitimate traffic arrives in deployment waves with long silences between, not
+at a steady rate. A smaller burst would spread out a budget you should be free
+to spend at once, and would refuse the third machine of a batch provisioned
+together behind one NAT egress address.
+
+What this bucket really bounds is not the cost of an account — that is one row —
+but the fact that an account **multiplies every per-account quota** below it. If
+you provision more than ten machines at a time behind a single address, raise
+both values together.
 
 ## Order Creation
 

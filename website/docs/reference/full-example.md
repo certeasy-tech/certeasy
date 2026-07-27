@@ -215,8 +215,8 @@ rate-limiting:
 
   account-creation:                    # Per-IP cap on new-account
     enabled: true
-    per-ip-per-hour: 5
-    burst: 2
+    per-ip-per-hour: 10          # burst == hourly: account creation happens
+    burst: 10                   # in deployment waves, not at a steady rate
 
   order-creation:                      # Per-account caps on new-order
     enabled: true

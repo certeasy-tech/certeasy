@@ -109,6 +109,14 @@ Two changes here, and the second is new behaviour rather than a new setting.
   at all, `badNonce` in particular: it happens to every client whenever the
   server restarts. See the configuration reference for the full table.
 
+- **Account creation now allows a deployment wave.** `account-creation` moves
+  from `5`/hour with a burst of `2` to `10`/hour with a burst of `10`. Creating
+  an account is a once-per-machine-for-life event, so legitimate traffic arrives
+  in bursts when you provision, not at a steady rate — and a burst smaller than
+  the hourly allowance refused the third machine of a batch deployed behind a
+  single NAT address. The sustained ceiling, which is what actually bounds
+  abuse, only doubles.
+
 If your clients reach Certeasy through a reverse proxy, set `trusted-proxies` in
 the `server` section so the limiters see real client addresses. Whitelisting the
 proxy would exempt every client behind it.

@@ -14,13 +14,13 @@ the time of writing.
 
 | Category | Tests | What it verifies |
 |---|---|---|
-| Unit (TU) | **624** | Pure logic: configuration parsing and validation, policy resolution, JWS signing and verification, anti-replay nonces, DNS scope matching, CSR validation, key handling, the asynchronous job engine, licensing decisions, rate-limit decision tables, audit-line encoding. No I/O, no database. |
-| Integration (IT) | **167** | Real database (SQLite, PostgreSQL, SQL Server), real audit file on disk, real PKI request store, full ACME handler stack wired against the storage layer. Each test runs against every supported database backend. |
-| End-to-end (E2E) | **115** | The full Certeasy binary running as a subprocess. Two flavours: (1) CLI black-box — every subcommand (`serve`, `init`, `validate`, `license`, `cold-start`, `backup`, `audit`, `adcs check`), exit codes, error messages. (2) ACME protocol — real third-party clients (lego, certbot, acme.sh) plus a RFC-strict native client driving certificate issuance, renewal, revocation, account lifecycle, key rollover, and the full error/security path. |
-| **Total** | **906** | |
+| Unit (TU) | **628** | Pure logic: configuration parsing and validation, policy resolution, JWS signing and verification, anti-replay nonces, DNS scope matching, CSR validation, key handling, the asynchronous job engine, licensing decisions, rate-limit decision tables, audit-line encoding. No I/O, no database. |
+| Integration (IT) | **171** | Real database (SQLite, PostgreSQL, SQL Server), real audit file on disk, real PKI request store, full ACME handler stack wired against the storage layer. Each test runs against every supported database backend. |
+| End-to-end (E2E) | **117** | The full Certeasy binary running as a subprocess. Two flavours: (1) CLI black-box — every subcommand (`serve`, `init`, `validate`, `license`, `cold-start`, `backup`, `audit`, `adcs check`), exit codes, error messages. (2) ACME protocol — real third-party clients (lego, certbot, acme.sh) plus a RFC-strict native client driving certificate issuance, renewal, revocation, account lifecycle, key rollover, and the full error/security path. |
+| **Total** | **916** | |
 
 Numbers are refreshed at every release. The most recent count above reflects
-the **v0.9.4** line — **+97 tests since v0.9.3**.
+the **v0.9.4** line — **+107 tests since v0.9.3**.
 
 ## What is covered, by area
 
@@ -41,6 +41,8 @@ the **v0.9.4** line — **+97 tests since v0.9.3**.
   `Location` header is asserted on the wire.
 - Anti-replay nonces: single-use enforcement, validity under concurrent
   clients running at uneven speeds, and both window edges.
+- Account keys: RSA, ECDSA and Ed25519. One key yields one account, whatever
+  the encoding of its JWK.
 
 ### ACME client interoperability
 
@@ -53,7 +55,8 @@ E2E suite runs the full happy-path issuance against:
   RFC URL/header conformance.
 
 One scenario runs the three CLIs simultaneously against a single server, each
-solving a different challenge type.
+solving a different challenge type. Another issues and renews an ECDSA
+certificate under an ECDSA account key.
 
 ### Microsoft ADCS integration
 

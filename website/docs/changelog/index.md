@@ -121,6 +121,26 @@ If your clients reach Certeasy through a reverse proxy, set `trusted-proxies` in
 the `server` section so the limiters see real client addresses. Whitelisting the
 proxy would exempt every client behind it.
 
+### Schema and migrations
+
+A restart is rarely something a human decided — a crash, a reboot, a service
+manager or a failed health check all restart the process, and none of them is a
+moment when someone is standing by with a backup. Certeasy now applies on its own
+only what doing nothing could have survived.
+
+- **A restart applies additive migrations only.** Anything that cannot be undone
+  by rolling the binary back stops startup and names what is pending. Nothing
+  changes today for an existing deployment: every migration currently shipped is
+  additive.
+- **New command `certeasy migrate`**, with `--confirm` to acknowledge a backup and
+  `--sql` to write the statements instead of running them.
+- **New setting `database.noddl`** for accounts that hold no schema rights.
+- **A database newer than the binary, or left mid-upgrade, is refused** rather
+  than started on.
+
+See [Migrations](/administration/migrations) for the full contract, the exit
+codes and the `noddl` workflow.
+
 ### Breaking changes
 
 - **`audit.rotate.max-backups` no longer exists and a configuration containing
@@ -149,42 +169,25 @@ proxy would exempt every client behind it.
 
 ### Fixes
 
-- **A database hiccup during challenge validation produced two responses.** If
-  the database was briefly unreachable at the moment a client answered a
-  challenge, the server wrote an error response and then carried on, writing a
-  second one over it. The client received a malformed reply instead of a clean
-  `500`, and the underlying database problem was harder to spot in the logs than
-  it should have been.
-
-- **A partial configuration block silently disabled controls.** Writing only
-  part of a section — for example `audit:` with just a `path:`, or
-  `rate-limiting:` with a single limiter — reset every unspecified field of that
-  section to zero. In practice a server could run with its audit log disabled,
-  its six rate limiters off, or its HTTP timeouts removed, while looking
-  perfectly healthy. Defaults are now applied by the configuration loader itself,
-  so what it returns is the effective configuration. An **explicitly** written
-  `0` on a timeout or a quota is now **refused** with an explanatory message
-  rather than quietly replaced by a default: a value you wrote is either honored
-  or rejected, never silently substituted.
-- **`renewal-info.lifetime-fraction` had no effect.** The configuration parser
-  did not support decimal values, so the setting was silently ignored and the
-  default (2/3) always applied. Decimal values are now supported, and a value
-  outside the valid range is refused rather than clamped.
-- **`certeasy validate` missed several sections.** Configuration errors in
-  `database`, `logs`, `renewal-info`, `license`, `workdir` and the rate-limiting
-  whitelist were only detected at startup — sometimes *after* database
-  migrations had run. `validate` and `serve` now share one validator, so a
-  configuration `serve` would reject is rejected by `validate` too.
-- **Enabling log rotation discarded history.** `logs.rotate.max-backups`
-  defaulted to `0`, meaning "keep nothing", so turning on rotation deleted the
-  log at every rotation. The default is now `5`. A negative value means "never
-  delete" and is honored as such (it previously meant the opposite).
-- `certeasy audit verify` now reports files left over from the previous rotation
-  naming scheme instead of skipping them silently, so you know when history
-  exists outside what was just verified.
+- **On a shared database, Certeasy could build its schema in the wrong place.**
+  Where a table of the same name already existed in another schema — a `jobs` or
+  a `servers` belonging to a different application — Certeasy could take it for
+  its own and then read and write that application's data. SQL Server
+  deployments using a schema other than `dbo` were affected. Certeasy no longer
+  asks the question that made this possible.
+- **The schema in use is reported at every start**, and any of Certeasy's tables
+  found outside it are named. Two instances sharing a database *and* a schema
+  share their data — a valid multi-node deployment, and an accident that looks
+  identical from the database's side. See
+  [Migrations](/administration/migrations).
 
 ### Documentation
 
+- **The migrations page was rewritten** — it described a schema silently brought
+  up to date at every start, with nothing ever to run by hand. Neither is true
+  any more.
+- The database configuration page gained the `noddl` setting and a section on
+  schema selection.
 - The rate-limiting page described the whitelist incorrectly: it stated that
   `order-creation` still applied to a whitelisted IP. It does not — a whitelisted
   IP also bypasses that limiter. The behaviour is unchanged; only the

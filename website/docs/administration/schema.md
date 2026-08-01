@@ -6,7 +6,7 @@ title: Database Schema
 # Database Schema
 
 
-Certeasy's schema is managed automatically via embedded migrations — you never write DDL yourself. This page is a **functional map** of the core ACME tables and how they change as an order progresses; it is not an exhaustive column-level reference. Internal/support tables (job queue, licensing, PKI request tracking, audit state) are managed automatically and are not covered here.
+Certeasy's schema travels inside the binary. A restart applies additive changes on its own; anything heavier waits for an explicit [`certeasy migrate`](./migrations.md), and on a database where Certeasy may not issue DDL it writes the script for your DBA. This page is a **functional map** of the core ACME tables and how they change as an order progresses; it is not an exhaustive column-level reference. Internal/support tables (job queue, licensing, PKI request tracking, audit state) are managed automatically and are not covered here.
 
 ## ACME Flow Overview
 

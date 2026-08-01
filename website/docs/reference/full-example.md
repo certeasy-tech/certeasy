@@ -23,6 +23,13 @@ database:
   ping-timeout-sec: 10
   max-idle-conn: 2        # Default: 2 (SQLite) | 5 (postgres/sqlserver)
   max-conn: 10
+  conn-max-lifetime: 2m   # Default: 2m (postgres/sqlserver), unset for SQLite.
+                          # Sits below typical firewall/NAT idle timeouts so the
+                          # pool recycles before the network drops a connection.
+  conn-max-idle-time: 1m  # Default: 1m (postgres/sqlserver), unset for SQLite
+  noddl: false            # true when the account holds no schema rights:
+                          # Certeasy issues no DDL, checks the schema at startup,
+                          # and `certeasy migrate` writes the SQL for your DBA
 
 # ── Server ────────────────────────────────────────────────────────────────────
 server:

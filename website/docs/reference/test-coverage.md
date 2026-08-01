@@ -14,13 +14,13 @@ the time of writing.
 
 | Category | Tests | What it verifies |
 |---|---|---|
-| Unit (TU) | **628** | Pure logic: configuration parsing and validation, policy resolution, JWS signing and verification, anti-replay nonces, DNS scope matching, CSR validation, key handling, the asynchronous job engine, licensing decisions, rate-limit decision tables, audit-line encoding. No I/O, no database. |
-| Integration (IT) | **171** | Real database (SQLite, PostgreSQL, SQL Server), real audit file on disk, real PKI request store, full ACME handler stack wired against the storage layer. Each test runs against every supported database backend. |
-| End-to-end (E2E) | **117** | The full Certeasy binary running as a subprocess. Two flavours: (1) CLI black-box — every subcommand (`serve`, `init`, `validate`, `license`, `cold-start`, `backup`, `audit`, `adcs check`), exit codes, error messages. (2) ACME protocol — real third-party clients (lego, certbot, acme.sh) plus a RFC-strict native client driving certificate issuance, renewal, revocation, account lifecycle, key rollover, and the full error/security path. |
-| **Total** | **916** | |
+| Unit (TU) | **729** | Pure logic: configuration parsing and validation, policy resolution, JWS signing and verification, anti-replay nonces, DNS scope matching, CSR validation, key handling, the asynchronous job engine, licensing decisions, rate-limit decision tables, audit-line encoding. No I/O, no database. |
+| Integration (IT) | **188** | Real database (SQLite, PostgreSQL, SQL Server), real audit file on disk, real PKI request store, full ACME handler stack wired against the storage layer. Each test runs against every supported database backend. |
+| End-to-end (E2E) | **135** | The full Certeasy binary running as a subprocess. Two flavours: (1) CLI black-box — every subcommand (`serve`, `init`, `validate`, `migrate`, `license`, `cold-start`, `backup`, `audit`, `adcs check`), exit codes, error messages. (2) ACME protocol — real third-party clients (lego, certbot, acme.sh) plus a RFC-strict native client driving certificate issuance, renewal, revocation, account lifecycle, key rollover, and the full error/security path. |
+| **Total** | **1052** | |
 
 Numbers are refreshed at every release. The most recent count above reflects
-the **v0.9.4** line — **+107 tests since v0.9.3**.
+the **v0.9.4** line — **+243 tests since v0.9.3**.
 
 ## What is covered, by area
 
@@ -87,9 +87,36 @@ backend:
 - **PostgreSQL** — when configured in the CI environment.
 - **SQL Server** — when configured in the CI environment.
 
-Schema migrations, concurrent-writer behaviour (serialisable retry), and
-dialect-specific edge cases (UUID handling, NULL semantics in unique
-indexes, cascade chain restrictions on SQL Server) are all covered.
+Concurrent-writer behaviour (serialisable retry) and dialect-specific edge
+cases (UUID handling, NULL semantics in unique indexes, cascade chain
+restrictions on SQL Server) are all covered.
+
+### Schema and migrations
+
+The upgrade path is treated as a component in its own right, because its
+failures are silent and reach a database nobody can inspect afterwards.
+
+- **Every upgrade path between versions**, on the three backends: applied
+  in order, out of order, partially, and interrupted mid-run.
+- **The startup contract**: additive changes applied automatically, a
+  breaking change refused with the remedy named, a database newer than the
+  binary refused, and the mixed case a failed upgrade followed by a
+  rollback leaves.
+- **A migration already applied is verified against the binary that meets
+  it**, so a schema that no longer matches the code is refused rather than
+  used.
+- **Every table created by a migration is checked to be declared**, in both
+  directions — an undeclared table and a declared table that no longer
+  exists both fail the suite.
+- **The generated SQL** (`certeasy migrate --sql`) is compared against what
+  a real migration executes, statement by statement, and applied
+  end-to-end to confirm the resulting database satisfies the binary.
+- **Schema resolution on PostgreSQL and SQL Server** is asserted against
+  the engines themselves rather than assumed from their documentation:
+  where an unqualified name resolves, where a table is created, and which
+  schema wins when the same name exists twice. Certeasy's behaviour on a
+  shared database rests on those answers, so they are re-checked at every
+  release.
 
 ### Asynchronous issuance &amp; revocation
 
@@ -121,6 +148,14 @@ Certeasy manages its own TLS certificate, and each source is exercised:
   restart.
 - **Graceful shutdown** — in-flight requests and jobs drain within the
   configured window, and terminal database writes survive a shutdown signal.
+- **The built-in test authority is flagged** — selecting it produces an
+  unconditional warning, surfaced by both configuration validation and startup.
+- **Certificate authority material is never overwritten** — for the built-in
+  test authority, every startup path is covered: absent key, correct password,
+  wrong password, corrupt key, empty files, missing certificate, certificate
+  not matching the key, changed common name, unreadable certificate. Each
+  refusal asserts both files are unchanged byte for byte, and an authority
+  written by the previous version starts unchanged on the current one.
 
 ### Configuration
 
@@ -146,6 +181,8 @@ order, licence refusal).
 ### Audit log
 
 - Round-trip write + verify on every supported database backend.
+- The audit secret is redacted from database debug logs, checked on both log
+  formats, and stored and read back unchanged on every supported backend.
 - HMAC chain anchoring on the installation key.
 - Recovery across process restart, including rotated files. Rotation writes
   dated segments that are never renamed.
@@ -164,8 +201,8 @@ that keep a server running through a degraded or expired state.
 ### CLI
 
 Every subcommand and flag is exercised in the E2E suite — including
-`serve`, `init`, `validate`, `license`, `backup`, `audit verify`, and the
-ADCS preflight `adcs check`: argument validation, exit codes, error
+`serve`, `init`, `validate`, `migrate`, `license`, `backup`, `audit verify`,
+and the ADCS preflight `adcs check`: argument validation, exit codes, error
 messages on missing file / bad format / incompatible flag combinations,
 help output for every command level.
 

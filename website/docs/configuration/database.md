@@ -62,6 +62,7 @@ database:
 | `driver` | `sqlite` | Database driver: `sqlite`, `postgres`, `sqlserver` |
 | `dsn` | — | Connection string (PostgreSQL and SQL Server) |
 | `path` | `%WORKDIR%/db.sqlite` | File path (SQLite only) |
+| `noddl` | `false` | The application account holds no schema rights. Certeasy never issues DDL: it checks the schema at startup, refuses to run if anything is missing, and `certeasy migrate` writes the SQL for your DBA instead of applying it. See [Migrations](/administration/migrations). |
 | `ping-timeout-sec` | `10` | Timeout for the startup connectivity check |
 | `max-idle-conn` | `2` (SQLite), `5` (others) | Maximum idle connections |
 | `max-conn` | `10` | Maximum open connections |
@@ -70,7 +71,34 @@ database:
 
 ## Migrations
 
-Certeasy runs database migrations automatically at startup. Migrations are embedded in the binary — no external SQL files are needed. If the schema is already up to date, startup proceeds immediately.
+The schema travels inside the binary — no external SQL files. A restart applies
+**additive** migrations on its own; anything that cannot be undone by doing
+nothing waits for an explicit `certeasy migrate`. See
+[Migrations](/administration/migrations) for the full contract, the `--sql`
+output, and the `noddl` mode.
+
+## Schema
+
+Certeasy writes to the schema its database account resolves to, and says which
+one at every start:
+
+```
+Database schema in use  schema=public
+```
+
+Two instances sharing a database **and a schema** share their data. That is a
+valid multi-node deployment — and an accident that looks identical from the
+database's side. For two separate installations, give each one a schema:
+
+```yaml
+# PostgreSQL: the default search path sends everyone to `public`
+database:
+  driver: postgres
+  dsn: "postgres://certeasy:secret@db01:5432/shared?options=-csearch_path%3Dcerteasy"
+```
+
+On SQL Server the schema comes from the database user, not the connection
+string — use one user per installation, each with its own `DEFAULT_SCHEMA`.
 
 ## Schema Reference
 

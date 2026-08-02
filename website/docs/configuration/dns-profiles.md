@@ -64,6 +64,27 @@ After a challenge DNS name resolves, Certeasy checks the resulting IP against th
 
 Deny rules are evaluated first. If an IP matches a deny CIDR, the challenge fails regardless of allow rules.
 
+:::warning At least one of the two is required
+A profile with neither `allow-cidrs` nor `deny-cidrs` is refused at startup, and
+by `certeasy validate`. An empty policy would accept every address DNS returns —
+link-local and cloud metadata (`169.254.169.254`) included — and Certeasy will
+not treat "unset" as "open".
+
+If you genuinely accept any address, say so:
+
+```yaml
+    resolved-ip-policy:
+      allow-cidrs:
+        - "0.0.0.0/0"
+        - "::/0"
+```
+
+This applies to every profile, whichever challenge you use. Challenge types
+cannot be restricted per profile: every non-wildcard authorization offers
+`dns-01`, `http-01` and `tls-alpn-01`, and the client picks — so a profile that
+has only ever seen `dns-01` still offers the paths this policy guards.
+:::
+
 ## Multiple Profiles
 
 You can define multiple profiles for different DNS zones or resolution strategies:

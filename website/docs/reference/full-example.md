@@ -134,7 +134,7 @@ authorities:
   #   configuration:
   #     common-name: "Certeasy Test CA"
   #     password: "testpassword"
-  #     key-size: 2048
+  #     key-size: 4096
   #     validity: 3650                 # CA certificate lifetime, in days
   #     certificate-validity: 2160h    # issued-certificate lifetime (default 90 days)
 

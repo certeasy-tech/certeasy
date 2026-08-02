@@ -150,7 +150,7 @@ authorities:
     configuration:
       common-name: "Certeasy Test CA"
       password: "testpassword"
-      key-size: 2048
+      key-size: 4096
       validity: 3650            # CA certificate lifetime, in days
       certificate-validity: 2160h   # issued-certificate lifetime (default 90 days)
 ```
@@ -159,11 +159,18 @@ authorities:
 
 | Field | Description |
 |---|---|
-| `common-name` | CN of the fake CA certificate |
-| `password` | Password for the CA key store |
-| `key-size` | RSA key size for the CA |
-| `validity` | Lifetime of the **CA** certificate, in days |
+| `common-name` | CN of the fake CA certificate. **Required.** |
+| `password` | Password encrypting the CA key on disk. **Required** — whoever reads that file otherwise becomes the authority. |
+| `key-size` | RSA key size for the CA. Defaults to `4096` when omitted. |
+| `validity` | Lifetime of the **CA** certificate, in days. Defaults to `3650` when omitted. |
 | `certificate-validity` | Lifetime of **issued** certificates (Go duration, e.g. `2160h`). Also bounds the CRL: a revoked serial is purged at `RevocationTime + certificate-validity` (it would be expired anyway), so the CRL cannot grow without bound. Default 90 days. |
+
+:::info The CA key cannot be weaker than what it signs
+`key-size` must be at least the highest `min-rsa-bits` of the issuance policies
+bound to this authority — `3072` by default — with a hard floor of `2048`. A CA
+signing 3072-bit certificates with a 2048-bit key is refused at startup, and by
+`certeasy validate`.
+:::
 
 :::warning
 The `fake` authority is for development and testing only. Do not use it in production.

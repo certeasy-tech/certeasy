@@ -143,6 +143,22 @@ codes and the `noddl` workflow.
 
 ### Breaking changes
 
+- **A `dns-validation-profiles` entry with neither `allow-cidrs` nor
+  `deny-cidrs` is refused at startup**, and by `certeasy validate`. An empty
+  `resolved-ip-policy` accepted every address DNS returned — link-local and cloud
+  metadata (`169.254.169.254`) included. Unset is not the same as deliberately
+  open, so it is refused instead of defaulted. Add the networks your targets live
+  on, or `allow-cidrs: ["0.0.0.0/0", "::/0"]` if you accept any address on
+  purpose. This applies to every profile whatever challenge you use: challenge
+  types cannot be restricted per profile, so a profile that has only ever seen
+  `dns-01` still offers the paths this policy guards. Configurations produced by
+  `certeasy init`, and the shipped examples, already carry the block.
+- **A `fake` authority with no `common-name`, no `password`, a `key-size` below
+  2048 or a non-positive `validity` is refused at startup**, and by
+  `certeasy validate`. That driver parsed its configuration without checking any
+  field, so these were accepted and then failed later — after the database had
+  been migrated — or produced a CA that expired the second it was created.
+
 - **`audit.rotate.max-backups` no longer exists and a configuration containing
   it is refused at startup.** The audit log is a compliance artifact: deleting it
   by file count is not a setting. Remove the key from your configuration before

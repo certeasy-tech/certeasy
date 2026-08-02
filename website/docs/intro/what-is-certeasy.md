@@ -24,7 +24,7 @@ Linux servers, reverse proxies, load balancers, and containers are a different s
 Certeasy sits between your ACME clients and your ADCS. It:
 
 1. Exposes a standard ACME endpoint that any ACME client can talk to
-2. Validates the DNS challenge to confirm ownership of the requested domain
+2. Validates the ACME challenge — `dns-01`, `http-01` or `tls-alpn-01` — to confirm ownership of the requested domain
 3. Submits the CSR to your ADCS authority in-process (no child process), with a `certreq.exe` connector available as a fallback
 4. Returns the signed certificate to the ACME client
 

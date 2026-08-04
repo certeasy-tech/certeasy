@@ -143,6 +143,20 @@ codes and the `noddl` workflow.
 
 ### Breaking changes
 
+- **The `adcs-cli` connector takes `certreq.exe` and `certutil.exe` from the
+  Windows system directory** (typically `C:\Windows\System32`) instead of
+  looking them up through `%PATH%`. An unset key, or a bare file name with or
+  without the `.exe` extension, resolves there — existing configurations keep
+  working. Set a full path to run a copy kept elsewhere, for instance on a path
+  carved out of an EDR policy. A path relative to the working directory
+  (`tools\certutil.exe`) is now refused at startup and by `certeasy validate`.
+  The native connector is unaffected: it runs in-process over COM and starts no
+  external binary.
+- **ADCS `ca-name` and `certificate-template` are refused when they contain a
+  control character or a colon, or start with a dash.** Those characters
+  delimit fields in the request sent to the CA, so a value carrying one changes
+  the request rather than naming it. Ordinary names — `PKI01\Lab-Issuing-CA`,
+  `Web Server v2` — are unaffected.
 - **A `dns-validation-profiles` entry with neither `allow-cidrs` nor
   `deny-cidrs` is refused at startup**, and by `certeasy validate`. An empty
   `resolved-ip-policy` accepted every address DNS returned — link-local and cloud

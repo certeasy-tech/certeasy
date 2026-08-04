@@ -63,8 +63,23 @@ fallback, not for heavy issuance/revocation volume.
 | `ca-name` | — | both | Full CA name as shown by `certutil -CA` (e.g. `PKI\LAB-RootCA`) |
 | `certificate-template` | — | both | ADCS certificate template name for ACME issuance |
 | `default-timeout` | `4m` | both | Maximum wait time for a single ADCS request. Keep it **below** `workers.max-job-duration` (default `5m`) so the ADCS timeout — not the surrounding job deadline — bounds the call; Certeasy warns at startup if it is greater than or equal to `max-job-duration`. |
-| `certreq-path` | `certreq.exe` | `adcs-cli` only | Full path to `certreq.exe` (enrollment). Ignored by the native connector. |
-| `certutil-path` | `certutil.exe` | `adcs-cli` only | Full path to `certutil.exe`, used for **revocation** (`certutil -revoke`). `certutil` is a different binary from `certreq`. Ignored by the native connector. Only relevant when revocation propagation is enabled (i.e. `disable-ca-revocation` is not set). |
+| `certreq-path` | system directory | `adcs-cli` only | Path to `certreq.exe` (enrollment). Ignored by the native connector. |
+| `certutil-path` | system directory | `adcs-cli` only | Path to `certutil.exe`, used for **revocation** (`certutil -revoke`). `certutil` is a different binary from `certreq`. Ignored by the native connector. Only relevant when revocation propagation is enabled (i.e. `disable-ca-revocation` is not set). |
+
+**Since 0.9.4**, both binaries are taken from the Windows system directory
+(typically `C:\Windows\System32`) instead of being looked up through `%PATH%`.
+Leaving the key unset — or giving just a file name, with or without the `.exe`
+extension — resolves there.
+
+Set a full path only to run a copy kept elsewhere, for instance on a dedicated
+path carved out of an Endpoint Detection and Response (EDR) policy:
+
+```yaml
+      certutil-path: "C:\\Tools\\certutil.exe"
+```
+
+A path relative to the working directory (`tools\certutil.exe`) is refused at
+startup and by `certeasy validate`.
 
 ### Finding your CA Name
 

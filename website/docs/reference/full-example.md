@@ -125,8 +125,11 @@ authorities:
       ca-name: "PKI\\LAB-RootCA"       # as shown by certutil -CA
       certificate-template: "ACME-Template-Server"
       default-timeout: 4m              # keep below workers.max-job-duration (default 5m)
-      # certreq-path: "certreq.exe"    # adcs-cli connector only (path if not in PATH)
-      # certutil-path: "certutil.exe"  # adcs-cli connector only (used for revocation)
+      # Taken from the Windows system directory by default (since 0.9.4).
+      # Set these only to run a copy kept elsewhere, e.g. on a path carved out
+      # of an EDR policy. adcs-cli connector only.
+      # certreq-path: "C:\\Tools\\certreq.exe"
+      # certutil-path: "C:\\Tools\\certutil.exe"   # used for revocation
 
   # Fake PKI for local testing — do not use in production
   # - name: test-ca

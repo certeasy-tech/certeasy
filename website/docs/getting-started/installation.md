@@ -77,21 +77,55 @@ In production you do not want `certeasy serve` running from an interactive shell
 
 ### Windows service
 
-The recommended production setup is to run Certeasy as a Windows service using `sc.exe` or [NSSM](https://nssm.cc/):
+Run Certeasy as a Windows service using `sc.exe` or [NSSM](https://nssm.cc/),
+under a **dedicated service account**.
+
+:::caution Do not run the service as LocalSystem
+`sc.exe create` without `obj=` gives you LocalSystem, the highest local
+privilege. Certeasy listens on the network and holds the enrollment identity for
+your CA, so that account is the wrong place for it. Give it an account whose only
+privilege on the PKI is the one it needs.
+:::
+
+Enroll permission is granted in Active Directory, so the account has to be a
+domain account. A **group Managed Service Account (gMSA)** is the best option:
+Windows rotates its password and it is never typed anywhere.
 
 ```powershell
-# Using sc.exe
-sc.exe create Certeasy binPath= "C:\certeasy\certeasy.exe -f C:\certeasy\config.yml" start= auto
+# Once, on a domain controller
+New-ADServiceAccount -Name certeasy -DNSHostName certeasy.example.com `
+  -PrincipalsAllowedToRetrieveManagedPassword "CERTEASY-HOST$"
+
+# On the Certeasy host
+Install-ADServiceAccount -Identity certeasy
+```
+
+Create the service under it — the trailing `$` and the empty password are how a
+gMSA is declared:
+
+```powershell
+sc.exe create Certeasy `
+  binPath= "C:\certeasy\certeasy.exe -f C:\certeasy\config.yml" `
+  obj= "EXAMPLE\certeasy$" password= "" start= auto
 sc.exe description Certeasy "ACME server for internal ADCS"
 sc.exe start Certeasy
 ```
 
-The service account must have:
+Where gMSA is not available, use an ordinary domain account dedicated to
+Certeasy — `obj= "EXAMPLE\svc-certeasy" password= "..."` — with its password
+held in your secret store.
 
+Grant that account, and nothing beyond:
+
+- **Log on as a service** (`SeServiceLogonRight`) — the service will not start without it
 - Write access to the work directory
 - Enroll permission on the ADCS certificate template
 - Network access to the ADCS host
-- (only with the `adcs-cli` connector) Access to `certreq.exe`, usually `C:\Windows\System32\certreq.exe`
+- (only with the `adcs-cli` connector) Read and execute on `certreq.exe` and `certutil.exe` in the Windows system directory
+
+Reusing an existing administrative account defeats the point: enrollment on one
+template is the only right Certeasy needs on your PKI, and whatever else the
+account carries is available to anything that reaches the service.
 
 ### Linux (systemd)
 

@@ -176,7 +176,7 @@ authorities:
 |---|---|
 | `common-name` | CN of the fake CA certificate. **Required.** |
 | `password` | Password encrypting the CA key on disk. **Required** — whoever reads that file otherwise becomes the authority. |
-| `key-size` | RSA key size for the CA. Defaults to `4096` when omitted. |
+| `key-size` | RSA key size for the CA, **applied only when the CA is generated**. Defaults to `4096` when omitted. |
 | `validity` | Lifetime of the **CA** certificate, in days. Defaults to `3650` when omitted. |
 | `certificate-validity` | Lifetime of **issued** certificates (Go duration, e.g. `2160h`). Also bounds the CRL: a revoked serial is purged at `RevocationTime + certificate-validity` (it would be expired anyway), so the CRL cannot grow without bound. Default 90 days. |
 
@@ -185,6 +185,24 @@ authorities:
 bound to this authority — `3072` by default — with a hard floor of `2048`. A CA
 signing 3072-bit certificates with a 2048-bit key is refused at startup, and by
 `certeasy validate`.
+:::
+
+:::caution `key-size` only applies when the CA is generated
+An existing `ca.key` is loaded as it stands and is **never** regenerated —
+replacing it would invalidate every certificate the authority has issued. So on
+an authority that already has a CA, changing `key-size` changes nothing: the key
+keeps the size it was created with, and the value in the configuration describes
+an intention rather than what runs.
+
+Certeasy logs a warning at startup when the two disagree, giving the size in use
+and the configured one. Moving to a stronger CA is a deliberate rollover: create
+a new authority and re-issue, rather than editing this field.
+
+Note the two checks fire at different moments. `key-size` against the policy
+floor is a **static** check, so `certeasy validate` and the startup gate both
+refuse it before anything else happens. The `common-name` check compares the
+configuration with the certificate on disk, so it can only run once the
+authority is opened, later in startup.
 :::
 
 :::warning

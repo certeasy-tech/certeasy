@@ -5,7 +5,7 @@ title: Changelog
 
 # Changelog
 
-## v0.9.4 - unreleased
+## v0.9.4 - 2026-08-04
 
 We re-review the Certeasy codebase internally whenever materially more capable
 code-analysis tooling becomes available. This release is the outcome of such a

@@ -23,10 +23,29 @@ certeasy.exe -f C:\certeasy\config.yml
 
 Without `-f`, Certeasy searches for `config.yml` / `config.yaml` in:
 
-1. Current directory
-2. Executable directory
-3. Windows: `%PROGRAMDATA%\certeasy`, then user config directory
-4. Linux: `$XDG_CONFIG_HOME/certeasy`, then `/etc/certeasy`
+1. Executable directory
+2. Windows: `%PROGRAMDATA%\hortval`, then `%APPDATA%\hortval`
+   Linux: `/etc/hortval`, then `$XDG_CONFIG_HOME/hortval`
+3. The same two directories named `certeasy` — the pre-rename location, still
+   read, with a warning at startup. It will be removed in v2.
+
+Machine-wide comes before per-user on purpose: the per-user directory is the one
+an unprivileged account can write to.
+
+:::warning The current directory is no longer searched
+Up to v0.9.4 the working directory came first. A `config.yml` sitting in any
+directory someone could write to therefore took precedence over the one in
+`/etc` — and the configuration file selects the database, the working directory,
+the audit log destination and the outbound proxy. Pass `-f` if you were relying
+on it, or move the file to one of the locations above.
+:::
+
+:::warning Two configuration files is an error, not a priority list
+If more than one of those files exists, Certeasy refuses to start and names them
+all. No directory wins over another: pass `-f` to say which one to use, or
+remove the others. A file that silently shadows another is how a deployment ends
+up running a configuration nobody meant to apply.
+:::
 
 ## Minimal Example
 

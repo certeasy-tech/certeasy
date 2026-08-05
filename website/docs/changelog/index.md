@@ -5,6 +5,48 @@ title: Changelog
 
 # Changelog
 
+## v0.9.5 - unreleased
+
+### Breaking changes
+
+- **The working directory is no longer searched for `config.yml`.** Until now it
+  came first, ahead of the executable's directory and `/etc`. That meant running
+  `certeasy audit verify` or `certeasy backup create` from any directory a less
+  privileged account could write to loaded *that* account's configuration file —
+  and the configuration file selects the database, the working directory, the
+  audit log destination and the outbound proxy. Pass `-f <path>` if you were
+  relying on it. Everything the documentation describes already passes `-f`: the
+  systemd unit, the `sc.exe create` line, and every command the setup wizard
+  prints when it finishes.
+- **Two or more candidate configuration files is now a startup error.** Certeasy
+  used to take the first one found and ignore the rest, so a file in one
+  searched directory silently shadowed the file in another — including
+  `config.yml` shadowing `config.yaml` in the same directory. It now refuses to
+  start, names every file it found, and asks for `-f`. No directory takes
+  precedence over another; if you had two and were relying on the order, that
+  order was never documented and never guaranteed.
+- **A configuration file that exists but cannot be read is reported instead of
+  skipped.** Certeasy cannot load it, so it is not a candidate — but falling
+  back to another file without saying so would apply a configuration you did not
+  intend. It is named, with the reason, either in the startup warning or in the
+  "no readable configuration file found" message.
+
+### Changes
+
+- **Configuration is now looked for under `hortval` before `certeasy`** —
+  `%PROGRAMDATA%\hortval` and `%APPDATA%\hortval` on Windows, `/etc/hortval` and
+  `$XDG_CONFIG_HOME/hortval` on Linux. The `certeasy` directories are still read,
+  with a warning naming both the old and the new location; they will be removed
+  in v2. Nothing to do at upgrade time.
+- **Machine-wide configuration directories are searched before per-user ones**,
+  on every platform. Windows already did; Linux and macOS had the reverse order.
+  Since two candidates are now refused outright this changes no outcome — it
+  changes what the error message lists first, and the per-user directory is the
+  one an unprivileged account can write to.
+
+See [Minimal configuration](/getting-started/minimal-configuration) for the full
+search order.
+
 ## v0.9.4 - 2026-08-04
 
 We re-review the Certeasy codebase internally whenever materially more capable

@@ -77,4 +77,12 @@ Base directory for all runtime files: SQLite database, TLS certificate cache, lo
 | Windows | `%ProgramData%\certeasy` |
 | Linux | `/var/lib/certeasy` |
 
-All relative paths in other configuration sections (e.g. `database.path`, `local-pki-cache-dir`) are resolved relative to `workdir`.
+:::warning Relative paths are **not** resolved against `workdir`
+A path you write elsewhere in the configuration — `database.path`, `audit.path`, `logs.file`, `local-pki-cache-dir`, `letsencrypt.cache-dir`, or a bundle's `local-cert-file` / `local-key-file` — is used exactly as written. A relative one therefore resolves against the **process working directory**, not against `workdir`.
+
+That directory is rarely the one you have in mind. A Windows service created with `sc.exe` starts in `C:\Windows\System32` — and `sc.exe` offers no field to change it — so a relative path lands there instead of beside your installation. On PostgreSQL or SQL Server, where the connection string is independent of `workdir`, the server then starts perfectly well on a *second*, empty working directory: fresh node identity, fresh audit chain, regenerated fake CA.
+
+**Write absolute paths.** Omitting a key is also always safe: only the defaults are anchored to `workdir` — leaving `audit.path` unset gives you `<workdir>/audit.log`.
+
+Earlier revisions of this page stated the opposite. That was wrong, and it is withdrawn.
+:::

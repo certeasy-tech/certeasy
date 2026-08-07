@@ -80,6 +80,27 @@ In production you do not want `certeasy serve` running from an interactive shell
 Run Certeasy as a Windows service using `sc.exe` or [NSSM](https://nssm.cc/),
 under a **dedicated service account**.
 
+:::danger `sc.exe` cannot start Certeasy on released versions
+Certeasy does not yet implement the Service Control Manager handshake, so a
+service created with `sc.exe` fails to start with **error 1053** — "the service
+did not respond to the start request in a timely fashion". The process does run
+for about thirty seconds before the SCM kills it, which leaves the shutdown
+drain unfinished and `db.sqlite-wal` / `db.sqlite-shm` files behind.
+
+Until this ships, run `certeasy serve -f <config>` in a console, or under a
+wrapper that performs the SCM handshake on the binary's behalf — a scheduled
+task, or NSSM. Neither wrapper has been validated against Certeasy yet.
+
+Whichever you choose, **capture stderr**. A handful of startup lines are written
+there and never reach `logs.file`, and when startup is *refused* the log file is
+not created at all — everything goes to stderr. Under the Windows SCM stderr is
+attached to nothing, so those lines are lost outright. Under NSSM, set
+`AppStderr`.
+
+The procedure below is the target shape and is correct for the account model —
+only the start step is affected.
+:::
+
 :::caution Do not run the service as LocalSystem
 `sc.exe create` without `obj=` gives you LocalSystem, the highest local
 privilege. Certeasy listens on the network and holds the enrollment identity for

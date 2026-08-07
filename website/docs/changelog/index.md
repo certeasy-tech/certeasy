@@ -26,8 +26,10 @@ for:
   sets byte for byte, as a defence against parser differentials. Subject
   Alternative Names are restricted to `dNSName`: `otherName`/UPN, `rfc822Name`,
   URI and IP addresses are refused outright. This makes the ESC1/ESC6
-  escalation vector **structurally impossible rather than filtered** — a
-  distinction that matters on an ADCS deployment.
+  escalation vector **structurally impossible to request rather than filtered**
+  — a distinction that matters on an ADCS deployment. It bounds what a client
+  can ask for, not what your CA can issue; the template remains yours to
+  harden. See [Certificate Security Model](/security/certificate-model).
 - **JWS algorithm confusion has no landing point.** The verifier is selected on
   key type, each verifier re-reads the protected header and requires an exact
   algorithm with a matching curve, and there is **no HMAC verifier and no `none`
@@ -341,6 +343,8 @@ Initial public release.
 :::note
 Certeasy v0.9.x is a **stable release**, used for day-to-day issuance, renewal and revocation. The full **production-ready** label is reserved for the upcoming **v1.0**, which closes the known, non-blocking limitations below:
 
+- **Certeasy cannot be started as a Windows service with `sc.exe`.** The Service Control Manager handshake is not implemented, so `sc.exe start` fails with error 1053 and the process is killed after about thirty seconds, leaving the shutdown drain unfinished. Run it in a console, or under a wrapper that performs the handshake. Planned for v1.0. See [Installation](../getting-started/installation.md).
+- **Some startup log lines only reach stderr, never `logs.file`.** The file receives everything the audit, PKI, HTTP, license and worker services emit, but a few lines from the main service are written before the configured destination is installed. A *refused* startup writes nothing to the file at all. Under systemd those lines land in journald; under the Windows SCM they are lost. Planned for v1.0. See [Logging](../administration/logging.md).
 - **No health or metrics HTTP endpoints yet.** Operational monitoring is limited to log scraping and database introspection for now; dedicated `/health` and metrics endpoints are planned for v1.0.
 - **No automatic data retention or cleanup.** ACME tables (orders, authorizations, challenges, …) grow without bound. Operators running long-lived deployments should plan for manual maintenance until automated retention ships in v1.0.
 - **RFC 9773 `replaces` field is accepted but not yet honored.** Clients can supply `replaces` on new orders without error, but the linkage to the previous certificate is not applied. The `renewalInfo` endpoint itself is fully functional; full `replaces` semantics are planned for v1.1.

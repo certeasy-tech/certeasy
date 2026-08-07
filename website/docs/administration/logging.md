@@ -7,6 +7,19 @@ title: Logging
 
 Certeasy uses structured logging with configurable level, format, output, and per-service overrides.
 
+:::caution Startup lines go to stderr, not to `logs.file`
+The configured destination is installed once the configuration has been read, so
+the lines emitted before that point are written to **stderr** and never appear in
+`logs.file`. When startup is *refused*, the log file is not created at all and
+everything — the JSON line and the human-readable message — goes to stderr.
+
+Keep stderr captured wherever Certeasy runs. Under systemd it is routed to
+journald by default, so nothing is lost, only split across two places. Under the
+Windows Service Control Manager stderr is attached to nothing and those lines are
+lost; see [Installation](../getting-started/installation.md) for what that means
+today.
+:::
+
 ## Configuration
 
 ```yaml

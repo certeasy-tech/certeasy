@@ -7,6 +7,14 @@ title: Certificate Security Model
 
 Certeasy enforces a strict certificate identity model at issuance time. This behavior is **mandatory, non-configurable, and secure by default**.
 
+:::warning These rules are enforced on the request, not on what your CA returns
+Every rule on this page is checked against the CSR and the ACME order, before submission. The certificate your CA issues is **not** re-checked against them.
+
+Certeasy prevents an ACME client from *asking* for a dangerous certificate. It does not prevent your CA from *issuing* one. If the ADCS template adds a SAN, sets a different Subject, or grants a broader EKU than was requested, Certeasy returns that certificate to the client without detecting the difference.
+
+The mitigations below are therefore only as strong as the template they are paired with. See [ADCS hardening & shared responsibility](/security/hardening).
+:::
+
 ## Core Principle
 
 > ACME proves **control over a DNS identifier** — nothing else.
@@ -58,7 +66,7 @@ In Windows and ADCS environments, Subject fields influence certificate-to-accoun
 | Subject Alternative Name | `2.5.29.17` | DNS names only, no duplicates |
 | Extended Key Usage | `2.5.29.37` | Server Authentication (`1.3.6.1.5.5.7.3.1`) only |
 
-EKU values are **forced by policy**. CSR-provided EKU values are ignored or rejected.
+CSR-provided EKU values are ignored or rejected. The EKU that ends up in the certificate comes from your ADCS template — configure it to grant Server Authentication only.
 
 ### Forbidden extensions
 

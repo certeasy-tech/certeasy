@@ -5,112 +5,6 @@ title: Changelog
 
 # Changelog
 
-## v0.9.5 - unreleased
-
-### Breaking changes
-
-- **The working directory is no longer searched for `config.yml`.** Until now it
-  came first, ahead of the executable's directory and `/etc`. That meant running
-  `certeasy audit verify` or `certeasy backup create` from any directory a less
-  privileged account could write to loaded *that* account's configuration file —
-  and the configuration file selects the database, the working directory, the
-  audit log destination and the outbound proxy. Pass `-f <path>` if you were
-  relying on it. Everything the documentation describes already passes `-f`: the
-  systemd unit, the `sc.exe create` line, and every command the setup wizard
-  prints when it finishes.
-- **Two or more candidate configuration files is now a startup error.** Certeasy
-  used to take the first one found and ignore the rest, so a file in one
-  searched directory silently shadowed the file in another — including
-  `config.yml` shadowing `config.yaml` in the same directory. It now refuses to
-  start, names every file it found, and asks for `-f`. No directory takes
-  precedence over another; if you had two and were relying on the order, that
-  order was never documented and never guaranteed.
-- **A configuration file that exists but cannot be read is reported instead of
-  skipped.** Certeasy cannot load it, so it is not a candidate — but falling
-  back to another file without saying so would apply a configuration you did not
-  intend. It is named, with the reason, either in the startup warning or in the
-  "no readable configuration file found" message.
-
-- **Every configuration setting that names a path must now be absolute or
-  anchored**, and a relative one is refused at startup and by
-  `certeasy validate`. This covers `workdir`, `database.path`, `audit.path`,
-  `logs.file`, `local-pki-cache-dir`, `letsencrypt.cache-dir`, and a bundle's
-  `local-cert-file` / `local-key-file`. None of them was anchored: a relative
-  value was resolved against the process working directory — which for a Windows
-  service created with `sc.exe` is `C:\Windows\System32`, since `sc.exe` has no
-  field to set it. A deployment could therefore end up with two working
-  directories, and on Postgres or SQL Server the service started anyway with a
-  fresh node identity, a fresh audit chain and a regenerated fake CA. Anchor
-  with `%WORKDIR%`, or `%CONFIGDIR%` for `workdir` itself; a refusal names the
-  setting, and when a live installation sits where the value resolves it prints
-  the exact line to write.
-
-  The documentation previously stated the opposite — that relative paths were
-  resolved relative to `workdir`. That was wrong, and is corrected on
-  [Configuration overview](/configuration/overview).
-
-### Changes
-
-- **New `%CONFIGDIR%` token, valid in `workdir`**, expanding to the directory
-  holding the configuration file. It exists because `workdir` is the one path
-  that could not use `%WORKDIR%` — it *is* the working directory. `certeasy init`
-  now proposes `%CONFIGDIR%/workdir` instead of `./workdir`, so a generated
-  configuration means the same directory wherever it is later started from, and
-  a free-form relative answer is written out already resolved.
-- **Configuration is now looked for under `hortval` before `certeasy`** —
-  `%PROGRAMDATA%\hortval` and `%APPDATA%\hortval` on Windows, `/etc/hortval` and
-  `$XDG_CONFIG_HOME/hortval` on Linux. The `certeasy` directories are still read,
-  with a warning naming both the old and the new location; they will be removed
-  in v2. Nothing to do at upgrade time.
-- **Machine-wide configuration directories are searched before per-user ones**,
-  on every platform. Windows already did; Linux and macOS had the reverse order.
-  Since two candidates are now refused outright this changes no outcome — it
-  changes what the error message lists first, and the per-user directory is the
-  one an unprivileged account can write to.
-
-### Upgrading from v0.9.4 — what changes for an existing configuration
-
-Nothing to do if you pass `-f` and every path in your configuration is absolute.
-Otherwise, find your case:
-
-| Your v0.9.4 setup | v0.9.4 did | v0.9.5 does | What to do |
-|---|---|---|---|
-| `-f <path>` on the command line | loads it | same | nothing |
-| No `-f`, `config.yml` in the **current directory** | loaded it | **refuses**, and lists where it looked | pass `-f`, or move the file |
-| No `-f`, `config.yml` next to the binary | loaded it | same | nothing |
-| No `-f`, `config.yml` in `/etc/certeasy` or `%PROGRAMDATA%\certeasy` | loaded it | loads it **and warns** | rename the directory to `hortval` before v2 |
-| Two candidate files in two directories | loaded the first, ignored the other | **refuses**, names both | pass `-f`, or delete one |
-| `config.yml` **and** `config.yaml` side by side | `.yml` won | **refuses**, names both | pass `-f`, or delete one |
-| A config file that exists but cannot be read | was selected, then failed to open | **skipped**, and reported; another readable file is used with a warning | fix the permissions |
-| `workdir: ./workdir` (or any relative path) | resolved against the working directory | **refuses**; if a live installation sits where it resolves, prints the exact line to write | use that line, or an absolute path, or `%CONFIGDIR%/…` |
-| `workdir` not set | `%ProgramData%\certeasy` / `/var/lib/certeasy` | same | nothing |
-| `database.path: %WORKDIR%/db.sqlite` | resolved | same | nothing |
-| `audit.path`, `logs.file`, `letsencrypt.cache-dir`, `local-cert-file`, `local-key-file` with `%WORKDIR%` | **taken literally** — created a directory actually named `%WORKDIR%` under the working directory | resolved | delete any stray `%WORKDIR%` directory once the real files are in place |
-| `certreq-path` / `certutil-path` | resolved from the Windows system directory, relative refused | **unchanged** | nothing |
-
-The wizard is affected too: `certeasy init` used to write `workdir: ./workdir`,
-which v0.9.5 refuses. A configuration generated by v0.9.4's wizard therefore
-needs its `workdir` line changed — the startup message tells you what to write.
-
-See [Minimal configuration](/getting-started/minimal-configuration) for the full
-search order, and [Configuration overview](/configuration/overview) for the
-anchor tokens.
-
-### Rolling back to v0.9.4
-
-**You can.** Nothing in this release prevents going back:
-
-- A configuration fixed for v0.9.5 stays readable by v0.9.4, provided you used
-  the absolute paths the startup message hands you. The `%CONFIGDIR%` token is
-  new and v0.9.4 would take it literally — it only appears in configurations
-  generated by `certeasy init`, that is on fresh installs, which have nothing to
-  roll back to.
-- No schema migration ships in this release, so the database is unchanged.
-
-Keep this in mind if you edit by hand: anchoring a path with a token that
-v0.9.4 does not substitute is what would close the door. An absolute path never
-does.
-
 ## v0.9.4 - 2026-08-04
 
 We re-review the Certeasy codebase internally whenever materially more capable
@@ -135,7 +29,7 @@ for:
   escalation vector **structurally impossible to request rather than filtered**
   — a distinction that matters on an ADCS deployment. It bounds what a client
   can ask for, not what your CA can issue; the template remains yours to
-  harden. See [Certificate Security Model](/security/certificate-model).
+  harden. See [Certificate Security Model](/0.9.4/security/certificate-model).
 - **JWS algorithm confusion has no landing point.** The verifier is selected on
   key type, each verifier re-reads the protected header and requires an exact
   algorithm with a matching curve, and there is **no HMAC verifier and no `none`
@@ -246,7 +140,7 @@ only what doing nothing could have survived.
 - **A database newer than the binary, or left mid-upgrade, is refused** rather
   than started on.
 
-See [Migrations](/administration/migrations) for the full contract, the exit
+See [Migrations](/0.9.4/administration/migrations) for the full contract, the exit
 codes and the `noddl` workflow.
 
 ### Breaking changes
@@ -317,7 +211,7 @@ codes and the `noddl` workflow.
   found outside it are named. Two instances sharing a database *and* a schema
   share their data — a valid multi-node deployment, and an accident that looks
   identical from the database's side. See
-  [Migrations](/administration/migrations).
+  [Migrations](/0.9.4/administration/migrations).
 
 ### Documentation
 

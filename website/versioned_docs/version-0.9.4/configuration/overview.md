@@ -77,42 +77,12 @@ Base directory for all runtime files: SQLite database, TLS certificate cache, lo
 | Windows | `%ProgramData%\certeasy` |
 | Linux | `/var/lib/certeasy` |
 
-## Every path must be absolute or anchored
+:::warning Relative paths are **not** resolved against `workdir`
+A path you write elsewhere in the configuration — `database.path`, `audit.path`, `logs.file`, `local-pki-cache-dir`, `letsencrypt.cache-dir`, or a bundle's `local-cert-file` / `local-key-file` — is used exactly as written. A relative one therefore resolves against the **process working directory**, not against `workdir`.
 
-:::warning Relative paths are refused
-This corrects the documentation as much as the product. Earlier versions of this
-page stated that relative paths in other sections were resolved relative to
-`workdir`. **They were not** — they were resolved against the process working
-directory, which for a Windows service created with `sc.exe` is
-`C:\Windows\System32`, and `sc.exe` offers no field to change it.
+That directory is rarely the one you have in mind. A Windows service created with `sc.exe` starts in `C:\Windows\System32` — and `sc.exe` offers no field to change it — so a relative path lands there instead of beside your installation. On PostgreSQL or SQL Server, where the connection string is independent of `workdir`, the server then starts perfectly well on a *second*, empty working directory: fresh node identity, fresh audit chain, regenerated fake CA.
 
-On SQLite that failed loudly. On PostgreSQL or SQL Server, where the connection
-string does not depend on `workdir`, it did not: the server started perfectly well
-on a *second*, empty working directory, with a fresh node identity, a fresh audit
-chain and a regenerated fake CA. Certeasy now refuses them at startup and in
-`certeasy validate`.
+**Write absolute paths.** Omitting a key is also always safe: only the defaults are anchored to `workdir` — leaving `audit.path` unset gives you `<workdir>/audit.log`.
+
+Earlier revisions of this page stated the opposite. That was wrong, and it is withdrawn.
 :::
-
-A path setting is accepted when it is **absolute**, or when it starts with an
-anchor token:
-
-| Token | Expands to | Valid in |
-|---|---|---|
-| `%WORKDIR%` | the resolved `workdir` | `database.path`, `audit.path`, `logs.file`, `local-pki-cache-dir`, `letsencrypt.cache-dir`, `local-cert-file`, `local-key-file` |
-| `%CONFIGDIR%` | the directory holding the configuration file | `workdir` only |
-
-```yaml
-workdir: "%CONFIGDIR%/workdir"      # beside the config file — what `certeasy init` writes
-database:
-  path: "%WORKDIR%/db.sqlite"
-audit:
-  path: "%WORKDIR%/audit.log"
-```
-
-`%CONFIGDIR%` exists for `workdir` alone: it is the one path that could not use
-`%WORKDIR%`, since it *is* the working directory. Written anywhere else it is
-refused rather than left as-is — an unsubstituted token would silently create a
-directory named `%CONFIGDIR%`.
-
-Omitting a key entirely is always safe: every default is anchored by
-construction.

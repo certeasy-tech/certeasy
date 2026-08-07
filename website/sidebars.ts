@@ -85,6 +85,7 @@ const sidebars: SidebarsConfig = {
         'reference/test-coverage',
       ],
     },
+    'upgrading',
     'changelog/index',
   ],
 };

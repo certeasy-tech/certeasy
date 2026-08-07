@@ -33,10 +33,18 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           routeBasePath: '/',
+          lastVersion: 'current',
           versions: {
             current: {
-              label: 'v1 (actuelle)',
+              label: 'Next',
               path: '/',
+            },
+            // What is frozen here is a binary, not a documentation number:
+            // readers pick the version by the name of the binary they installed.
+            '0.9.4': {
+              label: 'Certeasy 0.9.4',
+              path: '0.9.4',
+              banner: 'unmaintained',
             },
           },
         },

@@ -77,4 +77,37 @@ Base directory for all runtime files: SQLite database, TLS certificate cache, lo
 | Windows | `%ProgramData%\certeasy` |
 | Linux | `/var/lib/certeasy` |
 
-All relative paths in other configuration sections (e.g. `database.path`, `local-pki-cache-dir`) are resolved relative to `workdir`.
+## Every path must be absolute or anchored
+
+:::warning Relative paths are refused
+This corrects the documentation as much as the product. Earlier versions of this
+page stated that relative paths in other sections were resolved relative to
+`workdir`. **They were not** — they were resolved against the process working
+directory, which for a Windows service created with `sc.exe` is
+`C:\Windows\System32`. Certeasy now refuses them at startup and in
+`certeasy validate`.
+:::
+
+A path setting is accepted when it is **absolute**, or when it starts with an
+anchor token:
+
+| Token | Expands to | Valid in |
+|---|---|---|
+| `%WORKDIR%` | the resolved `workdir` | `database.path`, `audit.path`, `logs.file`, `local-pki-cache-dir`, `letsencrypt.cache-dir`, `local-cert-file`, `local-key-file` |
+| `%CONFIGDIR%` | the directory holding the configuration file | `workdir` only |
+
+```yaml
+workdir: "%CONFIGDIR%/workdir"      # beside the config file — what `certeasy init` writes
+database:
+  path: "%WORKDIR%/db.sqlite"
+audit:
+  path: "%WORKDIR%/audit.log"
+```
+
+`%CONFIGDIR%` exists for `workdir` alone: it is the one path that could not use
+`%WORKDIR%`, since it *is* the working directory. Written anywhere else it is
+refused rather than left as-is — an unsubstituted token would silently create a
+directory named `%CONFIGDIR%`.
+
+Omitting a key entirely is always safe: every default is anchored by
+construction.

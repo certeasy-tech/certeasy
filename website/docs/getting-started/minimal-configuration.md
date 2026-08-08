@@ -26,7 +26,7 @@ Without `-f`, Hortval searches for `config.yml` / `config.yaml` in:
 1. Executable directory
 2. Windows: `%PROGRAMDATA%\hortval`, then `%APPDATA%\hortval`
    Linux: `/etc/hortval`, then `$XDG_CONFIG_HOME/hortval`
-3. The same two directories named `hortval` — the pre-rename location, still
+3. The same two directories named `certeasy` — the pre-rename location, still
    read, with a warning at startup. It will be removed in v2.
 
 Machine-wide comes before per-user on purpose: the per-user directory is the one

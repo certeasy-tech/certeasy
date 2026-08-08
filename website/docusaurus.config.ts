@@ -14,10 +14,10 @@ const config: Config = {
   projectName: 'hortval-docs',
 
   trailingSlash: false,
-  onBrokenLinks: 'warn',
+  onBrokenLinks: 'throw',
   markdown: {
     hooks: {
-      onBrokenMarkdownLinks: 'warn',
+      onBrokenMarkdownLinks: 'throw',
     },
   },
 

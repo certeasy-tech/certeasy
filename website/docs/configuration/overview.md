@@ -78,7 +78,7 @@ Base directory for all runtime files: SQLite database, TLS certificate cache, lo
 | Linux | `/var/lib/hortval` |
 | macOS | `~/Library/Application Support/hortval` |
 
-:::warning Coming from Hortval: the server stops rather than use the old directory
+:::warning Coming from Certeasy: the server stops rather than use the old directory
 The default was renamed with the product. If you leave `workdir` unset **and** the
 pre-rename directory still holds data, startup stops rather than picking either
 one, and names three ways out: move it to the new default, keep it where it is by

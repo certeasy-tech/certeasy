@@ -36,7 +36,7 @@ const config: Config = {
           lastVersion: 'current',
           versions: {
             current: {
-              label: 'Next',
+              label: 'Hortval 0.9.5',
               path: '/',
             },
             // What is frozen here is a binary, not a documentation number:

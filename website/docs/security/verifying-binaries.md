@@ -5,7 +5,7 @@ title: Verifying release binaries
 
 # Verifying release binaries
 
-Every Certeasy release ships three platform binaries (Linux amd64, macOS arm64, Windows amd64) and a `SHA256SUMS` file:
+Every Hortval release ships three platform binaries (Linux amd64, macOS arm64, Windows amd64) and a `SHA256SUMS` file:
 
 | File | Purpose |
 |---|---|
@@ -13,11 +13,45 @@ Every Certeasy release ships three platform binaries (Linux amd64, macOS arm64, 
 
 `SHA256SUMS` covers **integrity** — it lets you detect a corrupted download or a tampered binary if the `SHA256SUMS` file you used was the one published on the official release page.
 
-:::warning Authenticity is not yet covered
-v0.9.x releases do **not** ship a GPG-signed `SHA256SUMS.asc`, and the Windows binary is **not** signed with Authenticode. A GPG signature on `SHA256SUMS` is planned for a later release (see the [roadmap](../intro/roadmap.md)). Until then, treat the published `SHA256SUMS` as authoritative only insofar as you trust the channel you fetched it from (the official GitHub Releases page over HTTPS).
+## Authenticity — Windows, from v0.9.5
+
+**The Windows binary is signed with Authenticode**, and the signature is
+timestamped (RFC 3161). Timestamping is what keeps it valid after the signing
+certificate expires: Windows then verifies *"this signature was valid when it
+was applied"*, so a binary released today does not become unsigned a year from
+now.
+
+Check it before running anything:
+
+```powershell
+Get-AuthenticodeSignature .\hortval-vX.Y.Z-windows-amd64.exe | Format-List Status,SignerCertificate
+```
+
+`Status` must read `Valid`, and the signer must be **SAFE PIC TECHNOLOGIES**. A
+`NotSigned` or `HashMismatch` means the file is not the one that was published —
+re-download it.
+
+:::caution Signed does not mean SmartScreen goes away
+It still appears. What changes is that the dialog now shows the **publisher's
+name** instead of *"Unknown publisher"* — which is the thing you can actually
+check. SmartScreen's reputation is built from download volume, not from the
+certificate, so a freshly published release warns regardless.
+
+**The prompt is expected. It is not evidence that your download was tampered
+with** — the signature check above is. See [Antivirus &
+EDR](../administration/antivirus-edr.md#windows-smartscreen--application-control)
+for clearing the block, and AppLocker rules.
 :::
 
-On Windows you will see this at first launch: with no Authenticode signature, SmartScreen displays *"Windows protected your PC"*, and AppLocker blocks the binary outright unless a rule allows it. **That prompt is expected — it is not a sign that your download was tampered with.** Verify the hash below to confirm, then see [Antivirus & EDR](../administration/antivirus-edr.md#windows-smartscreen--application-control) for how to clear the block.
+:::note Linux and macOS: integrity only
+Those binaries are not signed, and no GPG-signed `SHA256SUMS.asc` ships. For
+them, `SHA256SUMS` is authoritative only insofar as you trust the channel you
+fetched it from — the official Releases page over HTTPS.
+
+Distribution through signed package repositories, where the package manager
+verifies without anyone having to ask, is the direction being considered rather
+than a detached signature nobody downloads.
+:::
 
 ## Verifying a downloaded release
 
@@ -30,9 +64,9 @@ sha256sum -c SHA256SUMS
 Expected output:
 
 ```
-certeasy-vX.Y.Z-linux-amd64: OK
-certeasy-vX.Y.Z-darwin-arm64: OK
-certeasy-vX.Y.Z-windows-amd64.exe: OK
+hortval-vX.Y.Z-linux-amd64: OK
+hortval-vX.Y.Z-darwin-arm64: OK
+hortval-vX.Y.Z-windows-amd64.exe: OK
 ```
 
 If any line says `FAILED`, do not run the corresponding binary — re-download it from the official Releases page.
@@ -42,7 +76,7 @@ If any line says `FAILED`, do not run the corresponding binary — re-download i
 On Windows, use the built-in `certutil`:
 
 ```powershell
-certutil -hashfile certeasy-vX.Y.Z-windows-amd64.exe SHA256
+certutil -hashfile hortval-vX.Y.Z-windows-amd64.exe SHA256
 ```
 
 Compare the printed SHA-256 against the matching line in `SHA256SUMS`.

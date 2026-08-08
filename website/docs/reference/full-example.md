@@ -61,7 +61,7 @@ logs:
   services:               # Per-service log level overrides
     DB-Driver: warn
     adcs: info
-    Certeasy-acme-server: info
+    acme-server: info
     Async-Acme-Pki-Handler: info
     Async-Acme-Challenges: info
     JWKS: warn

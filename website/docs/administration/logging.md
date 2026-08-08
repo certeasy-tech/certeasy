@@ -33,7 +33,7 @@ logs:
     max-backups: 10
   services:
     DB-Driver: warn
-    Certeasy-acme-server: debug
+    acme-server: debug
   tags:
     instance: cert-srv-01
     region: eu-west
@@ -103,7 +103,7 @@ You can set a different log level for each internal service. This is useful for 
 logs:
   level: info
   services:
-    Certeasy-acme-server: debug
+    acme-server: debug
     Async-Acme-Challenges: debug
 ```
 
@@ -113,15 +113,26 @@ Use `off` (or `none`) to fully silence a service — for example when a chatty d
 logs:
   services:
     DB-Driver: off
-    Certeasy-acme-server: warn
+    acme-server: warn
 ```
 
 ### Registered Service Names
 
+:::caution An unrecognised name stops startup
+Only the names below are accepted. Anything else — a typo, or a name from a
+release before 0.9.5 — is refused at startup and by `hortval validate`, with the
+accepted list in the message.
+
+Until 0.9.5 it was silently ignored: the level fell back to the global default
+and nothing said so, which is the worst way for a diagnostic setting to fail.
+Two names changed in 0.9.5 and have **no alias** — `Certeasy-acme-server` became
+`acme-server`, `cert-easy-main` became `main`.
+:::
+
 | Service Name | Description |
 |---|---|
 | `DB-Driver` | Database driver and query logs |
-| `Certeasy-acme-server` | ACME HTTP request handling |
+| `acme-server` | ACME HTTP request handling |
 | `Async-Acme-Pki-Handler` | Async PKI job processing |
 | `Async-Acme-Challenges` | Async challenge validation |
 | `JWKS` | JWS key validation |
@@ -131,6 +142,13 @@ logs:
 | `adcs-cli` | ADCS authority operations — `certreq.exe` connector (`adcs-cli`) |
 | `license` | License lifecycle (install, refresh, enforcement) |
 | `node` | Node identity (`server_id`, servers table) |
+| `main` | Startup and shutdown: configuration, working directory, schema gate |
+| `audit` | Tamper-evident audit log (open, rotate, chain recovery) |
+| `fakepki` | Built-in test PKI — CA generation and issuance |
+
+The list is exhaustive as of 0.9.5, and it has to be: a name absent from it is
+refused. It is kept in step with the code by a test that scans every service
+registration in the codebase, so it cannot quietly fall behind.
 
 ## Tags (Grafana/Loki labels)
 

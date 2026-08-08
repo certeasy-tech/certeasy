@@ -55,7 +55,7 @@ At runtime:
 Certeasy avoids requiring explicit configuration for common cases:
 
 - If `database` is omitted → SQLite at `%WORKDIR%/db.sqlite`
-- If `license` is omitted → online license mode with defaults (`certeasy.tech`, `30s`)
+- If `license` is omitted → online license mode with defaults (`api.hortval.com`, `30s`)
 - If `license.offline: true` → offline license mode
 - If `workers` is omitted → 16 workers with sensible backoff settings
 - If only one DNS profile exists → policies don't need to reference it explicitly
@@ -67,15 +67,33 @@ Certeasy avoids requiring explicit configuration for common cases:
 ## `workdir`
 
 ```yaml
-workdir: "C:\\ProgramData\\certeasy"
+workdir: "C:\\ProgramData\\hortval"
 ```
 
 Base directory for all runtime files: SQLite database, TLS certificate cache, log files (when `output: file`).
 
 | OS | Default |
 |---|---|
-| Windows | `%ProgramData%\certeasy` |
-| Linux | `/var/lib/certeasy` |
+| Windows | `%ProgramData%\hortval` |
+| Linux | `/var/lib/hortval` |
+| macOS | `~/Library/Application Support/hortval` |
+
+:::warning Coming from Certeasy: the old directory is refused, not adopted
+The default was renamed with the product. If you leave `workdir` unset **and** the
+pre-rename directory still holds data, startup stops rather than picking either
+one, and names three ways out: move it to the new default, keep it where it is by
+naming it explicitly with `workdir:`, or delete it if it is a leftover.
+
+**Nothing is moved for you.** That directory holds the database, the node identity,
+the audit log and the CA key. The check fires on a directory that is simply
+*non-empty*, rather than on a recognised installation marker — that marker arrived
+with the node identity, so the oldest releases would not be recognised, and they
+are exactly the ones worth catching. An empty directory left behind by a package
+or a `mkdir` does not trigger it.
+
+Setting `workdir` to an absolute path skips the check entirely: saying where your
+data lives *is* the way out this error offers.
+:::
 
 ## Every path must be absolute or anchored
 
@@ -90,7 +108,7 @@ On SQLite that failed loudly. On PostgreSQL or SQL Server, where the connection
 string does not depend on `workdir`, it did not: the server started perfectly well
 on a *second*, empty working directory, with a fresh node identity, a fresh audit
 chain and a regenerated fake CA. Certeasy now refuses them at startup and in
-`certeasy validate`.
+`hortval validate`.
 :::
 
 A path setting is accepted when it is **absolute**, or when it starts with an
@@ -102,7 +120,7 @@ anchor token:
 | `%CONFIGDIR%` | the directory holding the configuration file | `workdir` only |
 
 ```yaml
-workdir: "%CONFIGDIR%/workdir"      # beside the config file — what `certeasy init` writes
+workdir: "%CONFIGDIR%/workdir"      # beside the config file — what `hortval init` writes
 database:
   path: "%WORKDIR%/db.sqlite"
 audit:

@@ -41,10 +41,14 @@ const config: Config = {
             },
             // What is frozen here is a binary, not a documentation number:
             // readers pick the version by the name of the binary they installed.
+            // No banner: 0.9.4 is the current shipping release. Docusaurus
+            // defaults every non-latest version to "no longer actively
+            // maintained", which would announce an end of support nobody
+            // decided.
             '0.9.4': {
               label: 'Certeasy 0.9.4',
               path: '0.9.4',
-              banner: 'unmaintained',
+              banner: 'none',
             },
           },
         },

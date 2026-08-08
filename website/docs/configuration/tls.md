@@ -5,7 +5,7 @@ title: TLS Certificate Manager
 
 # TLS Certificate Manager
 
-The `tls-certificate-manager` section configures the TLS certificate that Certeasy uses for its **own HTTPS endpoint** — not the certificates it issues to clients.
+The `tls-certificate-manager` section configures the TLS certificate that Hortval uses for its **own HTTPS endpoint** — not the certificates it issues to clients.
 Every hostname listed in `server.url` must be covered by exactly one bundle, or the server will not start.
 
 ## Configuration
@@ -17,8 +17,8 @@ tls-certificate-manager:
       hosts:
         - "acme.corp.internal"
       mode: files
-      local-cert-file: "C:\\certeasy\\tls\\fullchain.pem"
-      local-key-file: "C:\\certeasy\\tls\\privkey.pem"
+      local-cert-file: "C:\\hortval\\tls\\fullchain.pem"
+      local-key-file: "C:\\hortval\\tls\\privkey.pem"
   file-watch-interval: 5s
 ```
 
@@ -54,17 +54,17 @@ For an external name you can use a Let's Encrypt certificate; for an internal na
 
 ### `files` — Static Files
 
-Certeasy reads the certificate and key from disk. Use this when you manage the server certificate externally (e.g. via another ACME client or manual renewal).
+Hortval reads the certificate and key from disk. Use this when you manage the server certificate externally (e.g. via another ACME client or manual renewal).
 
 ```yaml
 bundles:
   - name: public
     mode: files
-    local-cert-file: "C:\\certeasy\\tls\\fullchain.pem"
-    local-key-file: "C:\\certeasy\\tls\\privkey.pem"
+    local-cert-file: "C:\\hortval\\tls\\fullchain.pem"
+    local-key-file: "C:\\hortval\\tls\\privkey.pem"
 ```
 
-Certeasy watches the files for changes and reloads automatically (controlled by `file-watch-interval`).
+Hortval watches the files for changes and reloads automatically (controlled by `file-watch-interval`).
 
 | Field | Default | Description |
 |---|---|---|
@@ -73,7 +73,7 @@ Certeasy watches the files for changes and reloads automatically (controlled by 
 
 ### `pki` — Auto-renewal via Internal PKI
 
-Certeasy issues and renews its own server certificate through one of its configured authorities. The certificate is cached locally.
+Hortval issues and renews its own server certificate through one of its configured authorities. The certificate is cached locally.
 
 ```yaml
 bundles:
@@ -93,7 +93,7 @@ This is the recommended mode for fully automated certificate management.
 
 #### Key type
 
-By default Certeasy generates an **ECDSA P-256** key for its own server
+By default Hortval generates an **ECDSA P-256** key for its own server
 certificate. If the backing CA rejects that key — most commonly an **ADCS
 certificate template that mandates RSA** (e.g. minimum key size 4096, RSA
 provider only) — set an explicit `key:` on the bundle so the generated CSR
@@ -123,7 +123,7 @@ ECDSA. The curve names match `allowed-ec-curves` in issuance policies.
 
 :::note
 If the CA rejects the key type, issuance of the server certificate fails and
-Certeasy does not start. With an RSA-only ADCS template you will see the CA
+Hortval does not start. With an RSA-only ADCS template you will see the CA
 deny the request (`CERTSRV_E_KEY_LENGTH`) unless the bundle sets `key.type` to
 `rsa`:
 
@@ -149,7 +149,7 @@ the better answer.
 
 **The value.** Every ACME client already trusts Let's Encrypt — it is in
 `certifi`, in curl's bundle, in every OS store. A publicly-trusted certificate on
-Certeasy therefore means **nothing to install and nothing to configure on the
+Hortval therefore means **nothing to install and nothing to configure on the
 client side**: no root to distribute, and no per-client trust-store setting to
 push, before a machine can so much as talk to your ACME endpoint. That is the
 whole reason this mode exists, and on a large fleet it removes a real bootstrap
@@ -164,14 +164,14 @@ saying plainly: this mode is offered, not recommended by default.
 
 1. **`mode: pki` — an internal certificate from your own CA.** The elegant one:
    one chain of trust, nothing exposed publicly, no external dependency, no rate
-   limits, and Certeasy's own certificate follows the same lifecycle as every
+   limits, and Hortval's own certificate follows the same lifecycle as every
    certificate it issues.
 
    Its cost is real and worth stating, in two parts. Your root has to reach the
-   trust store of every machine that talks to Certeasy — and those are the Linux
+   trust store of every machine that talks to Hortval — and those are the Linux
    servers, proxies, load balancers and containers that Active Directory does not
    reach. Group Policy already covers your Windows estate; it does not cover the
-   population Certeasy exists for.
+   population Hortval exists for.
 
    And the OS trust store is not the end of it: **ACME clients do not all use
    it**. certbot reads Python's own bundle (`certifi`) and needs
@@ -184,7 +184,7 @@ saying plainly: this mode is offered, not recommended by default.
    [lego](/clients/lego), [certbot](/clients/certbot), [acme.sh](/clients/acme-sh).
 2. **DNS-01 with a standalone ACME client, then `mode: files`.** When you want a
    publicly-trusted certificate — so clients need no internal CA at all, which is
-   exactly the step option 1 asks of you — without exposing anything. Certeasy's
+   exactly the step option 1 asks of you — without exposing anything. Hortval's
    file watcher reloads the pair when it changes on disk, so renewals are picked
    up without a restart (`file-watch-interval`, 5s by default).
 3. **HTTP-01**, when the endpoint is already internet-facing anyway, or when you
@@ -192,7 +192,7 @@ saying plainly: this mode is offered, not recommended by default.
 
 #### Setting it up
 
-For a **publicly resolvable** hostname, Certeasy obtains and auto-renews its own
+For a **publicly resolvable** hostname, Hortval obtains and auto-renews its own
 HTTPS certificate directly from Let's Encrypt (via the built-in ACME `autocert`
 client). Set the bundle to `mode: letsencrypt` and enable the manager-level
 `letsencrypt:` account block; the bundle's `hosts` become the issuance whitelist.
@@ -218,7 +218,7 @@ start.
 
 #### If you do use HTTP-01
 
-**It is the only challenge Certeasy wires.** DNS-01 and TLS-ALPN-01 are not, and
+**It is the only challenge Hortval wires.** DNS-01 and TLS-ALPN-01 are not, and
 no setting turns them on — for those, use option 2 above.
 
 The listener is then the only thing you expose: `server.listen` can stay on an
@@ -264,8 +264,8 @@ tls-certificate-manager:
     - name: public
       hosts: ["acme.example.com"]
       mode: files                 # certificate obtained elsewhere, e.g. DNS-01
-      local-cert-file: "/etc/certeasy/fullchain.pem"
-      local-key-file: "/etc/certeasy/privkey.pem"
+      local-cert-file: "/etc/hortval/fullchain.pem"
+      local-key-file: "/etc/hortval/privkey.pem"
 ```
 
 :::info One failed authorization per issuance is expected
@@ -286,7 +286,7 @@ issued roughly every 60 days per host.
 
 ## Multiple Bundles
 
-If you serve Certeasy on multiple hostnames, define one bundle per hostname group:
+If you serve Hortval on multiple hostnames, define one bundle per hostname group:
 
 ```yaml
 tls-certificate-manager:
@@ -295,14 +295,14 @@ tls-certificate-manager:
       hosts:
         - "acme.corp.internal"
       mode: files
-      local-cert-file: "/etc/certeasy/tls/internal.pem"
-      local-key-file: "/etc/certeasy/tls/internal.key"
+      local-cert-file: "/etc/hortval/tls/internal.pem"
+      local-key-file: "/etc/hortval/tls/internal.key"
 
     - name: dmz
       hosts:
         - "acme.dmz.example.com"
       mode: files
-      local-cert-file: "/etc/certeasy/tls/dmz.pem"
-      local-key-file: "/etc/certeasy/tls/dmz.key"
+      local-cert-file: "/etc/hortval/tls/dmz.pem"
+      local-key-file: "/etc/hortval/tls/dmz.key"
 ```
 

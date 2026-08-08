@@ -5,7 +5,7 @@ title: Graceful shutdown
 
 # Graceful shutdown
 
-Certeasy stops cleanly on `SIGTERM` (Linux) and on the equivalent stop signal
+Hortval stops cleanly on `SIGTERM` (Linux) and on the equivalent stop signal
 sent by the Windows Service Control Manager. This page describes the behaviour
 you can rely on, the two timeouts that bound it, and how to tune them.
 
@@ -27,13 +27,13 @@ that point are picked up on the next start (the jobs queue is durable).
 
 | Setting | Default | What it bounds |
 |---|---|---|
-| `server.shutdown-timeout` | `30s` | How long Certeasy waits for in-flight HTTP requests to finish before forcing the listener to close. |
-| `workers.drain-timeout` | `30s` | How long Certeasy waits for in-flight async jobs to finish before forcing them to stop. |
+| `server.shutdown-timeout` | `30s` | How long Hortval waits for in-flight HTTP requests to finish before forcing the listener to close. |
+| `workers.drain-timeout` | `30s` | How long Hortval waits for in-flight async jobs to finish before forcing them to stop. |
 
 ### Invariant
 
 `server.shutdown-timeout` must be **less than or equal to**
-`workers.drain-timeout`. Certeasy refuses to start otherwise:
+`workers.drain-timeout`. Hortval refuses to start otherwise:
 
 ```
 server.shutdown-timeout (45s) must be ≤ workers.drain-timeout (30s):
@@ -83,7 +83,7 @@ need a hard ceiling on individual request duration, use `server.write-timeout`
 
 ## After a restart
 
-Run `certeasy audit verify` if the audit log is enabled. The audit chain is
+Run `hortval audit verify` if the audit log is enabled. The audit chain is
 designed to resume cleanly across stop/start, but `verify` confirms that no
 gap was introduced and reports the first break otherwise.
 

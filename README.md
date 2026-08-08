@@ -1,18 +1,18 @@
-# Certeasy
+# Hortval
 
-Certeasy is an ACME connector for Microsoft ADCS that enables automated internal certificate issuance using your existing PKI.
+Hortval is an ACME connector for Microsoft ADCS that enables automated internal certificate issuance using your existing PKI.
 
 ## 🌐 Website
 
-👉 https://certeasy.tech
+👉 https://hortval.com
 
 ## 🚀 Download
 
-👉 https://github.com/certeasy-tech/certeasy/releases/latest
+👉 https://github.com/hortval/hortval/releases/latest
 
 ## 📖 Documentation
 
-👉 https://docs.certeasy.tech
+👉 https://docs.hortval.com
 
 ## 🔐 Security
 
@@ -21,12 +21,12 @@ for security issues → private contact (see SECURITY.md)
 
 ## 🛠 Support
 
-- 🐛 Report a bug → https://github.com/certeasy-tech/certeasy/issues/new?template=bug.yml
-- 💡 Request a feature → https://github.com/certeasy-tech/certeasy/issues/new?template=feature.yml
-- ❓ Ask a question → https://github.com/certeasy-tech/certeasy/issues/new?template=question.yml
+- 🐛 Report a bug → https://github.com/hortval/hortval/issues/new?template=bug.yml
+- 💡 Request a feature → https://github.com/hortval/hortval/issues/new?template=feature.yml
+- ❓ Ask a question → https://github.com/hortval/hortval/issues/new?template=question.yml
 
 - 🔐Security issues → private contact (see SECURITY.md)
 
 ## 📄 License
 
-Certeasy is proprietary software. See LICENSE for details.
+Hortval is proprietary software. See LICENSE for details.

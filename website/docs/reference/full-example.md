@@ -11,8 +11,8 @@ Comments indicate which fields are required, optional, or mode-specific.
 
 ```yaml
 # Base directory for runtime files (SQLite, TLS cache, logs).
-# Default: %ProgramData%\certeasy (Windows) | /var/lib/certeasy (Linux)
-workdir: "C:\\ProgramData\\certeasy"
+# Default: %ProgramData%\hortval (Windows) | /var/lib/hortval (Linux)
+workdir: "C:\\ProgramData\\hortval"
 
 # ── Database ──────────────────────────────────────────────────────────────────
 # Omit this section entirely to use SQLite with all defaults.
@@ -28,8 +28,8 @@ database:
                           # pool recycles before the network drops a connection.
   conn-max-idle-time: 1m  # Default: 1m (postgres/sqlserver), unset for SQLite
   noddl: false            # true when the account holds no schema rights:
-                          # Certeasy issues no DDL, checks the schema at startup,
-                          # and `certeasy migrate` writes the SQL for your DBA
+                          # Hortval issues no DDL, checks the schema at startup,
+                          # and `hortval migrate` writes the SQL for your DBA
 
 # ── Server ────────────────────────────────────────────────────────────────────
 server:
@@ -54,7 +54,7 @@ logs:
   # With rotation enabled, `file` is a NAMING BASE, not a file: segments are
   # written beside it as <name>.<UTC timestamp>.<discriminant>.log and are never
   # renamed. Point log collectors at the directory glob, not at this path.
-  file: "C:\\ProgramData\\certeasy\\certeasy.log"
+  file: "C:\\ProgramData\\hortval\\hortval.log"
   rotate:
     max-size-mb: 100
     max-backups: 10                    # closed segments kept; 0 = none, -1 = never delete
@@ -91,8 +91,8 @@ tls-certificate-manager:
       mode: pki                        # files | pki | letsencrypt (beta)
       authority: ca1                   # pki mode — authority name
       # files mode fields (use instead of authority):
-      # local-cert-file: "C:\\certeasy\\tls\\fullchain.pem"
-      # local-key-file: "C:\\certeasy\\tls\\privkey.pem"
+      # local-cert-file: "C:\\hortval\\tls\\fullchain.pem"
+      # local-key-file: "C:\\hortval\\tls\\privkey.pem"
 
 # ── DNS Validation Profiles ───────────────────────────────────────────────────
 dns-validation-profiles:
@@ -135,7 +135,7 @@ authorities:
   # - name: test-ca
   #   type: fake
   #   configuration:
-  #     common-name: "Certeasy Test CA"
+  #     common-name: "Hortval Test CA"
   #     password: "testpassword"
   #     key-size: 4096
   #     validity: 3650                 # CA certificate lifetime, in days
@@ -259,14 +259,14 @@ renewal-info:
 
 # ── Audit log (HMAC-chained JSONL) ────────────────────────────────────────────
 # Enabled by default. Omit this section to apply the defaults shown below.
-# Verify the chain with: certeasy audit verify -f config.yml
+# Verify the chain with: hortval audit verify -f config.yml
 audit:
   enabled: true
   path: ""                             # Empty → <workdir>/audit.log
   rotate:
-    # 0 → a single segment that grows indefinitely. Above 0, Certeasy starts a
+    # 0 → a single segment that grows indefinitely. Above 0, Hortval starts a
     # new dated segment at that size. External rotation (logrotate, Scheduled
     # Task) on this file is NOT supported: it breaks the tamper-evident chain.
-    # There is no max-backups here — Certeasy never deletes an audit segment.
+    # There is no max-backups here — Hortval never deletes an audit segment.
     max-size-mb: 0
 ```

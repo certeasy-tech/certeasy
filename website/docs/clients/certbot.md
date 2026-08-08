@@ -20,9 +20,9 @@ certbot's CLI has been stable since 1.x — the `certonly` / `renew` / `revoke` 
 
 ## Trusting your internal CA
 
-Certeasy's HTTPS certificate is signed by your internal ADCS root CA. ACME clients need to trust that CA, otherwise the TLS handshake fails before any certificate request can be made.
+Hortval's HTTPS certificate is signed by your internal ADCS root CA. ACME clients need to trust that CA, otherwise the TLS handshake fails before any certificate request can be made.
 
-The recommended approach is to **deploy your root CA to the OS trust store on all Linux servers** — ideally via your configuration management tool (Ansible, Puppet, Chef…). This is good practice regardless of Certeasy: any internal service using TLS with an internal CA benefits from it.
+The recommended approach is to **deploy your root CA to the OS trust store on all Linux servers** — ideally via your configuration management tool (Ansible, Puppet, Chef…). This is good practice regardless of Hortval: any internal service using TLS with an internal CA benefits from it.
 
 ```bash
 # Debian / Ubuntu
@@ -69,7 +69,7 @@ This way there is a single source of truth: the OS trust store. Update it, and c
 ### `--no-verify-ssl` (testing only)
 
 :::danger Do not use in production
-`--no-verify-ssl` disables TLS certificate verification entirely. The client has no guarantee it is talking to your Certeasy instance — the connection could be intercepted. Acceptable for a quick local test, never for production or automated renewal.
+`--no-verify-ssl` disables TLS certificate verification entirely. The client has no guarantee it is talking to your Hortval instance — the connection could be intercepted. Acceptable for a quick local test, never for production or automated renewal.
 :::
 
 ## HTTP-01 (standalone)
@@ -85,7 +85,7 @@ certbot certonly \
   -d app.corp.internal
 ```
 
-Certbot opens port 80, Certeasy fetches `http://app.corp.internal/.well-known/acme-challenge/<token>`, and on success submits the CSR to ADCS. The signed certificate is written to `/etc/letsencrypt/live/app.corp.internal/`.
+Certbot opens port 80, Hortval fetches `http://app.corp.internal/.well-known/acme-challenge/<token>`, and on success submits the CSR to ADCS. The signed certificate is written to `/etc/letsencrypt/live/app.corp.internal/`.
 
 ## HTTP-01 (webroot)
 

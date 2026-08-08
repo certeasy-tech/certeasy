@@ -161,7 +161,6 @@ Otherwise, find your case:
 | `database.path: %WORKDIR%/db.sqlite` | resolved | same | nothing |
 | `audit.path`, `logs.file`, `letsencrypt.cache-dir`, `local-cert-file`, `local-key-file` with `%WORKDIR%` | **taken literally** — created a directory actually named `%WORKDIR%` under the working directory | resolved | delete any stray `%WORKDIR%` directory once the real files are in place |
 | `certreq-path` / `certutil-path` | resolved from the Windows system directory, relative refused | **unchanged** | nothing |
-
 | `logs.services` naming a service | applied it | **refuses** an unrecognised name (they were silently ignored); `Certeasy-acme-server` → `acme-server`, `cert-easy-main` → `main` | rename the keys |
 
 The wizard is affected too: `certeasy init` used to write `workdir: ./workdir`,

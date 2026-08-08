@@ -5,7 +5,7 @@ title: Quick start with the wizard
 
 # Quick start with the wizard
 
-`certeasy init` is the recommended way to get a working configuration in
+`hortval init` is the recommended way to get a working configuration in
 a few minutes. It walks you through a handful of questions — what to listen
 on, which database, which authority, which DNS zones you'll be issuing
 certificates for, how the server's own TLS cert should be obtained — and
@@ -21,7 +21,7 @@ it require); in `--script` mode it stays fully offline.
 After [installing the binary](installation.md), from the work directory:
 
 ```bash
-certeasy init
+hortval init
 ```
 
 That's it. By default it writes to `./config.yml`. Use `-o <path>` to put
@@ -72,12 +72,12 @@ server:
 4. **Skip** — prints the commands you can run later.
 
 Whichever branch you pick, the wizard prints the final commands you need
-(typically `certeasy serve`) and exits.
+(typically `hortval serve`) and exits.
 
 ## Replay a session
 
 ```bash
-certeasy init --save-script /tmp/answers.txt
+hortval init --save-script /tmp/answers.txt
 ```
 
 writes every answer you typed to a small text file. To regenerate the same
@@ -85,7 +85,7 @@ configuration on another machine — or to keep a reproducible setup recipe in
 your git repo — feed it back to the wizard via stdin:
 
 ```bash
-certeasy init --script -o config.yml < /tmp/answers.txt
+hortval init --script -o config.yml < /tmp/answers.txt
 ```
 
 It's the same answers, same defaults, same output — no interactive prompts.

@@ -5,7 +5,7 @@ title: Logging
 
 # Logging
 
-Certeasy uses structured logging with configurable level, format, output, and per-service overrides.
+Hortval uses structured logging with configurable level, format, output, and per-service overrides.
 
 :::caution Startup lines go to stderr, not to `logs.file`
 The configured destination is installed once the configuration has been read, so
@@ -13,7 +13,7 @@ the lines emitted before that point are written to **stderr** and never appear i
 `logs.file`. When startup is *refused*, the log file is not created at all and
 everything — the JSON line and the human-readable message — goes to stderr.
 
-Keep stderr captured wherever Certeasy runs. Under systemd it is routed to
+Keep stderr captured wherever Hortval runs. Under systemd it is routed to
 journald by default, so nothing is lost, only split across two places. Under the
 Windows Service Control Manager stderr is attached to nothing and those lines are
 lost; see [Installation](../getting-started/installation.md) for what that means
@@ -27,7 +27,7 @@ logs:
   level: info
   format: json
   output: file
-  file: "C:\\ProgramData\\certeasy\\logs\\certeasy.log"
+  file: "C:\\ProgramData\\hortval\\logs\\hortval.log"
   rotate:
     max-size-mb: 100
     max-backups: 10
@@ -55,15 +55,15 @@ logs:
 ## Rotation
 
 When `output: file` and `rotate.max-size-mb` is greater than zero, `file` is a
-**naming base**, not a file. Certeasy writes dated segments beside it and never
+**naming base**, not a file. Hortval writes dated segments beside it and never
 renames them:
 
 ```
-file: C:\ProgramData\certeasy\logs\certeasy.log
+file: C:\ProgramData\hortval\logs\hortval.log
 
-C:\ProgramData\certeasy\logs\
-    certeasy.20260726T091702Z.ms123.log     <- closed
-    certeasy.20260726T104417Z.ms008.log     <- being written
+C:\ProgramData\hortval\logs\
+    hortval.20260726T091702Z.ms123.log     <- closed
+    hortval.20260726T104417Z.ms008.log     <- being written
 ```
 
 The suffix is a UTC timestamp, so the alphabetical order of the file names is
@@ -74,12 +74,12 @@ makes it safe to copy or archive.
 the path in `file`. To follow the live file interactively:
 
 ```powershell
-Get-Content -Wait (Get-ChildItem C:\ProgramData\certeasy\logs\certeasy.*.log |
+Get-Content -Wait (Get-ChildItem C:\ProgramData\hortval\logs\hortval.*.log |
     Sort-Object Name | Select-Object -Last 1)
 ```
 
 If a rotation cannot complete — an antivirus holding the file, a full disk, a
-permissions problem — Certeasy keeps writing to the current segment, reports the
+permissions problem — Hortval keeps writing to the current segment, reports the
 reason on stderr (captured by the Windows service manager), and retries later.
 Nothing is lost.
 
@@ -175,7 +175,7 @@ Log rotation is supported when `output: file`. Configure `rotate` to limit disk 
 ```yaml
 logs:
   output: file
-  file: "C:\\ProgramData\\certeasy\\certeasy.log"
+  file: "C:\\ProgramData\\hortval\\hortval.log"
   rotate:
     max-size-mb: 100
     max-backups: 5

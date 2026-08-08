@@ -5,7 +5,7 @@ title: DNS Validation Profiles
 
 # DNS Validation Profiles
 
-DNS validation profiles define **how Certeasy resolves and validates DNS challenges**. Each profile controls which DNS zones are in scope, which resolver to use, and which resolved IP addresses are acceptable.
+DNS validation profiles define **how Hortval resolves and validates DNS challenges**. Each profile controls which DNS zones are in scope, which resolver to use, and which resolved IP addresses are acceptable.
 
 ## Configuration
 
@@ -55,7 +55,7 @@ Each zone entry defines which DNS zones this profile handles and how to resolve 
 
 ### Resolved IP Policy
 
-After a challenge DNS name resolves, Certeasy checks the resulting IP against these rules.
+After a challenge DNS name resolves, Hortval checks the resulting IP against these rules.
 
 | Field | Type                                                                | Description                   |
 |---|---------------------------------------------------------------------|-------------------------------|
@@ -66,8 +66,8 @@ Deny rules are evaluated first. If an IP matches a deny CIDR, the challenge fail
 
 :::warning At least one of the two is required
 A profile with neither `allow-cidrs` nor `deny-cidrs` is refused at startup, and
-by `certeasy validate`. An empty policy would accept every address DNS returns —
-link-local and cloud metadata (`169.254.169.254`) included — and Certeasy will
+by `hortval validate`. An empty policy would accept every address DNS returns —
+link-local and cloud metadata (`169.254.169.254`) included — and Hortval will
 not treat "unset" as "open".
 
 If you genuinely accept any address, say so:

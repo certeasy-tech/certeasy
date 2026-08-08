@@ -65,8 +65,8 @@ jobs:
           User-agent: *
           Allow: /
 
-          Sitemap: https://docs.certeasy.tech/sitemap.xml
-          Sitemap: https://docs.certeasy.tech/markdown-sitemap.xml
+          Sitemap: https://docs.hortval.com/sitemap.xml
+          Sitemap: https://docs.hortval.com/markdown-sitemap.xml
           EOF
 
           # Page HTML d'index pour /markdown/
@@ -76,12 +76,12 @@ jobs:
             echo '<head>'
             echo '  <meta charset="utf-8">'
             echo '  <meta name="viewport" content="width=device-width, initial-scale=1">'
-            echo '  <title>Certeasy Markdown Documentation</title>'
-            echo '  <meta name="description" content="Raw Markdown sources for the Certeasy documentation.">'
+            echo '  <title>Hortval Markdown Documentation</title>'
+            echo '  <meta name="description" content="Raw Markdown sources for the Hortval documentation.">'
             echo '</head>'
             echo '<body>'
-            echo '  <h1>Certeasy Markdown Documentation</h1>'
-            echo '  <p>Raw Markdown sources for the Certeasy documentation.</p>'
+            echo '  <h1>Hortval Markdown Documentation</h1>'
+            echo '  <p>Raw Markdown sources for the Hortval documentation.</p>'
             echo '  <ul>'
 
             find website/build/markdown -type f \( -name '*.md' -o -name '*.mdx' \) | sort | while read -r file; do
@@ -99,17 +99,17 @@ jobs:
 
           # llms.txt
           cat > website/build/llms.txt <<'EOF'
-          # Certeasy Documentation
+          # Hortval Documentation
 
-          > Official documentation for Certeasy, an on-premise ACME server for Microsoft ADCS.
+          > Official documentation for Hortval, an on-premise ACME server for Microsoft ADCS.
 
           ## Main resources
 
-          - [Documentation website](https://docs.certeasy.tech/)
-          - [Markdown index](https://docs.certeasy.tech/markdown/)
-          - [Full Markdown export](https://docs.certeasy.tech/llms-full.txt)
-          - [Markdown sitemap](https://docs.certeasy.tech/markdown-sitemap.xml)
-          - [Certeasy website](https://certeasy.tech/)
+          - [Documentation website](https://docs.hortval.com/)
+          - [Markdown index](https://docs.hortval.com/markdown/)
+          - [Full Markdown export](https://docs.hortval.com/llms-full.txt)
+          - [Markdown sitemap](https://docs.hortval.com/markdown-sitemap.xml)
+          - [Hortval website](https://hortval.com/)
 
           ## Suggested entry points
 
@@ -123,9 +123,9 @@ jobs:
 
           # llms-full.txt
           {
-            echo "# Certeasy Documentation Full Export"
+            echo "# Hortval Documentation Full Export"
             echo
-            echo "Source: https://docs.certeasy.tech/"
+            echo "Source: https://docs.hortval.com/"
             echo
             echo "---"
             echo
@@ -148,22 +148,22 @@ jobs:
             echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
 
             echo '  <url>'
-            echo '    <loc>https://docs.certeasy.tech/markdown/</loc>'
+            echo '    <loc>https://docs.hortval.com/markdown/</loc>'
             echo '  </url>'
 
             find website/build/markdown -type f \( -name '*.md' -o -name '*.mdx' \) | sort | while read -r file; do
               rel="${file#website/build/markdown/}"
               echo '  <url>'
-              echo "    <loc>https://docs.certeasy.tech/markdown/$rel</loc>"
+              echo "    <loc>https://docs.hortval.com/markdown/$rel</loc>"
               echo '  </url>'
             done
 
             echo '  <url>'
-            echo '    <loc>https://docs.certeasy.tech/llms.txt</loc>'
+            echo '    <loc>https://docs.hortval.com/llms.txt</loc>'
             echo '  </url>'
 
             echo '  <url>'
-            echo '    <loc>https://docs.certeasy.tech/llms-full.txt</loc>'
+            echo '    <loc>https://docs.hortval.com/llms-full.txt</loc>'
             echo '  </url>'
 
             echo '</urlset>'

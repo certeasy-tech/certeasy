@@ -1,11 +1,11 @@
 ---
 sidebar_position: 1
-title: What is Certeasy?
+title: What is Hortval?
 ---
 
-# What is Certeasy?
+# What is Hortval?
 
-Certeasy is an **on-premise ACME server** that bridges standard ACME clients (certbot, acme.sh, Caddy, Traefik…) with your internal **Active Directory Certificate Services (ADCS)** PKI.
+Hortval is an **on-premise ACME server** that bridges standard ACME clients (certbot, acme.sh, Caddy, Traefik…) with your internal **Active Directory Certificate Services (ADCS)** PKI.
 
 It lets you automate TLS certificate issuance inside your organization — without relying on any external cloud service, without exposing your PKI, and without changing your existing infrastructure.
 
@@ -21,7 +21,7 @@ Linux servers, reverse proxies, load balancers, and containers are a different s
 
 ## The Solution
 
-Certeasy sits between your ACME clients and your ADCS. It:
+Hortval sits between your ACME clients and your ADCS. It:
 
 1. Exposes a standard ACME endpoint that any ACME client can talk to
 2. Validates the ACME challenge — `dns-01`, `http-01` or `tls-alpn-01` — to confirm ownership of the requested domain
@@ -42,7 +42,7 @@ Your ADCS never changes. Your ACME clients don't know they're talking to an inte
 | **Isolated networks** | Supports segmented environments (v2.0) |
 | **Auditable** | Full audit log of all certificate operations |
 
-## What Certeasy Is Not
+## What Hortval Is Not
 
 - Not a CA — it delegates issuance to your existing ADCS
 - Not a cloud service — it runs entirely inside your infrastructure

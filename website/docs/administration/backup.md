@@ -5,7 +5,7 @@ title: Backup & restore
 
 # Backup &amp; restore
 
-Certeasy stores all persistent state in a single database plus a small set of
+Hortval stores all persistent state in a single database plus a small set of
 files in the workdir. This page covers SQLite, the default driver. Postgres
 and SQL Server users should follow their standard DBA tooling — see the
 [Other databases](#other-databases) section.
@@ -14,7 +14,7 @@ and SQL Server users should follow their standard DBA tooling — see the
 
 | Path | Contents | Backup method |
 |---|---|---|
-| `db.sqlite` (+ `-wal`, `-shm`) | Default SQLite database | `certeasy backup create` (NOT raw copy) |
+| `db.sqlite` (+ `-wal`, `-shm`) | Default SQLite database | `hortval backup create` (NOT raw copy) |
 | `<workdir>/server-certificate-cache/` | Certmanager TLS bundles for the ACME endpoint | File copy |
 | `<workdir>/fakepki/` | Fake PKI CA + key (only if running the fake authority) | File copy |
 | `<audit.path>` (or `<workdir>/audit.log`) | Audit log (when enabled) | File copy |
@@ -27,13 +27,13 @@ nothing here) and must not be in your backup set.
 
 The DB file itself must never be copied raw with the server running: the
 `-wal` and `-shm` companion files contain uncommitted writes and the result
-is corrupt. Always use `certeasy backup create`, which calls SQLite&#39;s
+is corrupt. Always use `hortval backup create`, which calls SQLite&#39;s
 `VACUUM INTO` to produce a self-contained snapshot.
 
-## `certeasy backup create`
+## `hortval backup create`
 
 ```
-certeasy backup create -f <config> --output <path>
+hortval backup create -f <config> --output <path>
                        [--check none|quick|full]   (default: quick)
                        [--allow-incomplete]
 ```
@@ -62,7 +62,7 @@ The command:
 read transaction — writers continue working. The actual cost is *WAL
 pressure*: the checkpoint is deferred while the check runs, so the `-wal`
 file grows, marginally slowing writes after several hundred MB. Negligible
-for a nominal Certeasy database.
+for a nominal Hortval database.
 
 Recommended cadence:
 
@@ -78,10 +78,10 @@ purposes even if integrity checks fail. The exit code `2` is the signal that
 the backup exists but is suspect — your scheduled task should treat it as a
 distinct outcome from `0` (clean success) and `1` (no backup produced).
 
-## `certeasy backup verify`
+## `hortval backup verify`
 
 ```
-certeasy backup verify --input <path>
+hortval backup verify --input <path>
                        [--check quick|full]   (default: full)
                        [--schema]
 ```
@@ -90,27 +90,27 @@ Runs against a backup file directly, without needing the server&#39;s config:
 
 - Opens the file in read-only mode.
 - Runs the integrity PRAGMA selected by `--check`.
-- With `--schema`: also checks that the canonical Certeasy tables exist
-  (catches "this is not a Certeasy DB" or partial backup).
+- With `--schema`: also checks that the canonical Hortval tables exist
+  (catches "this is not a Hortval DB" or partial backup).
 - Exits `0` on success, non-zero with a message on stderr otherwise.
 
 This enables a fast-backup pattern: run `backup create --check none` for
 speed, then verify the produced file in the background:
 
 ```bash
-certeasy backup create -f config.yml --output backup.sqlite --check none
-certeasy backup verify --input backup.sqlite --check full --schema
+hortval backup create -f config.yml --output backup.sqlite --check none
+hortval backup verify --input backup.sqlite --check full --schema
 ```
 
 ## Procedure example (Windows Task Scheduler)
 
 ```bat
-1. certeasy.exe backup create -f C:\certeasy\config.yml ^
+1. hortval.exe backup create -f C:\hortval\config.yml ^
                               --output D:\backups\db.sqlite
-2. xcopy C:\certeasy\workdir\server-certificate-cache D:\backups\server-certificate-cache /E /I /Y
-3. xcopy C:\certeasy\workdir\fakepki D:\backups\fakepki /E /I /Y
-4. copy C:\certeasy\workdir\audit.log D:\backups\audit.log
-5. copy C:\certeasy\config.yml D:\backups\config.yml
+2. xcopy C:\hortval\workdir\server-certificate-cache D:\backups\server-certificate-cache /E /I /Y
+3. xcopy C:\hortval\workdir\fakepki D:\backups\fakepki /E /I /Y
+4. copy C:\hortval\workdir\audit.log D:\backups\audit.log
+5. copy C:\hortval\config.yml D:\backups\config.yml
 ```
 
 Steps 3–4 are conditional: skip step 3 if you are not using the fake PKI,
@@ -121,7 +121,7 @@ outside the workdir, copy it too.
 
 There is no `restore` subcommand in v1: the procedure is a few file moves.
 
-1. Stop the service: `Stop-Service Certeasy`.
+1. Stop the service: `Stop-Service Hortval`.
 2. Move the failed `db.sqlite`, `db.sqlite-wal`, `db.sqlite-shm` aside (do
    **not** delete them yet).
 3. Copy the backup&#39;s `db.sqlite` to the workdir.
@@ -130,15 +130,15 @@ There is no `restore` subcommand in v1: the procedure is a few file moves.
 5. Restore `server-certificate-cache/` and (if applicable) `fakepki/` from
    the backup.
 6. Restore `audit.log` to its configured path.
-7. Start the service: `Start-Service Certeasy`.
+7. Start the service: `Start-Service Hortval`.
 8. Tail the startup logs to confirm the license, schema migrations, and
    first request all succeed.
-9. `certeasy audit verify` to confirm the audit log MAC chain
+9. `hortval audit verify` to confirm the audit log MAC chain
    end-to-end.
 
 ## 3-2-1-1 baseline
 
-A safe backup posture for a production Certeasy:
+A safe backup posture for a production Hortval:
 
 - **3** copies of the data
 - on **2** different storage media
@@ -153,7 +153,7 @@ restored is a hope, not a backup.
 
 ### PostgreSQL
 
-Out of scope for `certeasy backup`. Use standard PostgreSQL tooling:
+Out of scope for `hortval backup`. Use standard PostgreSQL tooling:
 
 - `pg_dump` for logical, point-in-time snapshots that are portable across
   PG versions.
@@ -164,7 +164,7 @@ file-copy procedure above; only step 1 changes.
 
 ### SQL Server
 
-Out of scope for `certeasy backup`. Use standard SQL Server tooling:
+Out of scope for `hortval backup`. Use standard SQL Server tooling:
 
 - `BACKUP DATABASE` T-SQL with maintenance plans driven by SQL Server Agent.
 - Full / differential / log backup chains depending on your RPO.
@@ -173,7 +173,7 @@ The workdir procedure is identical to SQLite.
 
 ## PII and retention
 
-The Certeasy database and audit log contain potentially personal data
+The Hortval database and audit log contain potentially personal data
 (account contact addresses, validation source IPs, user agents). Backups
 are subject to the same data-protection obligations as the live data —
 encrypt them at rest, restrict access, and apply a retention policy that

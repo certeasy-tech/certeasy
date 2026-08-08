@@ -7,7 +7,7 @@ title: Antivirus & EDR
 
 :::tip Native connector (default): no `certreq.exe` spawn
 Since **v0.9.2** the default ADCS connector (`type: adcs` / `adcs-native`)
-enrolls **in-process** — Certeasy launches no child process. The LOLBin
+enrolls **in-process** — Hortval launches no child process. The LOLBin
 parent-child signature that strict EDRs used to flag (the same pattern as
 offensive ADCS tooling such as Certify / Certipy) is simply not produced. For a
 default deployment, the certreq-specific guidance on this page **does not
@@ -18,22 +18,22 @@ The certreq.exe details below apply **only if you explicitly chose the
 `adcs-cli` connector** (see [Authorities](/configuration/authorities)).
 :::
 
-With the **native connector (default)**, Certeasy on a Windows ADCS host binds
+With the **native connector (default)**, Hortval on a Windows ADCS host binds
 an HTTPS listener, writes to a local database, and appends to an audit log — no
 child process, no transient certificate files on disk.
 
-With the **`adcs-cli` connector**, Certeasy additionally spawns `certreq.exe`
+With the **`adcs-cli` connector**, Hortval additionally spawns `certreq.exe`
 and writes transient CSR / certificate files for each issuance. Endpoint
 Detection and Response (EDR) products (Microsoft Defender for Endpoint,
 CrowdStrike Falcon, SentinelOne, ESET, Sophos, …) sometimes flag that
 parent-child chain, because the same primitives appear in offensive playbooks.
 
-This page lists what Certeasy does on the host, what to allow-list before
+This page lists what Hortval does on the host, what to allow-list before
 deploying, and how to react if the EDR blocks something unexpectedly. It is a
-best-effort baseline — Certeasy is not certified against any specific EDR
+best-effort baseline — Hortval is not certified against any specific EDR
 product, and your security team owns the final policy.
 
-## What Certeasy does on the host
+## What Hortval does on the host
 
 | Activity | When | Connector | Why an EDR may flag it |
 |---|---|---|---|
@@ -47,21 +47,21 @@ product, and your security team owns the final policy.
 ## Recommended exclusions
 
 Add the following to your EDR/AV real-time scanning exclusions **before**
-starting Certeasy. Replace `C:\Program Files\Certeasy\` and the workdir path
+starting Hortval. Replace `C:\Program Files\Hortval\` and the workdir path
 with your actual install path.
 
 ### Process exclusions
 
-- `C:\Program Files\Certeasy\certeasy.exe` — the Certeasy binary itself.
+- `C:\Program Files\Hortval\hortval.exe` — the Hortval binary itself.
 - `C:\Windows\System32\certreq.exe` — **`adcs-cli` connector only.** Invoked by
-  Certeasy in that mode. Usually already trusted by Defender, but third-party
+  Hortval in that mode. Usually already trusted by Defender, but third-party
   EDRs may not whitelist it by default in non-standard parent-child
   relationships. The default native connector launches no child process, so this
   exclusion is unnecessary there.
 
 ### Path exclusions
 
-- `<workdir>\` — the entire Certeasy work directory. Subpaths to focus on if
+- `<workdir>\` — the entire Hortval work directory. Subpaths to focus on if
   blanket exclusion is not acceptable:
   - `<workdir>\adcs\` — **`adcs-cli` connector only:** transient CSR /
     certificate scratch space (high file-creation rate). The native connector
@@ -87,7 +87,7 @@ If your EDR has an outbound-connection monitor, allow:
 
 If your environment uses Windows SmartScreen or AppLocker:
 
-- The Certeasy binary is currently distributed **unsigned**. SmartScreen will
+- The Hortval binary is currently distributed **unsigned**. SmartScreen will
   prompt the operator on the first launch (`Windows protected your PC`),
   and AppLocker will block it unless an explicit publisher or path rule is
   added.
@@ -96,11 +96,11 @@ If your environment uses Windows SmartScreen or AppLocker:
 - Defender SmartScreen "warn but allow" can be unblocked by an
   administrator via *Properties → Unblock* on the binary right-click menu.
 
-## If your EDR blocks Certeasy
+## If your EDR blocks Hortval
 
 Symptoms to look for:
 
-- Certeasy exits immediately at startup with `access denied` errors on its
+- Hortval exits immediately at startup with `access denied` errors on its
   workdir (or, with `adcs-cli`, on `certreq.exe`).
 - ACME orders fail at finalize with a backend error; the audit log shows
   repeated `certificate.issue` failures with the same reason. With `adcs-cli`
@@ -111,18 +111,18 @@ Symptoms to look for:
 To diagnose:
 
 1. Pull the EDR's quarantine / detection log for the host and filter on
-   `certeasy.exe` and `certreq.exe`. The detection name and the rule ID
+   `hortval.exe` and `certreq.exe`. The detection name and the rule ID
    tell your security team which heuristic fired.
 2. Add the [recommended exclusions](#recommended-exclusions) and restart
-   Certeasy.
-3. If detections continue, capture a Certeasy stderr trace
+   Hortval.
+3. If detections continue, capture a Hortval stderr trace
    (`APP_LOG_LEVEL=debug`) covering one failed order and share it with your
    EDR vendor along with the rule ID — that is enough for them to issue an
    exception or a tuned signature.
 
 ## Linux
 
-Linux deployments of Certeasy do not invoke `certreq.exe` — the equivalent
+Linux deployments of Hortval do not invoke `certreq.exe` — the equivalent
 activity is local-only (SQLite + audit log + ACME network traffic). If your
 Linux host runs an EDR agent, the recommended exclusions reduce to the
 workdir and the listening port; the process exclusion is rarely needed
@@ -131,7 +131,7 @@ because Linux EDRs do not generally weight `:443` binders the same way.
 ## What is NOT a sign of EDR interference
 
 These behaviours are normal and should not be reported to your security
-team as a Certeasy issue:
+team as a Hortval issue:
 
 - Brief CPU bursts on the host during a batch of finalize calls — enrollment
   does cryptographic work (and, with `adcs-cli`, each `certreq.exe` spawn).

@@ -5,7 +5,7 @@ title: Public roadmap
 
 # Public roadmap
 
-This page lists the major features Certeasy ships progressively across versions, what drives each one, and which plan unlocks it. Subscribers on annual plans **lock the price** when they sign up — new features unlock on the same subscription as they ship.
+This page lists the major features Hortval ships progressively across versions, what drives each one, and which plan unlocks it. Subscribers on annual plans **lock the price** when they sign up — new features unlock on the same subscription as they ship.
 
 The roadmap is a planning indication, not a contractual commitment. Versions and feature ordering may change based on customer feedback.
 
@@ -26,10 +26,10 @@ Legend: ✅ shipped · 🎯 next release in flight.
 | Graceful HTTP shutdown | 0.9 ✅ | All | Zero in-flight cert lost on `systemctl restart` |
 | RFC 8555 `Location` headers audit complete | 0.9 ✅ | All | Conformance with strict-RFC ACME clients (NativeClient, Caddy) |
 | Native ADCS connector (in-process enrollment by default — no `certreq.exe` child process; `certreq.exe` stays available as the `adcs-cli` fallback) | 0.9.2 ✅ | All | Removes the LOLBin process chain that strict EDRs flag (Defender for Endpoint, CrowdStrike, SentinelOne) — eligible for stricter deployment perimeters |
-| Configuration validation (`certeasy validate`, `nginx -t`-style) + fail-fast boot gate | 0.9.2 ✅ | All | Catch a bad configuration before startup, not halfway through |
+| Configuration validation (`hortval validate`, `nginx -t`-style) + fail-fast boot gate | 0.9.2 ✅ | All | Catch a bad configuration before startup, not halfway through |
 | Real ADCS revocation (CRL / OCSP propagation) | 0.9.3 ✅ | All | A revoked certificate is actually revoked end-to-end |
 | Configurable server-certificate key (RSA / ECDSA — e.g. RSA 4096 for RSA-only ADCS templates) | 0.9.3 ✅ | All | Start against CA templates that mandate a specific key type or size |
-| ADCS setup preflight (`certeasy adcs check` + guided `init`: template picker, key-requirement detection, clear denial reasons) | 0.9.3 ✅ | All | Diagnose ADCS onboarding before go-live — fewer support tickets at setup |
+| ADCS setup preflight (`hortval adcs check` + guided `init`: template picker, key-requirement detection, clear denial reasons) | 0.9.3 ✅ | All | Diagnose ADCS onboarding before go-live — fewer support tickets at setup |
 | Cleanup / retention of expired ACME records | 1.0 🎯 | All | Long-term operations: the database stops growing forever |
 | Health / metrics endpoints (`/healthz`, `/readyz`, Prometheus `/metrics`) | 1.0 🎯 | All | Drop-in integration with existing supervision (Zabbix, Centreon, Prometheus, Grafana) |
 | PKI health checks + load-balanced CAs (Ping at boot + runtime) | 1.0 🎯 | All | Mis-configured CAs fail loudly at boot; `round_robin` policy actually skips unhealthy CAs |
@@ -49,6 +49,6 @@ The RFC and integration gaps documented in [Standards & RFC support](../referenc
 
 ## Pricing and feature gating
 
-Each feature above is tagged with the plan that includes it and the version it ships in. See the [pricing page](https://certeasy.tech/#pricing) for the current line-up and the [plans documentation](./plans.md) for what each tier includes.
+Each feature above is tagged with the plan that includes it and the version it ships in. See the [pricing page](https://hortval.com/#pricing) for the current line-up and the [plans documentation](./plans.md) for what each tier includes.
 
 Subscribe today on an annual plan to **lock the price** and follow the feature ramp without any annual increase.

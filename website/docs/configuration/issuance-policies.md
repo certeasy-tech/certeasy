@@ -5,7 +5,7 @@ title: Issuance Policies
 
 # Issuance Policies
 
-Issuance policies define **which certificate requests Certeasy will accept** and what constraints apply. Every order is evaluated against an issuance policy before any certificate is issued.
+Issuance policies define **which certificate requests Hortval will accept** and what constraints apply. Every order is evaluated against an issuance policy before any certificate is issued.
 
 ## Configuration
 
@@ -48,7 +48,7 @@ issuance-policies:
 
 ## DNS Scope Rules
 
-The `dns.allow` list controls which DNS names Certeasy will accept in a CSR. Each rule uses a compact grammar.
+The `dns.allow` list controls which DNS names Hortval will accept in a CSR. Each rule uses a compact grammar.
 
 ### Rule: Non-wildcard zone with depth limit
 
@@ -116,7 +116,7 @@ Before matching, all DNS names are:
 
 ## CSR Extension Whitelist (Extended Key Usage)
 
-Certeasy validates the contents of the CSR's `extensionRequest` strictly: only DNS-typed SANs and the Extended Key Usage extension (EKU, OID `2.5.29.37`) are accepted. By default the **only EKU value tolerated is `serverAuth`** (OID `1.3.6.1.5.5.7.3.1`) — the appropriate purpose for a public-server TLS certificate.
+Hortval validates the contents of the CSR's `extensionRequest` strictly: only DNS-typed SANs and the Extended Key Usage extension (EKU, OID `2.5.29.37`) are accepted. By default the **only EKU value tolerated is `serverAuth`** (OID `1.3.6.1.5.5.7.3.1`) — the appropriate purpose for a public-server TLS certificate.
 
 To accept additional EKU values, opt in per policy:
 
@@ -149,7 +149,7 @@ Only loosen this for policies whose authority you trust to enforce purpose const
 
 For most of TLS history, server certificates routinely declared both `serverAuth` and `clientAuth` in their Extended Key Usage. Some popular ACME clients still do this by default — notably **acme.sh**, whose built-in CSR template emits `extendedKeyUsage = serverAuth, clientAuth`. Without `clientAuth` in `allowed-extra-eku`, those CSRs are refused.
 
-The CA/B Forum's TLS Baseline Requirements **forbid this combination from June 2026 onwards**: a publicly-trusted server certificate must declare `serverAuth` only. Certeasy is most often deployed against an internal ADCS — outside the public WebPKI — so the rule is advisory rather than binding for your deployment, but mirroring the public-trust posture is good hygiene.
+The CA/B Forum's TLS Baseline Requirements **forbid this combination from June 2026 onwards**: a publicly-trusted server certificate must declare `serverAuth` only. Hortval is most often deployed against an internal ADCS — outside the public WebPKI — so the rule is advisory rather than binding for your deployment, but mirroring the public-trust posture is good hygiene.
 
 Two practical positions:
 

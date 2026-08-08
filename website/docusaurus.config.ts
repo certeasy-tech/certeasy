@@ -3,15 +3,15 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'Certeasy',
-  tagline: 'Connecteur ACME pour votre ADCS interne',
+  title: 'Hortval',
+  tagline: 'ACME connector for your internal ADCS',
   favicon: 'img/favicon.ico',
 
-  url: 'https://docs.certeasy.tech',
+  url: 'https://docs.hortval.com',
   baseUrl: '/',
 
-  organizationName: 'certeasy',
-  projectName: 'certeasy-docs',
+  organizationName: 'hortval',
+  projectName: 'hortval-docs',
 
   trailingSlash: false,
   onBrokenLinks: 'warn',
@@ -66,15 +66,32 @@ const config: Config = {
     ],
   ],
 
+  plugins: [
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        // The only documentation path that carried the product name. The
+        // cross-domain move is handled at the CDN; this covers inbound links
+        // that already reach the new host on the old path.
+        redirects: [
+          {
+            from: '/intro/what-is-certeasy',
+            to: '/intro/what-is-hortval',
+          },
+        ],
+      },
+    ],
+  ],
+
   themeConfig: {
-    image: 'img/certeasy-social-card.jpg',
+    image: 'img/hortval-social-card.jpg',
     colorMode: {
       defaultMode: 'light',
     },
     navbar: {
-      title: 'Certeasy',
+      title: 'Hortval',
       logo: {
-        alt: 'Certeasy Logo',
+        alt: 'Hortval Logo',
         src: 'img/logo-black.png',
         srcDark: 'img/logo-white.png',
       },
@@ -90,12 +107,12 @@ const config: Config = {
           position: 'right',
         },
         {
-          href: 'https://certeasy.tech',
+          href: 'https://hortval.com',
           label: 'Product site',
           position: 'right',
         },
         {
-          href: 'https://github.com/certeasy-tech/certeasy/releases',
+          href: 'https://github.com/hortval/hortval/releases',
           label: 'Download',
           position: 'right',
         },
@@ -115,7 +132,7 @@ const config: Config = {
         {
           title: 'Product',
           items: [
-            {label: 'Official site', href: 'https://certeasy.tech'},
+            {label: 'Official site', href: 'https://hortval.com'},
             {label: 'Plans & pricing', to: '/intro/plans'},
           ],
         },

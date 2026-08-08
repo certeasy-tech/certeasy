@@ -5,7 +5,7 @@ title: Overview
 
 # Configuration Overview
 
-Certeasy is configured with a single YAML file. The parser is strict: unknown fields, malformed YAML, and missing required relationships all cause startup to fail with an explicit error.
+Hortval is configured with a single YAML file. The parser is strict: unknown fields, malformed YAML, and missing required relationships all cause startup to fail with an explicit error.
 
 ## Top-Level Sections
 
@@ -52,7 +52,7 @@ At runtime:
 
 ## Implicit Defaults
 
-Certeasy avoids requiring explicit configuration for common cases:
+Hortval avoids requiring explicit configuration for common cases:
 
 - If `database` is omitted → SQLite at `%WORKDIR%/db.sqlite`
 - If `license` is omitted → online license mode with defaults (`api.hortval.com`, `30s`)
@@ -78,7 +78,7 @@ Base directory for all runtime files: SQLite database, TLS certificate cache, lo
 | Linux | `/var/lib/hortval` |
 | macOS | `~/Library/Application Support/hortval` |
 
-:::warning Coming from Certeasy: the old directory is refused, not adopted
+:::warning Coming from Hortval: the server stops rather than use the old directory
 The default was renamed with the product. If you leave `workdir` unset **and** the
 pre-rename directory still holds data, startup stops rather than picking either
 one, and names three ways out: move it to the new default, keep it where it is by
@@ -107,7 +107,7 @@ directory, which for a Windows service created with `sc.exe` is
 On SQLite that failed loudly. On PostgreSQL or SQL Server, where the connection
 string does not depend on `workdir`, it did not: the server started perfectly well
 on a *second*, empty working directory, with a fresh node identity, a fresh audit
-chain and a regenerated fake CA. Certeasy now refuses them at startup and in
+chain and a regenerated fake CA. Hortval now refuses them at startup and in
 `hortval validate`.
 :::
 

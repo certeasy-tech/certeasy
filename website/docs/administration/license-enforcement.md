@@ -5,7 +5,7 @@ title: License enforcement
 
 # License enforcement
 
-Certeasy enforces the limits associated with your active license at two
+Hortval enforces the limits associated with your active license at two
 moments:
 
 - **At boot**, against your configuration and the current state of the
@@ -50,19 +50,19 @@ action. You open a 1-week cold-start window against the plan you intend
 to evaluate under:
 
 ```
-certeasy cold-start init --plan=starter -f config.yml
+hortval cold-start init --plan=starter -f config.yml
 ```
 
 The constraints of the chosen plan (allowed database drivers, maximum
 authorities, managed-server cap) apply during the window — exactly as
 they would with a real license at that plan level. Once the window is
-open, `certeasy serve` boots normally.
+open, `hortval serve` boots normally.
 
 When the window is about to elapse and the license has not yet arrived,
 extend it for another 7 days:
 
 ```
-certeasy cold-start extend --confirm -f config.yml
+hortval cold-start extend --confirm -f config.yml
 ```
 
 Extensions are bounded by a 3-week cumulative cap once your installation
@@ -86,7 +86,7 @@ Example banner:
 
 ```
 ==============================================================================
-  CERTEASY — BOOT REFUSED (LICENSE DEGRADED)
+  HORTVAL — BOOT REFUSED (LICENSE DEGRADED)
 ==============================================================================
 
   Installation key: INST-XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX
@@ -96,9 +96,9 @@ Example banner:
   db_not_allowed
 
   What to do:
-    1. Acknowledge and start in degraded mode: certeasy license acknowledge-degraded -f <config>
+    1. Acknowledge and start in degraded mode: hortval license acknowledge-degraded -f <config>
     2. Or fix your configuration to fit the license (fewer CAs, allowed DB driver, ...)
-    3. Or upgrade your plan at https://certeasy.tech/portal/dashboard
+    3. Or upgrade your plan at https://hortval.com/portal/dashboard
 
 ==============================================================================
 ```
@@ -112,7 +112,7 @@ You have three options:
 1. **Fix the underlying problem** — reduce the number of authorities,
    change the database driver, or upgrade your plan, then restart.
 2. **Acknowledge the degraded state** — run
-   `certeasy license acknowledge-degraded`. The server will then start,
+   `hortval license acknowledge-degraded`. The server will then start,
    with a clearly visible warning, and continue serving renewals
    (see [Runtime behaviour](#runtime-behaviour) below).
 3. **Use force-grace** as a temporary escape hatch
@@ -121,7 +121,7 @@ You have three options:
 ## Acknowledging a degraded state
 
 ```
-certeasy license acknowledge-degraded -f config.yml
+hortval license acknowledge-degraded -f config.yml
 ```
 
 This command:
@@ -154,23 +154,23 @@ that any new degradation later requires a fresh, explicit acknowledgement.
 
 ## Installing a license that does not fit the configuration
 
-`certeasy license install <file>` and `certeasy license refresh` refuse
+`hortval license install <file>` and `hortval license refresh` refuse
 to apply a new license whose entitlements do not match the running
 configuration. The previous state is preserved untouched. The CLI
 prints the reasons and three options:
 
 - Fix the configuration, then re-run.
 - Pick a different license that fits.
-- Re-run with `--force` to install anyway. The next `certeasy serve`
+- Re-run with `--force` to install anyway. The next `hortval serve`
   will refuse to start until you also run
-  `certeasy license acknowledge-degraded` (see above).
+  `hortval license acknowledge-degraded` (see above).
 
 The watcher's online auto-refresh applies the same check — a renewed
 license that does not match is **not** silently applied; the previously
 installed payload remains in effect and a `license.refresh_rejected`
 audit event is recorded.
 
-`certeasy license register <license-key>` is validated at the portal
+`hortval license register <license-key>` is validated at the portal
 before any binding happens. Mismatches are returned as a `400` with a
 clear message; you can immediately retry with a different key. There is
 no `--force` flag on `register`.
@@ -182,8 +182,8 @@ window and you need immediate breathing room — a renewal is in flight,
 the portal had an outage, etc. — you can open a 7-day boot window with:
 
 ```
-certeasy license force-grace -f config.yml             # preview, nothing is written
-certeasy license force-grace -f config.yml --confirm   # actually opens the window
+hortval license force-grace -f config.yml             # preview, nothing is written
+hortval license force-grace -f config.yml --confirm   # actually opens the window
 ```
 
 Without `--confirm`, the command only **previews** what would happen and
@@ -195,13 +195,13 @@ has expired past its grace. Other situations have their own dedicated
 paths and are not covered:
 
 - **No license installed yet** — open a cold-start window with
-  `certeasy cold-start init --plan=<plan>` (see [Cold-start](cold-start.md)).
+  `hortval cold-start init --plan=<plan>` (see [Cold-start](cold-start.md)).
 - **License revoked** — revocation is an explicit decision from the
   portal; contact support instead.
 - **License signature invalid** — the stored file is corrupted or
   tampered with; this should be investigated, not bypassed.
 - **Degraded configuration with a valid license** — use
-  `certeasy license acknowledge-degraded` instead. Force-grace is for
+  `hortval license acknowledge-degraded` instead. Force-grace is for
   license problems, not configuration problems.
 
 ### The 3-week cap
@@ -233,7 +233,7 @@ restores normal boot.
 ### Example session
 
 ```
-$ certeasy license force-grace -f config.yml --confirm
+$ hortval license force-grace -f config.yml --confirm
 Force-grace evaluation
   License state : license_expired
   Anchor        : license_expiry
@@ -242,14 +242,14 @@ Force-grace evaluation
   Window grants : until 2026-06-09 18:43 UTC
 
 Force-grace activated until 2026-06-09 18:43 UTC.
-You may now start the server normally: certeasy serve -f <config>
+You may now start the server normally: hortval serve -f <config>
 ```
 
 At boot, a clearly visible banner is printed on stderr:
 
 ```
 ==============================================================================
-  CERTEASY — RUNNING IN FORCE-GRACE (7-DAY WINDOW)
+  HORTVAL — RUNNING IN FORCE-GRACE (7-DAY WINDOW)
 ==============================================================================
 
   Installation key: INST-XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX
@@ -276,13 +276,13 @@ and how to recover from each.
 
 | Banner title | When you see it | How to recover |
 |---|---|---|
-| `BOOT REFUSED (NO LICENSE, NO COLD-START)` | Fresh installation: no license has been installed and no cold-start window has been opened. | Open a cold-start window with `certeasy cold-start init --plan=<plan>` while you procure a license, or install one directly with `certeasy license register <license-key>` or `certeasy license install <path>`. See [Cold-start](cold-start.md). |
-| `BOOT REFUSED (COLD-START WINDOW EXPIRED)` | A cold-start window had been opened but elapsed without a license being installed. | Open a new 7-day window with `certeasy cold-start extend --confirm`, or install your license now with `certeasy license register` / `... install`. The extend command may be refused once the 3-week cumulative cap has been reached — installing a license is then the only path forward. |
+| `BOOT REFUSED (NO LICENSE, NO COLD-START)` | Fresh installation: no license has been installed and no cold-start window has been opened. | Open a cold-start window with `hortval cold-start init --plan=<plan>` while you procure a license, or install one directly with `hortval license register <license-key>` or `hortval license install <path>`. See [Cold-start](cold-start.md). |
+| `BOOT REFUSED (COLD-START WINDOW EXPIRED)` | A cold-start window had been opened but elapsed without a license being installed. | Open a new 7-day window with `hortval cold-start extend --confirm`, or install your license now with `hortval license register` / `... install`. The extend command may be refused once the 3-week cumulative cap has been reached — installing a license is then the only path forward. |
 | `BOOT REFUSED (COLD-START PLAN MISMATCH)` | A cold-start window is open but the running configuration cannot be honored by the chosen plan (database driver not allowed, or too many authorities declared). | Reduce the configuration to fit the plan (e.g. switch to SQLite, drop an authority), or re-bootstrap with a plan that matches the configuration. |
-| `BOOT REFUSED (LICENSE EXPIRED)` | Your installed license has been expired for more than the 7-day post-expiry grace. | Pull the renewed license with `certeasy license refresh`, install the new file manually with `certeasy license install`, register a fresh key with `certeasy license register`, or open a 7-day window with `certeasy license force-grace --confirm`. |
-| `BOOT REFUSED (LICENSE DEGRADED)` | A valid license is installed, but the current configuration exceeds what your plan allows (CAs declared, database driver, managed-server count). | Either fix the configuration, upgrade your plan at the portal, or acknowledge the situation with `certeasy license acknowledge-degraded` to start in degraded mode (renewals continue, new orders are refused). |
-| `BOOT REFUSED (LICENSE ERROR)` | Catch-all for an unrecognised license problem. | Check the structured log line just above the banner for context; `certeasy license refresh` is a safe first attempt. |
-| `RUNNING IN FORCE-GRACE` | Information banner — the server is booting under an open force-grace window. | Resolve the underlying license problem before the window closes (`certeasy license refresh`, `... install`, or `... register` with a renewed key). The window is one-shot per cap period.|
+| `BOOT REFUSED (LICENSE EXPIRED)` | Your installed license has been expired for more than the 7-day post-expiry grace. | Pull the renewed license with `hortval license refresh`, install the new file manually with `hortval license install`, register a fresh key with `hortval license register`, or open a 7-day window with `hortval license force-grace --confirm`. |
+| `BOOT REFUSED (LICENSE DEGRADED)` | A valid license is installed, but the current configuration exceeds what your plan allows (CAs declared, database driver, managed-server count). | Either fix the configuration, upgrade your plan at the portal, or acknowledge the situation with `hortval license acknowledge-degraded` to start in degraded mode (renewals continue, new orders are refused). |
+| `BOOT REFUSED (LICENSE ERROR)` | Catch-all for an unrecognised license problem. | Check the structured log line just above the banner for context; `hortval license refresh` is a safe first attempt. |
+| `RUNNING IN FORCE-GRACE` | Information banner — the server is booting under an open force-grace window. | Resolve the underlying license problem before the window closes (`hortval license refresh`, `... install`, or `... register` with a renewed key). The window is one-shot per cap period.|
 
 Other banner titles exist for situations that indicate license file
 tampering or revocation by the portal. If you encounter one of those,
@@ -328,27 +328,27 @@ events are emitted:
 |---|---|---|---|
 | `license.boot_refused` | The server refused to start. Emitted with one of several reasons: a configuration degraded against a valid license with no acknowledgement, a cold-start window that has elapsed, a cold-start plan mismatch, or "no license and no cold-start window" on a fresh install. | `deny` | `reason`, `reasons` (when degraded), `plan` / `driver` / `configured_cas` (when cold-start) |
 | `license.boot_degraded` | The server started in degraded mode against a valid acknowledgement. One event per boot. | `allow` (`reason=ack_active`) | `reasons`, `hash`, `acknowledged_at` |
-| `license.acknowledge` | An operator ran `certeasy license acknowledge-degraded`. | `allow` (`reason=operator_ack`) | `reasons`, `hash`, `hostname` |
-| `license.install_rejected` | `certeasy license install` or `... register` refused to persist a new license because its entitlements do not match the running configuration. The `--force` flag overrides this refusal. | `deny` (`reason=config_mismatch`) | `source`, `plan`, `driver`, `configured_cas`, `reasons` |
-| `license.refresh_rejected` | A refreshed license was rejected because it does not match the running configuration. Emitted both for the manual `certeasy license refresh` path and for the watcher's online auto-refresh path; the `source` field distinguishes them. | `deny` (`reason=config_mismatch`) | `source` (`cli` or `watcher`), `plan`, `driver`, `configured_cas`, `reasons` |
+| `license.acknowledge` | An operator ran `hortval license acknowledge-degraded`. | `allow` (`reason=operator_ack`) | `reasons`, `hash`, `hostname` |
+| `license.install_rejected` | `hortval license install` or `... register` refused to persist a new license because its entitlements do not match the running configuration. The `--force` flag overrides this refusal. | `deny` (`reason=config_mismatch`) | `source`, `plan`, `driver`, `configured_cas`, `reasons` |
+| `license.refresh_rejected` | A refreshed license was rejected because it does not match the running configuration. Emitted both for the manual `hortval license refresh` path and for the watcher's online auto-refresh path; the `source` field distinguishes them. | `deny` (`reason=config_mismatch`) | `source` (`cli` or `watcher`), `plan`, `driver`, `configured_cas`, `reasons` |
 | `license.installation_mismatch` | A stored license is bound to a different installation than this one. The server refuses to use it. | `deny` (`reason=installation_key_mismatch`) | `license_key`, `installation_key` |
-| `license.force_grace` | An operator consumed a force-grace window via `certeasy license force-grace --confirm`. | `allow` (`reason=operator_forced`) | `state`, `expires_at`, `cap_at` |
+| `license.force_grace` | An operator consumed a force-grace window via `hortval license force-grace --confirm`. | `allow` (`reason=operator_forced`) | `state`, `expires_at`, `cap_at` |
 | `license.force_grace_boot` | The server booted under an active force-grace window. One event per boot. | `allow` (`reason=force_grace_active`) | `state`, `expires_at` |
 | `license.force_grace_expired` | The active force-grace window elapsed mid-run; the server is stopping. | `deny` (`reason=force_grace_window_elapsed`) | `expired_at` |
 | `license.deny` | A new order was refused at runtime because of a license limit. One event per refused request. | `deny` (`reason` = the failing limit) | `reasons` and the offending values (driver, current count, max, etc.) |
 | `license.change` | The license state transitioned (`valid` ↔ `grace` ↔ `expired` ↔ `revoked` ↔ `no_license`). | `allow` | `from`, `to` |
-| `cold_start.init` | An operator ran `certeasy cold-start init --plan=<plan>` and the window opened. | `allow` (`reason=operator_init`) | `plan`, `expires_at`, `installation_key` |
+| `cold_start.init` | An operator ran `hortval cold-start init --plan=<plan>` and the window opened. | `allow` (`reason=operator_init`) | `plan`, `expires_at`, `installation_key` |
 | `cold_start.init_rejected` | `cold-start init` was refused because the configuration does not match the chosen plan. | `deny` (`reason=config_mismatch`) | `plan`, `driver`, `configured_cas`, `reasons` |
-| `cold_start.extend` | An operator opened a new 7-day window via `certeasy cold-start extend --confirm`. | `allow` (`reason=operator_extend`) | `plan`, `anchor`, `cap_at`, `expires_at` |
+| `cold_start.extend` | An operator opened a new 7-day window via `hortval cold-start extend --confirm`. | `allow` (`reason=operator_extend`) | `plan`, `anchor`, `cap_at`, `expires_at` |
 
 The audit log is tamper-evident (HMAC chain anchored on the installation
-identifier). Use `certeasy audit verify` to validate it. See the
+identifier). Use `hortval audit verify` to validate it. See the
 [Audit log page](audit.md) for the file format and rotation behaviour.
 
 ## Example acknowledgement output
 
 ```
-$ certeasy license acknowledge-degraded -f config.yml
+$ hortval license acknowledge-degraded -f config.yml
 License degradation acknowledged.
   Reasons: [db_not_allowed max_cas_exceeded]
   Hash:    7a3f...e1b9

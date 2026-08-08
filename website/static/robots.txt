@@ -23,8 +23,8 @@ Allow: /
 User-agent: Meta-ExternalAgent
 Allow: /
 
-Sitemap: https://docs.certeasy.tech/sitemap.xml
-Sitemap: https://docs.certeasy.tech/markdown-sitemap.xml
+Sitemap: https://docs.hortval.com/sitemap.xml
+Sitemap: https://docs.hortval.com/markdown-sitemap.xml
 
 # Institutional website
-# https://certeasy.tech/
+# https://hortval.com/

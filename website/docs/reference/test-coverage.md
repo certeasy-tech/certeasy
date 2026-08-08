@@ -5,7 +5,7 @@ title: Test coverage
 
 # Test coverage
 
-Every Certeasy release ships only after the full automated test suite
+Every Hortval release ships only after the full automated test suite
 passes against the targeted database backends. This page lists the suites
 that compose the gate, what each one verifies, and the headline counts at
 the time of writing.
@@ -16,7 +16,7 @@ the time of writing.
 |---|---|---|
 | Unit (TU) | **729** | Pure logic: configuration parsing and validation, policy resolution, JWS signing and verification, anti-replay nonces, DNS scope matching, CSR validation, key handling, the asynchronous job engine, licensing decisions, rate-limit decision tables, audit-line encoding. No I/O, no database. |
 | Integration (IT) | **188** | Real database (SQLite, PostgreSQL, SQL Server), real audit file on disk, real PKI request store, full ACME handler stack wired against the storage layer. Each test runs against every supported database backend. |
-| End-to-end (E2E) | **135** | The full Certeasy binary running as a subprocess. Two flavours: (1) CLI black-box — every subcommand (`serve`, `init`, `validate`, `migrate`, `license`, `cold-start`, `backup`, `audit`, `adcs check`), exit codes, error messages. (2) ACME protocol — real third-party clients (lego, certbot, acme.sh) plus a RFC-strict native client driving certificate issuance, renewal, revocation, account lifecycle, key rollover, and the full error/security path. |
+| End-to-end (E2E) | **135** | The full Hortval binary running as a subprocess. Two flavours: (1) CLI black-box — every subcommand (`serve`, `init`, `validate`, `migrate`, `license`, `cold-start`, `backup`, `audit`, `adcs check`), exit codes, error messages. (2) ACME protocol — real third-party clients (lego, certbot, acme.sh) plus a RFC-strict native client driving certificate issuance, renewal, revocation, account lifecycle, key rollover, and the full error/security path. |
 | **Total** | **1052** | |
 
 Numbers are refreshed at every release. The most recent count above reflects
@@ -60,14 +60,14 @@ certificate under an ECDSA account key.
 
 ### Microsoft ADCS integration
 
-When an ADCS lab is available, Certeasy is validated against a real Active
+When an ADCS lab is available, Hortval is validated against a real Active
 Directory Certificate Services authority:
 
 - **Issuance** through both supported ADCS connectors, so an upgrade never
   changes behaviour silently.
 - **Revocation propagated to the CA**, then confirmed on the authority itself
   — a revoked certificate is verified as revoked at the source, not only in
-  Certeasy's own records.
+  Hortval's own records.
 - **Onboarding checks** — the `adcs check` command and the setup wizard verify
   that the CA is reachable, that the certificate template is published, and
   read the template's key requirements, so common misconfigurations surface
@@ -75,7 +75,7 @@ Directory Certificate Services authority:
 - **Clear diagnostics** — when the CA refuses a request, the underlying reason
   is surfaced with actionable guidance (for example, a key that does not meet
   the template's requirements), independent of the CA's display language.
-- **Server-certificate key selection** — Certeasy's own certificate can be
+- **Server-certificate key selection** — Hortval's own certificate can be
   issued as RSA or ECDSA at the strength the CA template mandates, and this
   selection is verified end to end.
 
@@ -108,13 +108,13 @@ failures are silent and reach a database nobody can inspect afterwards.
 - **Every table created by a migration is checked to be declared**, in both
   directions — an undeclared table and a declared table that no longer
   exists both fail the suite.
-- **The generated SQL** (`certeasy migrate --sql`) is compared against what
+- **The generated SQL** (`hortval migrate --sql`) is compared against what
   a real migration executes, statement by statement, and applied
   end-to-end to confirm the resulting database satisfies the binary.
 - **Schema resolution on PostgreSQL and SQL Server** is asserted against
   the engines themselves rather than assumed from their documentation:
   where an unqualified name resolves, where a table is created, and which
-  schema wins when the same name exists twice. Certeasy's behaviour on a
+  schema wins when the same name exists twice. Hortval's behaviour on a
   shared database rests on those answers, so they are re-checked at every
   release.
 
@@ -132,7 +132,7 @@ job engine, and its reliability guarantees are tested:
 
 ### Server certificate management
 
-Certeasy manages its own TLS certificate, and each source is exercised:
+Hortval manages its own TLS certificate, and each source is exercised:
 
 - **Static files** — loaded from disk and hot-reloaded when they change.
 - **Internal PKI** — issued and automatically renewed from a configured
@@ -161,7 +161,7 @@ Certeasy manages its own TLS certificate, and each source is exercised:
 
 - The configuration parser is covered for strict schema checking (unknown
   fields are rejected), quoting and escaping, and Windows path handling.
-- `certeasy validate` runs exactly the same static validation as the server's
+- `hortval validate` runs exactly the same static validation as the server's
   fail-fast boot gate, with no side effects — an invalid configuration is
   caught before startup rather than halfway through it.
 - A partial section leaves the other keys at their documented defaults; an
@@ -226,7 +226,7 @@ issuance and revocation, and both ADCS connectors (see
 Classification is purely based on the file path of the test, so the
 numbers are reproducible without judgement calls:
 
-- **End-to-end (E2E)** — tests that run the Certeasy binary as a subprocess
+- **End-to-end (E2E)** — tests that run the Hortval binary as a subprocess
   and assert on the wire or the CLI output.
 - **Integration (IT)** — tests that hit a real database, write a real
   audit file to disk, or wire the full handler stack against a real

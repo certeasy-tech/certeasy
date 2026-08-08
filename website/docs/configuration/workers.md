@@ -40,7 +40,7 @@ workers:
 
 ## How the Job Engine Works
 
-All background work in Certeasy (DNS challenge validation, ADCS polling) is handled by the job engine:
+All background work in Hortval (DNS challenge validation, ADCS polling) is handled by the job engine:
 
 1. An ACME handler enqueues a job in the database
 2. A worker picks up the job and acquires a lease
@@ -49,7 +49,7 @@ All background work in Certeasy (DNS challenge validation, ADCS polling) is hand
 5. On transient failure, the job is rescheduled with exponential backoff
 6. On fatal failure, the job is failed and the associated order is invalidated
 
-Jobs are persistent — if Certeasy restarts mid-processing, workers resume from the database.
+Jobs are persistent — if Hortval restarts mid-processing, workers resume from the database.
 
 ## Shutdown and Recovery
 
@@ -75,7 +75,7 @@ The default settings (16 workers, 1s–2m backoff) work well for most deployment
 
 ## Multi-node Deployments
 
-Running multiple Certeasy instances against the same database is supported (PostgreSQL, SQL Server). Each instance competes for job leases — only one instance processes each job. Set `worker-id` to a unique value per instance:
+Running multiple Hortval instances against the same database is supported (PostgreSQL, SQL Server). Each instance competes for job leases — only one instance processes each job. Set `worker-id` to a unique value per instance:
 
 ```yaml
 # Node 1

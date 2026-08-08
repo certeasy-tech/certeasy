@@ -5,7 +5,7 @@ title: Database
 
 # Database
 
-Certeasy stores all ACME state (accounts, orders, challenges, certificates, audit logs) in a relational database.
+Hortval stores all ACME state (accounts, orders, challenges, certificates, audit logs) in a relational database.
 
 ## Supported Drivers
 
@@ -20,7 +20,7 @@ Certeasy stores all ACME state (accounts, orders, challenges, certificates, audi
 ```yaml
 database:
   driver: postgres
-  dsn: "postgres://certeasy:secret@db01:5432/certeasy?sslmode=require"
+  dsn: "postgres://hortval:secret@db01:5432/hortval?sslmode=require"
   ping-timeout-sec: 5
   max-idle-conn: 5
   max-conn: 10
@@ -30,13 +30,13 @@ database:
 
 ### SQLite (default)
 
-If `database` is omitted entirely, Certeasy uses SQLite at `%WORKDIR%/db.sqlite`.
+If `database` is omitted entirely, Hortval uses SQLite at `%WORKDIR%/db.sqlite`.
 
 ```yaml
 # Explicit SQLite config
 database:
   driver: sqlite
-  path: "C:\\ProgramData\\certeasy\\db.sqlite"
+  path: "C:\\ProgramData\\hortval\\db.sqlite"
 ```
 
 ### PostgreSQL
@@ -44,7 +44,7 @@ database:
 ```yaml
 database:
   driver: postgres
-  dsn: "postgres://certeasy:secret@db01:5432/certeasy?sslmode=require"
+  dsn: "postgres://hortval:secret@db01:5432/hortval?sslmode=require"
 ```
 
 ### SQL Server
@@ -52,7 +52,7 @@ database:
 ```yaml
 database:
   driver: sqlserver
-  dsn: "sqlserver://certeasy:secret@sqlserver01:1433?database=certeasy"
+  dsn: "sqlserver://hortval:secret@sqlserver01:1433?database=hortval"
 ```
 
 ## Fields
@@ -62,7 +62,7 @@ database:
 | `driver` | `sqlite` | Database driver: `sqlite`, `postgres`, `sqlserver` |
 | `dsn` | — | Connection string (PostgreSQL and SQL Server) |
 | `path` | `%WORKDIR%/db.sqlite` | File path (SQLite only) |
-| `noddl` | `false` | The application account holds no schema rights. Certeasy never issues DDL: it checks the schema at startup, refuses to run if anything is missing, and `certeasy migrate` writes the SQL for your DBA instead of applying it. See [Migrations](/administration/migrations). |
+| `noddl` | `false` | The application account holds no schema rights. Hortval never issues DDL: it checks the schema at startup, refuses to run if anything is missing, and `hortval migrate` writes the SQL for your DBA instead of applying it. See [Migrations](/administration/migrations). |
 | `ping-timeout-sec` | `10` | Timeout for the startup connectivity check |
 | `max-idle-conn` | `2` (SQLite), `5` (others) | Maximum idle connections |
 | `max-conn` | `10` | Maximum open connections |
@@ -73,13 +73,13 @@ database:
 
 The schema travels inside the binary — no external SQL files. A restart applies
 **additive** migrations on its own; anything that cannot be undone by doing
-nothing waits for an explicit `certeasy migrate`. See
+nothing waits for an explicit `hortval migrate`. See
 [Migrations](/administration/migrations) for the full contract, the `--sql`
 output, and the `noddl` mode.
 
 ## Schema
 
-Certeasy writes to the schema its database account resolves to, and says which
+Hortval writes to the schema its database account resolves to, and says which
 one at every start:
 
 ```
@@ -94,7 +94,7 @@ database's side. For two separate installations, give each one a schema:
 # PostgreSQL: the default search path sends everyone to `public`
 database:
   driver: postgres
-  dsn: "postgres://certeasy:secret@db01:5432/shared?options=-csearch_path%3Dcerteasy"
+  dsn: "postgres://hortval:secret@db01:5432/shared?options=-csearch_path%3Dhortval"
 ```
 
 On SQL Server the schema comes from the database user, not the connection

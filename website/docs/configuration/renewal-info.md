@@ -5,7 +5,7 @@ title: Renewal Information (ARI)
 
 # ACME Renewal Information (RFC 9773)
 
-Certeasy implements [ACME Renewal Information (ARI)](https://datatracker.ietf.org/doc/html/rfc9773), the standard mechanism that lets the server tell ACME clients **when** to renew. Compliant clients (recent certbot, acme.sh, lego, Caddy, Traefik) honour the suggested window instead of relying on their own renewal heuristics.
+Hortval implements [ACME Renewal Information (ARI)](https://datatracker.ietf.org/doc/html/rfc9773), the standard mechanism that lets the server tell ACME clients **when** to renew. Compliant clients (recent certbot, acme.sh, lego, Caddy, Traefik) honour the suggested window instead of relying on their own renewal heuristics.
 
 ARI is **always enabled** and exposes one new endpoint:
 

@@ -13,16 +13,16 @@ acme.sh's CLI has been stable for years — `--issue` / `--renew` / `--revoke` a
 
 ## What changes vs certbot
 
-- **Key type**: acme.sh generates **RSA 2048** by default. This is **refused** by Certeasy under the default `signature.min-rsa-bits: 3072` policy — always pass `--keylength` explicitly:
+- **Key type**: acme.sh generates **RSA 2048** by default. This is **refused** by Hortval under the default `signature.min-rsa-bits: 3072` policy — always pass `--keylength` explicitly:
   - `--keylength 3072` or `4096` for RSA
   - `--keylength ec-256` or `ec-384` for ECDSA
   - See [FAQ → RSA-only templates](/reference/faq#rsa-only-templates).
-- **CSR EKU — read this carefully**: acme.sh's built-in OpenSSL template declares **both `serverAuth` and `clientAuth`** in the CSR's Extended Key Usage, regardless of intended purpose. By default Certeasy rejects this combination, returning `badCSR: EKU 1.3.6.1.5.5.7.3.2 in CSR not allowed by policy`.
+- **CSR EKU — read this carefully**: acme.sh's built-in OpenSSL template declares **both `serverAuth` and `clientAuth`** in the CSR's Extended Key Usage, regardless of intended purpose. By default Hortval rejects this combination, returning `badCSR: EKU 1.3.6.1.5.5.7.3.2 in CSR not allowed by policy`.
 
   Two paths to make it work:
 
   1. **Strict (preferred from June 2026)**: drop `clientAuth` from acme.sh's CSR template. The CA/B Forum baseline forbids the `serverAuth + clientAuth` combination on publicly-trusted server certificates from June 2026 onwards — production deployments should align even when fronted by an internal ADCS. The cleanest way is to maintain a private fork of `acme.sh` or to override its OpenSSL config file (`~/.acme.sh/openssl.cnf` if you use `--certhome`).
-  2. **Pragmatic (existing fleet)**: add `clientAuth` to the policy's `csr.allowed-extra-eku` on the Certeasy side. See [Configuration → Issuance policies → EKU](../configuration/issuance-policies.md). This unblocks acme.sh as-is; plan a migration before June 2026.
+  2. **Pragmatic (existing fleet)**: add `clientAuth` to the policy's `csr.allowed-extra-eku` on the Hortval side. See [Configuration → Issuance policies → EKU](../configuration/issuance-policies.md). This unblocks acme.sh as-is; plan a migration before June 2026.
 
 - **Trust store**: acme.sh uses curl under the hood. Point both `--ca-bundle` and the `CA_BUNDLE` / `CURL_CA_BUNDLE` env vars at your OS bundle:
 
@@ -91,7 +91,7 @@ acme.sh has its own catalogue of DNS plugins under `~/.acme.sh/dnsapi/`. Configu
 :::warning Disable the public DNS pre-check on intranet deployments
 By default, acme.sh resolves the just-installed `_acme-challenge.<domain>` TXT
 record through public DoH resolvers (Cloudflare, Google) before notifying
-Certeasy. On an internal-only deployment this check **will always fail** —
+Hortval. On an internal-only deployment this check **will always fail** —
 the names do not exist publicly — and worse, the internal domain name is
 leaked in cleartext to the public resolvers.
 

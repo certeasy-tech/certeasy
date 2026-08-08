@@ -5,7 +5,7 @@ title: Rate Limiting
 
 # Rate Limiting
 
-Certeasy enforces several rate limits to protect the ACME endpoint from abuse and to prevent runaway clients from issuing thousands of certificates for the same names. All limits are configurable and individually disablable.
+Hortval enforces several rate limits to protect the ACME endpoint from abuse and to prevent runaway clients from issuing thousands of certificates for the same names. All limits are configurable and individually disablable.
 
 The block lives at the top level of the configuration file. The defaults below apply when `rate-limiting` is omitted entirely — note the empty `whitelist`: **no IP bypasses rate limits unless you opt in explicitly** (secure by default).
 
@@ -64,7 +64,7 @@ When a limit is hit, the server replies with HTTP 429 (`urn:ietf:params:acme:err
 
 ## Whitelist
 
-**Empty by default.** Adding entries explicitly opts an IP or range out of IP-based limits — Certeasy never auto-trusts private RFC 1918 ranges or any other network.
+**Empty by default.** Adding entries explicitly opts an IP or range out of IP-based limits — Hortval never auto-trusts private RFC 1918 ranges or any other network.
 
 `whitelist` accepts both single IPs and CIDR ranges:
 
@@ -81,7 +81,7 @@ Any client whose IP matches a whitelist entry bypasses `global`, `account-creati
 Use this sparingly: typical setups don't need a whitelist at all.
 
 In particular, **a shared frontend IP is not a reason to whitelist it**. If clients
-reach Certeasy through a reverse proxy, set `trusted-proxies` in the [`server`](./server.md)
+reach Hortval through a reverse proxy, set `trusted-proxies` in the [`server`](./server.md)
 section instead, so the limiters key on the real client address. Whitelisting the
 proxy CIDR would exempt *every* client behind it — the aggregate volume stops
 being throttled, but so does each individual client. Reserve the whitelist for a
@@ -276,13 +276,13 @@ Caps the number of **in-flight** pending authorizations per account. An "in-flig
 
 ### Why 30 by default
 
-The CertEasy deployment model is typically **one machine = one ACME account**. A single host issuing certificates for its own domains rarely has more than 5–10 pending authzs at once. 30 is generous for legitimate workflows and tight enough to catch runaway loops.
+The Hortval deployment model is typically **one machine = one ACME account**. A single host issuing certificates for its own domains rarely has more than 5–10 pending authzs at once. 30 is generous for legitimate workflows and tight enough to catch runaway loops.
 
 For multi-tenant deployments where one account fronts many machines, raise the cap explicitly.
 
 ### Why expired authzs are excluded
 
-CertEasy does not auto-purge expired authzs from the database (they remain visible for audit). Counting them would mean an account that abandons a few orders gets locked out **permanently**. The check uses `expires_at IS NULL OR expires_at > now()` to count only rows that are actually still in flight.
+Hortval does not auto-purge expired authzs from the database (they remain visible for audit). Counting them would mean an account that abandons a few orders gets locked out **permanently**. The check uses `expires_at IS NULL OR expires_at > now()` to count only rows that are actually still in flight.
 
 ### Retry-After
 

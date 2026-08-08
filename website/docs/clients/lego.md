@@ -77,7 +77,7 @@ lego run \
      --path /etc/lego
 ```
 
-lego binds port 443 with the ACME-specific ALPN protocol; Certeasy probes the IP at port 443 with ALPN `acme-tls/1` to verify ownership. Useful when port 80 is unavailable but port 443 is free.
+lego binds port 443 with the ACME-specific ALPN protocol; Hortval probes the IP at port 443 with ALPN `acme-tls/1` to verify ownership. Useful when port 80 is unavailable but port 443 is free.
 
 ## DNS-01 (for wildcards)
 
@@ -86,7 +86,7 @@ lego ships built-in plugins for ~80 DNS providers — no extra package needed. P
 :::warning Point the propagation check at your internal resolver
 By default, lego waits until the just-installed `_acme-challenge.<domain>` TXT
 record is visible through public resolvers (Cloudflare `1.1.1.1`, Google
-`8.8.8.8`) before notifying Certeasy. On an internal-only deployment that
+`8.8.8.8`) before notifying Hortval. On an internal-only deployment that
 check **will never succeed** — the names do not exist publicly — and worse,
 the internal domain name is leaked in cleartext to those resolvers.
 

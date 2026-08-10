@@ -1,1 +1,5 @@
 *.iml
+
+# Artefacts macOS Finder — apparaissent dès qu'on ouvre un dossier depuis le Mac.
+# Sans slash : le motif est récursif, il couvre tous les sous-répertoires.
+.DS_Store

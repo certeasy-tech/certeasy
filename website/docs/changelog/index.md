@@ -25,10 +25,11 @@ title: Changelog
 
   This only concerns you if you never set `workdir` in your configuration —
   **an explicit `workdir` is used as written and nothing else is checked.**
-  Otherwise, when the pre-rename directory still contains something, startup
-  stops and offers three ways out: move that directory to the new location, keep
-  it where it is by writing `workdir:` with its path, or delete it if it is a
-  leftover.
+  Configurations written by the setup wizard always set it, so this is about
+  hand-written ones. Otherwise, when the pre-rename directory still contains
+  something, startup stops and offers three ways out: move that directory to the
+  new location, keep it where it is by writing `workdir:` with its path, or
+  delete it if it is a leftover.
 
   **Why stop instead of just using the old directory?** Because it would work —
   for a year or two. The old location disappears in v2, and an installation

@@ -151,19 +151,24 @@ issuance-policies:
         - "*.corp.internal"            # wildcard at zone root only
       deny:
         - "=forbidden.corp.internal"   # exact match deny
+    # Both lists REPLACE the secure defaults, they do not extend them: write
+    # every value you want. Each EC curve is pinned to one algorithm, so a
+    # curve without its algorithm (or the reverse) is unusable — Hortval says
+    # so at startup and in `hortval validate`.
     signature:
       allowed-algorithms:
         - "RSA-SHA256"
         - "RSA-SHA384"
         - "RSA-SHA512"
-        - "ECDSA-SHA256"
-        - "ECDSA-SHA384"
-        - "ECDSA-SHA512"
+        - "ECDSA-SHA256"   # pairs with P-256
+        - "ECDSA-SHA384"   # pairs with P-384
+        - "ECDSA-SHA512"   # pairs with P-521
         - "ED25519"
       min-rsa-bits: 3072
       allowed-ec-curves:
         - "P-256"
         - "P-384"
+        - "P-521"          # required by ECDSA-SHA512 above
     # CSR Extended Key Usage whitelist. Default: serverAuth only.
     # See SECURITY WARNING in configuration/issuance-policies.md before
     # adding non-server purposes — back-end ADCS templates configured as

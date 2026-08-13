@@ -42,9 +42,9 @@ issuance-policies:
 | `dns-validation-profile` | Conditional | Profile to use for challenge validation. Required if more than one profile exists. |
 | `dns.allow` | Yes | DNS scope rules (see below). Must not be empty. |
 | `dns.deny` | No | DNS names to explicitly reject |
-| `signature.allowed-algorithms` | No | Allowed signing algorithms. Empty = secure defaults. |
-| `signature.min-rsa-bits` | No | Minimum RSA key size. Default: `3072`. |
-| `signature.allowed-ec-curves` | No | Allowed EC curves. Empty = secure defaults. |
+| `signature.allowed-algorithms` | No | Allowed signing algorithms. Empty = secure defaults. **A non-empty list replaces the defaults — it does not add to them.** |
+| `signature.min-rsa-bits` | No | Minimum RSA key size. Default: `3072`. Floor: `2048`. |
+| `signature.allowed-ec-curves` | No | Allowed EC curves. Empty = secure defaults. **A non-empty list replaces the defaults — it does not add to them.** |
 
 ## DNS Scope Rules
 
@@ -161,8 +161,82 @@ Two practical positions:
 If `signature` is omitted:
 
 - `min-rsa-bits`: `3072`
-- `allowed-algorithms`: when empty, all supported algorithms are accepted — `RSA-SHA256`, `RSA-SHA384`, `RSA-SHA512`, `ECDSA-SHA256`, `ECDSA-SHA384`, `ECDSA-SHA512`, `ED25519`
+- `allowed-algorithms`: when empty, a secure default set applies — `RSA-SHA256`, `RSA-SHA384`, `RSA-SHA512`, `ECDSA-SHA256`, `ECDSA-SHA384`, `ED25519`
 - `allowed-ec-curves`: internal secure defaults (P-256, P-384)
+
+The default set is deliberately **narrower** than what you may configure. The
+full configurable set adds `ECDSA-SHA512`; anything outside it is rejected when
+the configuration is loaded, not at issuance time.
+
+## Two rules that decide what a policy really accepts
+
+Most surprises with `signature` come from these two, and they compound.
+
+### 1. The lists replace the defaults, they do not extend them
+
+Writing one value does not add it to the defaults — it **discards** the rest.
+`allowed-ec-curves: ["P-521"]` does not mean "P-256, P-384 and also P-521"; it
+means "P-521 only".
+
+This is deliberate: it is what lets you constrain a policy to match a back-end CA
+template (see [FAQ — reject a wrong key early](../reference/faq.md)). But it means
+you must list **every** value you want.
+
+### 2. Each EC curve is pinned to one algorithm
+
+| Curve | Requires |
+|---|---|
+| `P-256` | `ECDSA-SHA256` |
+| `P-384` | `ECDSA-SHA384` |
+| `P-521` | `ECDSA-SHA512` |
+
+Allowing a curve without its algorithm — or an algorithm without its curve —
+makes that entry unusable.
+
+### What each configuration actually accepts
+
+| Configuration | RSA | P-256 | P-384 | P-521 | Ed25519 |
+|---|:--:|:--:|:--:|:--:|:--:|
+| no `signature` block | ✅ | ✅ | ✅ | ❌ | ✅ |
+| `allowed-ec-curves: ["P-521"]` only | ✅ | ❌ | ❌ | ❌ | ✅ |
+| `allowed-algorithms: ["ECDSA-SHA512"]` only | ❌ | ❌ | ❌ | ❌ | ❌ |
+| both, `P-521` / `ECDSA-SHA512` only | ❌ | ❌ | ❌ | ✅ | ❌ |
+| every algorithm **and** every curve listed | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+Row 2 is the common trap: adding `P-521` on its own loses P-256 and P-384 (rule 1)
+**and** does not enable P-521 (rule 2). To add a curve, write both lists in full:
+
+```yaml
+signature:
+  allowed-ec-curves:
+    - "P-256"
+    - "P-384"
+    - "P-521"          # added
+  allowed-algorithms:
+    - "RSA-SHA256"
+    - "RSA-SHA384"
+    - "RSA-SHA512"
+    - "ECDSA-SHA256"
+    - "ECDSA-SHA384"
+    - "ECDSA-SHA512"   # added — required by P-521
+    - "ED25519"
+```
+
+:::tip Hortval tells you before your clients do
+Any entry you wrote that cannot take effect is reported at startup **and** by
+`hortval validate`, naming the policy and what to add:
+
+```
+issuance policy "corp": allowed-ec-curves lists P-521, but allowed-algorithms
+does not allow ECDSA-SHA512 — the only algorithm that curve can be used with.
+No certificate on that curve can be issued. Add ECDSA-SHA512 to
+allowed-algorithms, or drop the curve
+```
+
+Startup also logs the rules in force for each policy, so you can check what a
+narrowed configuration ended up accepting. A policy that can issue **nothing** is
+refused outright at startup rather than failing every order at finalize.
+:::
 
 ## Multiple Policies
 

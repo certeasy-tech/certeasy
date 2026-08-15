@@ -24,7 +24,7 @@ Hortval is configured with a single YAML file. The parser is strict: unknown fie
 | [`rate-limiting`](./rate-limiting) | No | Per-IP, per-account, and duplicate-certificate rate limits |
 | [`renewal-info`](./renewal-info) | No | ACME Renewal Information (RFC 9773) — suggested renewal window |
 | [`audit`](../administration/audit) | No | Tamper-evident audit log (HMAC-chained JSONL) |
-| `workdir` | No | Base directory for runtime files |
+| `workdir` | **Yes** | Base directory for runtime files — absolute, no default |
 
 ## Runtime Model
 
@@ -72,27 +72,41 @@ workdir: "C:\\ProgramData\\hortval"
 
 Base directory for all runtime files: SQLite database, TLS certificate cache, log files (when `output: file`).
 
-| OS | Default |
+:::warning Required, and absolute. There is no default.
+A configuration that does not set `workdir` is refused at startup, and by
+`hortval validate`. Earlier releases picked a location for you; this one does
+not.
+
+**Why.** Every other path setting in this file already refuses to be guessed —
+all eight are rejected unless absolute or anchored (see below). `workdir` was
+the single exception, and it is the one that decides where the database, the
+node identity, the audit log and the CA key live. A default for *that* is a
+location nobody chose, that moves when the product is renamed, and that has to
+be arbitrated against the location the previous release used.
+
+These are the values previous releases used, and they remain the sensible
+choice — write the one for your platform:
+
+| OS | Conventional location |
 |---|---|
 | Windows | `%ProgramData%\hortval` |
 | Linux | `/var/lib/hortval` |
 | macOS | `~/Library/Application Support/hortval` |
 
-:::warning Coming from Certeasy: the server stops rather than use the old directory
-The default was renamed with the product. If you leave `workdir` unset **and** the
-pre-rename directory still holds data, startup stops rather than picking either
-one, and names three ways out: move it to the new default, keep it where it is by
-naming it explicitly with `workdir:`, or delete it if it is a leftover.
+**Upgrading? The refusal tells you where your data is.** Until v2, startup also
+looks at the locations previous releases used — including the pre-rename
+`certeasy` ones — and, when an installation is there, names it and prints the
+exact line to paste. If both hold one, it says so and lets you choose.
 
-**Nothing is moved for you.** That directory holds the database, the node identity,
-the audit log and the CA key. The check fires on a directory that is simply
-*non-empty*, rather than on a recognised installation marker — that marker arrived
-with the node identity, so the oldest releases would not be recognised, and they
-are exactly the ones worth catching. An empty directory left behind by a package
-or a `mkdir` does not trigger it.
+**Nothing is ever moved for you.** That directory holds the database, the node
+identity, the audit log and the CA key. Copying a database while opening it is
+not something a startup path should attempt, and a half-copy leaves two
+installations that both look right.
 
-Setting `workdir` to an absolute path skips the check entirely: saying where your
-data lives *is* the way out this error offers.
+An installation is recognised by its `server_id` marker, which every release
+since v0.9.0 writes. A directory holding only a `logs/` folder is not one: a
+service that started once and failed leaves exactly that, and it says nothing
+about where your data is.
 :::
 
 ## Every path must be absolute or anchored

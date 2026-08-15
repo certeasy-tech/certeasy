@@ -18,29 +18,42 @@ title: Changelog
   unaffected** — no account, order or certificate needs anything done to it, and
   no client configuration changes. The configuration file keeps its name and every
   one of its keys.
-- **The default working directory moved. If your data is still in the old one,
-  the server will not start.** The default is now `%ProgramData%\hortval` on
-  Windows, `/var/lib/hortval` on Linux, `~/Library/Application Support/hortval`
-  on macOS.
+- **`workdir` is now required, and must be an absolute path. There is no
+  default.** If your configuration does not set it, the server will not start.
 
-  This only concerns you if you never set `workdir` in your configuration —
-  **an explicit `workdir` is used as written and nothing else is checked.**
   Configurations written by the setup wizard always set it, so this is about
-  hand-written ones. Otherwise, when the pre-rename directory still contains
-  something, startup stops and offers three ways out: move that directory to the
-  new location, keep it where it is by writing `workdir:` with its path, or
-  delete it if it is a leftover.
+  hand-written ones. The fix is one line:
 
-  **Why stop instead of just using the old directory?** Because it would work —
-  for a year or two. The old location disappears in v2, and an installation
-  quietly living there would break then, with nobody left who remembers a
-  warning from an upgrade long past. Stopping costs one decision, taken once,
-  while someone is looking at a console.
+  ```yaml
+  workdir: "C:\\ProgramData\\hortval"     # or /var/lib/hortval
+  ```
 
-  **And why not move the directory for you?** It holds the database, the node
-  identity, the audit log and the CA key. Copying a database while opening it is
-  not something a startup path should attempt, and a half-copy leaves two
-  installations that both look right.
+  **Why remove the default rather than just rename it?** Because every other
+  path setting in this file already refuses to be guessed — all eight are
+  rejected unless absolute or anchored (see the entry below). `workdir` was the
+  single exception, and it is the one that decides where the database, the node
+  identity, the audit log and the CA key live. A default for *that* is a
+  location nobody chose, that moves when the product is renamed, and that has to
+  be arbitrated against the location the previous release used. Removing it
+  removes all three problems at once.
+
+  **The refusal tells you where your data is.** For this release and until v2,
+  startup looks at the two locations previous releases used —
+  `%ProgramData%\hortval` and `%ProgramData%\certeasy` on Windows,
+  `/var/lib/hortval` and `/var/lib/certeasy` on Linux — and, if an installation
+  is there, names it and prints the exact line to paste. If both hold one, it
+  says so and lets you choose: **nothing is ever moved for you.** That directory
+  holds the database, the node identity, the audit log and the CA key; copying a
+  database while opening it is not something a startup path should attempt, and
+  a half-copy leaves two installations that both look right.
+
+  An installation is recognised by its `server_id` marker, which every release
+  since v0.9.0 writes. A directory holding only a `logs/` folder is *not* one —
+  a service that started once and failed leaves exactly that, and it says
+  nothing about where your data is.
+
+  `hortval validate -f <config>` reports this along with everything else the
+  configuration needs, in one pass, without starting anything.
 - **The working directory is no longer searched for `config.yml`.** Until now it
   came first, ahead of the executable's directory and `/etc`. That meant running
   `hortval audit verify` or `hortval backup create` from any directory a less

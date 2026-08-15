@@ -12,7 +12,7 @@ Comments indicate which fields are required, optional, or mode-specific.
 ```yaml
 # Base directory for runtime files (SQLite, TLS cache, logs).
 # Default: %ProgramData%\hortval (Windows) | /var/lib/hortval (Linux)
-workdir: "C:\\ProgramData\\hortval"
+workdir: 'C:\ProgramData\hortval'
 
 # ── Database ──────────────────────────────────────────────────────────────────
 # Omit this section entirely to use SQLite with all defaults.

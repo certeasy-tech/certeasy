@@ -284,7 +284,7 @@ the documented onboarding path produced exactly the file that now fails.
 Set it to an absolute path. A configuration that omits it does not start.
 
 ```yaml
-workdir: "C:\\ProgramData\\hortval"     # or /var/lib/hortval
+workdir: 'C:\ProgramData\hortval'     # or /var/lib/hortval
 ```
 
 The reason is the same one behind the rule above: this key decides where the

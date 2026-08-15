@@ -25,7 +25,7 @@ title: Changelog
   hand-written ones. The fix is one line:
 
   ```yaml
-  workdir: "C:\\ProgramData\\hortval"     # or /var/lib/hortval
+  workdir: 'C:\ProgramData\hortval'     # or /var/lib/hortval
   ```
 
   **Why remove the default rather than just rename it?** Because every other

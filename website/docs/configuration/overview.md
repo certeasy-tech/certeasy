@@ -67,7 +67,7 @@ Hortval avoids requiring explicit configuration for common cases:
 ## `workdir`
 
 ```yaml
-workdir: "C:\\ProgramData\\hortval"
+workdir: 'C:\ProgramData\hortval'
 ```
 
 Base directory for all runtime files: SQLite database, TLS certificate cache, log files (when `output: file`).

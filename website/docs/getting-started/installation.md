@@ -80,16 +80,22 @@ In production you do not want `hortval serve` running from an interactive shell 
 Run Hortval as a Windows service using `sc.exe` or [NSSM](https://nssm.cc/),
 under a **dedicated service account**.
 
-:::danger `sc.exe` cannot start Hortval on released versions
-Hortval does not yet implement the Service Control Manager handshake, so a
-service created with `sc.exe` fails to start with **error 1053** — "the service
-did not respond to the start request in a timely fashion". The process does run
-for about thirty seconds before the SCM kills it, which leaves the shutdown
-drain unfinished and `db.sqlite-wal` / `db.sqlite-shm` files behind.
+:::danger Hortval does not run as a Windows service yet — this ships in v0.9.6
+**v0.9.5 cannot be started by the Service Control Manager.** Hortval does not
+implement the SCM handshake, so a service created with `sc.exe` fails to start
+with **error 1053** — "the service did not respond to the start request in a
+timely fashion". The process does run for about thirty seconds before the SCM
+kills it, which leaves the shutdown drain unfinished and `db.sqlite-wal` /
+`db.sqlite-shm` files behind.
 
-Until this ships, run `hortval serve -f <config>` in a console, or under a
-wrapper that performs the SCM handshake on the binary's behalf — a scheduled
-task, or NSSM. Neither wrapper has been validated against Hortval yet.
+This is a known limitation of the first release, not a configuration mistake:
+nothing you change in `config.yml` or in the `sc.exe` line will fix it. Native
+service support — SCM handshake, Windows event log, and a `hortval diag`
+subcommand to prove where the logs went — is the headline of **v0.9.6**.
+
+**Until then**, run `hortval serve -f <config>` in a console, or under a wrapper
+that performs the SCM handshake on the binary's behalf — a scheduled task, or
+NSSM. Neither wrapper has been validated against Hortval yet.
 
 Whichever you choose, **capture stderr**. A handful of startup lines are written
 there and never reach `logs.file`, and when startup is *refused* the log file is

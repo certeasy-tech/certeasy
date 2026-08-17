@@ -7,109 +7,48 @@ title: Changelog
 
 ## v0.9.5 - unreleased
 
-### Breaking changes
+**The first Hortval release.** One idea runs through it: the server no longer
+guesses where anything is. Every path it uses is one you wrote, ambiguity is
+refused instead of resolved silently, and each refusal names what it wanted and
+prints the exact line to paste.
 
-- **Certeasy is now Hortval, and so are the command and the binary.** Every
-  invocation changes with it: the `ExecStart` of a systemd unit, the `binPath=` of
-  a Windows service, and whatever your runbooks and monitoring call. Release
-  artefacts are named `hortval-<version>-<os>-<arch>`.
+If you are coming from Certeasy v0.9.4 and you pass `-f` with absolute paths,
+your configuration needs nothing — jump to
+[Upgrading](#upgrading-from-v094--what-changes-for-an-existing-configuration)
+for the case-by-case.
+
+### What this release gives you
+
+- **Hortval, under its own name.** The command, the binary and the release
+  artefacts are `hortval` / `hortval-<version>-<os>-<arch>`. Every invocation
+  changes with it: the `ExecStart` of a systemd unit, the `binPath=` of a Windows
+  service, your runbooks and your monitoring.
 
   Nothing inside the ACME protocol carries the name, so **ACME clients are
   unaffected** — no account, order or certificate needs anything done to it, and
   no client configuration changes. The configuration file keeps its name and every
   one of its keys.
-- **`workdir` is now required, and must be an absolute path. There is no
-  default.** If your configuration does not set it, the server will not start.
 
-  Configurations written by the setup wizard always set it, so this is about
-  hand-written ones. The fix is one line:
+- **Nothing is guessed any more.** Seven lookups and settings that used to resolve
+  silently now refuse, and say what to write instead. This is the release, not a
+  side effect of it — see [Breaking changes](#breaking-changes) for the list and
+  [Upgrading](#upgrading-from-v094--what-changes-for-an-existing-configuration)
+  for what to do.
 
-  ```yaml
-  workdir: 'C:\ProgramData\hortval'     # or /var/lib/hortval
-  ```
+- **The Windows binary is signed with Authenticode**, timestamped so the
+  signature outlives the signing certificate. Verify with
+  `Get-AuthenticodeSignature`; the signer is SAFE PIC TECHNOLOGIES. Note that
+  **SmartScreen still appears** — what changes is that it now names the publisher
+  instead of saying "Unknown publisher". Linux and macOS binaries remain covered
+  by `SHA256SUMS` for integrity only. See
+  [Verifying release binaries](/security/verifying-binaries).
 
-  **Why remove the default rather than just rename it?** Because every other
-  path setting in this file already refuses to be guessed — all eight are
-  rejected unless absolute or anchored (see the entry below). `workdir` was the
-  single exception, and it is the one that decides where the database, the node
-  identity, the audit log and the CA key live. A default for *that* is a
-  location nobody chose, that moves when the product is renamed, and that has to
-  be arbitrated against the location the previous release used. Removing it
-  removes all three problems at once.
+- **SQL Server integrated authentication.** Add `authenticator=winsspi` to your
+  `database.dsn` and drop the credentials: Hortval connects as the Windows account
+  it runs under, and no SQL password sits in `config.yml`. Windows only, and it
+  needs a domain account — see [Database](/configuration/database).
 
-  **The refusal tells you where your data is.** For this release and until v2,
-  startup looks at the two locations previous releases used —
-  `%ProgramData%\hortval` and `%ProgramData%\certeasy` on Windows,
-  `/var/lib/hortval` and `/var/lib/certeasy` on Linux — and, if an installation
-  is there, names it and prints the exact line to paste. If both hold one, it
-  says so and lets you choose: **nothing is ever moved for you.** That directory
-  holds the database, the node identity, the audit log and the CA key; copying a
-  database while opening it is not something a startup path should attempt, and
-  a half-copy leaves two installations that both look right.
-
-  An installation is recognised by its `server_id` marker, which every release
-  since v0.9.0 writes. A directory holding only a `logs/` folder is *not* one —
-  a service that started once and failed leaves exactly that, and it says
-  nothing about where your data is.
-
-  `hortval validate -f <config>` reports this along with everything else the
-  configuration needs, in one pass, without starting anything.
-- **The working directory is no longer searched for `config.yml`.** Until now it
-  came first, ahead of the executable's directory and `/etc`. That meant running
-  `hortval audit verify` or `hortval backup create` from any directory a less
-  privileged account could write to loaded *that* account's configuration file —
-  and the configuration file selects the database, the working directory, the
-  audit log destination and the outbound proxy. Pass `-f <path>` if you were
-  relying on it. Everything the documentation describes already passes `-f`: the
-  systemd unit, the `sc.exe create` line, and every command the setup wizard
-  prints when it finishes.
-- **Two or more candidate configuration files is now a startup error.** Certeasy
-  used to take the first one found and ignore the rest, so a file in one
-  searched directory silently shadowed the file in another — including
-  `config.yml` shadowing `config.yaml` in the same directory. It now refuses to
-  start, names every file it found, and asks for `-f`. No directory takes
-  precedence over another; if you had two and were relying on the order, that
-  order was never documented and never guaranteed.
-- **A configuration file that exists but cannot be read is reported instead of
-  skipped.** Certeasy cannot load it, so it is not a candidate — but falling
-  back to another file without saying so would apply a configuration you did not
-  intend. It is named, with the reason, either in the startup warning or in the
-  "no readable configuration file found" message.
-
-- **Every configuration setting that names a path must now be absolute or
-  anchored**, and a relative one is refused at startup and by
-  `hortval validate`. This covers `workdir`, `database.path`, `audit.path`,
-  `logs.file`, `local-pki-cache-dir`, `letsencrypt.cache-dir`, and a bundle's
-  `local-cert-file` / `local-key-file`. None of them was anchored: a relative
-  value was resolved against the process working directory — which for a Windows
-  service created with `sc.exe` is `C:\Windows\System32`, since `sc.exe` has no
-  field to set it. A deployment could therefore end up with two working
-  directories, and on Postgres or SQL Server the service started anyway with a
-  fresh node identity, a fresh audit chain and a regenerated fake CA. Anchor
-  with `%WORKDIR%`, or `%CONFIGDIR%` for `workdir` itself; a refusal names the
-  setting, and when a live installation sits where the value resolves it prints
-  the exact line to write.
-
-  The documentation previously stated the opposite — that relative paths were
-  resolved relative to `workdir`. That was wrong, and is corrected on
-  [Configuration overview](/configuration/overview).
-
-- **Two per-service log names changed, and an unrecognised one now stops
-  startup.** `Certeasy-acme-server` became `acme-server`, `cert-easy-main`
-  became `main` — they carried the product name. There is no alias: a
-  configuration using an old name is refused, and the message lists the accepted
-  ones.
-
-  The refusal matters more than the rename. Until now an unrecognised key in
-  `logs.services` was **silently ignored** — the level you asked for fell back to
-  the global default and nothing said so, so the only symptom was logs quieter
-  than expected, precisely when you were trying to diagnose something. The
-  accepted names are listed on [Logging](/administration/logging), and that list
-  is now exhaustive.
-
-### Changes
-
-- **`hortval validate` now checks the filesystem, and `--no-disk` skips it.** It
+- **`hortval validate` now checks the filesystem**, and `--no-disk` skips it. It
   looks at what it can — does a working directory's parent exist, is an
   installation already sitting where a path resolves — because the machine you
   validate on is usually the machine that will serve. Two things it deliberately
@@ -119,40 +58,61 @@ title: Changelog
   runs as its service account — guessing another identity's permissions produces
   confident wrong answers.
 
-- **The Windows binary is signed with Authenticode**, timestamped so the
-  signature outlives the signing certificate. Verify with
-  `Get-AuthenticodeSignature`; the signer is SAFE PIC TECHNOLOGIES. Note that
-  **SmartScreen still appears** — what changes is that it now names the
-  publisher instead of saying "Unknown publisher". Linux and macOS binaries
-  remain covered by `SHA256SUMS` for integrity only. See [Verifying release
-  binaries](/security/verifying-binaries).
-
 - **New `%CONFIGDIR%` token, valid in `workdir`**, expanding to the directory
-  holding the configuration file. It exists because `workdir` is the one path
-  that could not use `%WORKDIR%` — it *is* the working directory. `hortval init`
-  now proposes `%CONFIGDIR%/workdir` instead of `./workdir`, so a generated
-  configuration means the same directory wherever it is later started from, and
-  a free-form relative answer is written out already resolved.
-- **Configuration is now looked for under `hortval` before `certeasy`** —
-  `%PROGRAMDATA%\hortval` and `%APPDATA%\hortval` on Windows, `/etc/hortval` and
-  `$XDG_CONFIG_HOME/hortval` on Linux. The `certeasy` directories are still read,
-  with a warning naming both the old and the new location; they will be removed
-  in v2. Nothing to do at upgrade time.
-- **Machine-wide configuration directories are searched before per-user ones**,
-  on every platform. Windows already did; Linux and macOS had the reverse order.
-  Since two candidates are now refused outright this changes no outcome — it
-  changes what the error message lists first, and the per-user directory is the
-  one an unprivileged account can write to.
-- **The licensing backend moved to `api.hortval.com`.** If your egress is
-  filtered by hostname, allow it before upgrading — otherwise online licence
-  checks fail and the deployment slides into its degraded states. Offline
-  installations are unaffected.
+  holding the configuration file. It exists because `workdir` is the one path that
+  could not use `%WORKDIR%` — it *is* the working directory. `hortval init` now
+  proposes `%CONFIGDIR%/workdir` instead of `./workdir`, so a generated
+  configuration means the same directory wherever it is later started from.
+
 - **A `letsencrypt` bundle now always serves an ECDSA P-256 certificate.**
   Previously the key type was decided by whichever client connected first, and
   then served to everyone: `autocert` indexes its cache by key type and holds
-  both, but the certificate manager keeps one certificate per bundle, so the
-  first handshake settled it for the life of the process. If a client of yours
-  needs RSA, use `mode: pki` or `mode: files`, where `key.type` is yours to set.
+  both, but the certificate manager keeps one certificate per bundle, so the first
+  handshake settled it for the life of the process. If a client of yours needs
+  RSA, use `mode: pki` or `mode: files`, where `key.type` is yours to set.
+
+### Not yet: running as a Windows service — this ships in v0.9.6
+
+**v0.9.5 cannot be started by the Windows Service Control Manager.** The SCM
+handshake is not implemented: `sc.exe start` fails with error 1053, and the
+process is killed after about thirty seconds with its shutdown drain unfinished,
+leaving `db.sqlite-wal` / `db.sqlite-shm` behind.
+
+Run it in a console, or under a wrapper that performs the handshake on its behalf
+(a scheduled task, or NSSM — neither is validated against Hortval yet). Native
+service support, the Windows event log, and a `hortval diag` subcommand to prove
+where the messages went are the headline of **v0.9.6**. See
+[Installation → Windows service](/getting-started/installation#windows-service).
+
+This is stated here rather than left to be discovered: on the platform Hortval
+targets, "runs as a service" is what deployment means.
+
+### Breaking changes
+
+All of them are the same rule — **a value that was guessed is now demanded** —
+and each refusal prints what to write. Only the last row is a rename rather than
+a refusal.
+
+| What | v0.9.4 did | v0.9.5 does |
+|---|---|---|
+| `workdir` absent | picked a location for you | **refuses.** Why, and the conventional value per platform: [`workdir`](/configuration/overview#workdir) |
+| a path setting holding a relative path | resolved it against the current directory | **refuses** unless absolute or anchored with `%WORKDIR%` / `%CONFIGDIR%` |
+| `config.yml` in the current directory | loaded it, ahead of everything else | **not searched at all** — the current directory of a service created by `sc.exe` is `C:\Windows\System32`, and any directory a lesser account can write to selected the database, the working directory, the audit destination and the outbound proxy |
+| two candidate configuration files | loaded one, ignored the other | **refuses**, naming both |
+| a configuration file that exists but cannot be read | selected it, then failed to open it | **skipped and reported**; a readable one is used with a warning |
+| `%WORKDIR%` in `audit.path`, `logs.file`, `letsencrypt.cache-dir`, `local-cert-file`, `local-key-file` | taken literally — it created a directory actually *named* `%WORKDIR%` | **resolved** |
+| an unrecognised name in `logs.services` | silently ignored, so the level you asked for never applied | **refuses**. `Certeasy-acme-server` → `acme-server`, `cert-easy-main` → `main` |
+
+Two lookups also changed order without changing any outcome, since ambiguity is
+now refused either way: configuration is looked for under `hortval` before
+`certeasy` (the `certeasy` directories are still read, with a warning naming
+both; they go away in v2), and machine-wide directories are searched before
+per-user ones on every platform.
+
+**The licensing backend moved to `api.hortval.com`.** If your egress is filtered
+by hostname, allow it before upgrading — otherwise online licence checks fail and
+the deployment slides into its degraded states. Offline installations are
+unaffected.
 
 ### Upgrading from v0.9.4 — what changes for an existing configuration
 

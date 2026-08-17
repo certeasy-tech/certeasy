@@ -5,9 +5,21 @@ title: Graceful shutdown
 
 # Graceful shutdown
 
-Hortval stops cleanly on `SIGTERM` (Linux) and on the equivalent stop signal
-sent by the Windows Service Control Manager. This page describes the behaviour
-you can rely on, the two timeouts that bound it, and how to tune them.
+Hortval stops cleanly on `SIGTERM` (Linux) and on **Ctrl+C / Ctrl+Break in a
+console** (Windows). This page describes the behaviour you can rely on, the two
+timeouts that bound it, and how to tune them.
+
+:::warning On Windows, a service stop does **not** drain — v0.9.5
+Everything below applies when Hortval is stopped by a signal it actually
+receives. **The Windows Service Control Manager is not one of them in v0.9.5**:
+the SCM handshake is not implemented, so the process is killed after about
+thirty seconds with the drain unfinished, leaving `db.sqlite-wal` /
+`db.sqlite-shm` behind.
+
+Ship as a console process or under a wrapper until **v0.9.6**, which brings
+native service support. See
+[Installation → Windows service](../getting-started/installation.md#windows-service).
+:::
 
 ## What happens on stop signal
 

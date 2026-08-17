@@ -11,7 +11,7 @@ Hortval is designed and supported as a **single-instance** deployment. This page
 
 ### Single instance (recommended)
 
-One Hortval process on one host, with its own database. This is the production-ready topology.
+One Hortval process on one host, with its own database. This is the recommended production topology.
 
 ```
 ┌──────────────┐    HTTPS     ┌──────────────┐    RPC       ┌──────────┐

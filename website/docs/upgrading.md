@@ -17,15 +17,14 @@ on disk. Nothing inside the ACME protocol carries the name, so your ACME clients
 are unaffected.
 :::
 
-Two things make an upgrade here different from most:
+One thing makes an upgrade here different from most: **the configuration file
+carries no version number, and it is never rewritten for you.** There is no
+migration step and no compatibility shim. A key that no longer exists is not
+ignored — the file fails to parse and the server does not start.
 
-- **The configuration file carries no version number, and it is never rewritten
-  for you.** There is no migration step and no compatibility shim. A key that no
-  longer exists is not ignored — the file fails to parse and the server does not
-  start.
-- **The break is symmetric.** A configuration written for 0.9.4 also fails to load
-  on a 0.9.3 binary. Rolling the binary back means restoring the old configuration
-  file with it, so keep a copy.
+Before any upgrade, back up **the database, the installation directory and the
+configuration**. Keep the database copy even for a release that does not seem to
+need one: it is the only part you cannot rebuild.
 
 ## Check before you switch
 

@@ -14,13 +14,20 @@ the time of writing.
 
 | Category | Tests | What it verifies |
 |---|---|---|
-| Unit (TU) | **729** | Pure logic: configuration parsing and validation, policy resolution, JWS signing and verification, anti-replay nonces, DNS scope matching, CSR validation, key handling, the asynchronous job engine, licensing decisions, rate-limit decision tables, audit-line encoding. No I/O, no database. |
+| Unit (TU) | **843** | Pure logic: configuration parsing and validation, policy resolution, JWS signing and verification, anti-replay nonces, DNS scope matching, CSR validation, key handling, the asynchronous job engine, licensing decisions, rate-limit decision tables, audit-line encoding. No I/O, no database. |
 | Integration (IT) | **188** | Real database (SQLite, PostgreSQL, SQL Server), real audit file on disk, real PKI request store, full ACME handler stack wired against the storage layer. Each test runs against every supported database backend. |
-| End-to-end (E2E) | **135** | The full Hortval binary running as a subprocess. Two flavours: (1) CLI black-box — every subcommand (`serve`, `init`, `validate`, `migrate`, `license`, `cold-start`, `backup`, `audit`, `adcs check`), exit codes, error messages. (2) ACME protocol — real third-party clients (lego, certbot, acme.sh) plus a RFC-strict native client driving certificate issuance, renewal, revocation, account lifecycle, key rollover, and the full error/security path. |
-| **Total** | **1052** | |
+| End-to-end (E2E) | **162** | The full Hortval binary running as a subprocess. Two flavours: (1) CLI black-box — every subcommand (`serve`, `init`, `validate`, `migrate`, `license`, `cold-start`, `backup`, `audit`, `adcs check`), exit codes, error messages, **each run against every supported database backend**. (2) ACME protocol — real third-party clients (lego, certbot, acme.sh) plus a RFC-strict native client driving certificate issuance, renewal, revocation, account lifecycle, key rollover, and the full error/security path. |
+| **Total** | **1193** | |
 
-Numbers are refreshed at every release. The most recent count above reflects
-the **v0.9.4** line — **+243 tests since v0.9.3**.
+Numbers are refreshed at every release. The count above reflects the **v0.9.5**
+line — **+141 tests since v0.9.4**.
+
+These count test *functions*, not executions. Most run several times — once per
+database backend — so a full run reports a much larger figure: the v0.9.5
+Windows run executed **5,540** cases across 39 phases, with **76** skipped.
+
+Every skip is declared and checked against a per-platform reference, so the
+coverage above cannot quietly erode between releases.
 
 ## What is covered, by area
 
@@ -87,9 +94,17 @@ backend:
 - **PostgreSQL** — when configured in the CI environment.
 - **SQL Server** — when configured in the CI environment.
 
+**The CLI black-box suite runs against all three as well**: `migrate`, the schema
+gate, the cold-start plans and `license install` are each exercised on every
+supported engine. The one exception is `backup`, SQLite-only by design in v1.
+
 Concurrent-writer behaviour (serialisable retry) and dialect-specific edge
 cases (UUID handling, NULL semantics in unique indexes, cascade chain
 restrictions on SQL Server) are all covered.
+
+Test isolation is per-schema rather than per-database on PostgreSQL and SQL
+Server: each test gets its own schema, and on SQL Server its own login and user
+so unqualified identifiers resolve there rather than falling back to `dbo`.
 
 ### Schema and migrations
 
@@ -215,10 +230,18 @@ help output for every command level.
 
 ### Cross-platform
 
-The suite runs on Linux for every release. On Windows, when an ADCS lab is
-available, the protocol suite additionally runs against a real Active
-Directory Certificate Services authority — covering both certificate
-issuance and revocation, and both ADCS connectors (see
+The suite runs on Linux and macOS for every release, and **the whole suite runs
+on Windows** — not a subset. The v0.9.5 Windows run executed 39 phases across
+the three database backends with no failure.
+
+That matters because Windows is where the product is deployed, and several
+behaviours exist only there: where files land once the working directory is
+resolved, how anchored paths expand, and how the process drains when asked to
+stop. Each is covered on Windows itself, against all three database backends.
+
+On Windows, when an ADCS lab is available, the protocol suite additionally runs
+against a real Active Directory Certificate Services authority — covering both
+certificate issuance and revocation, and both ADCS connectors (see
 [Microsoft ADCS integration](#microsoft-adcs-integration)).
 
 ## How the categories are defined

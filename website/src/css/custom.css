@@ -33,3 +33,56 @@
   --ifm-color-primary-lightest: #4fddbf;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+/* LE BANDEAU DE RENOMMAGE — il doit se VOIR.
+   Le thème le peint en `var(--ifm-color-white)` sur `var(--ifm-color-black)`
+   et lui fixe 30 px de haut au-dessus de 997 px : blanc sur blanc, et si fin
+   qu'on le prend pour une bordure.
+   TROIS SÉLECTEURS pour la même règle, parce que la classe varie selon la
+   version du thème et que node_modules vit dans un volume docker qu'on ne peut
+   pas inspecter depuis l'hôte :
+     .theme-announcement-bar        classe stable, v2 et v3
+     div[class*='announcementBar_'] classe du module CSS, où qu'elle soit dans
+                                    l'attribut (*= et non ^=, l'erreur d'hier)
+     [role='banner']:not(header)    le dernier filet, l'élément portant ce rôle
+   !important assumé : on écrase un défaut de thème ET un style inline.
+   À retirer avec la clé `announcementBar` de docusaurus.config.ts. */
+:root { --docusaurus-announcement-bar-height: auto !important; }
+@media (min-width: 997px) {
+  :root { --docusaurus-announcement-bar-height: auto !important; }
+}
+.theme-announcement-bar,
+div[class*='announcementBar_'] {
+  background: #4f46e5 !important;
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
+  height: auto !important;
+  min-height: 64px !important;
+  padding: 18px 16px !important;
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  border-bottom: none !important;
+}
+/* LE TEXTE VIT DANS L'ENFANT, et c'est lui qui décide de sa taille.
+   AnnouncementBar/Content/styles.module.css pose `font-size: 85%` sur
+   `.content_xxxx` — donc la taille du conteneur est héritée puis RÉDUITE, et
+   agrandir le parent ne sert à rien. On vise l'enfant, scopé sous le bandeau :
+   `content_` est un nom trop courant pour être ciblé seul. */
+.theme-announcement-bar div[class*='content_'],
+div[class*='announcementBar_'] div[class*='content_'] {
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  padding: 0 !important;
+}
+.theme-announcement-bar a,
+div[class*='announcementBar_'] a {
+  color: #ffffff !important;
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+}
+.theme-announcement-bar b,
+div[class*='announcementBar_'] b {
+  color: #ffffff !important;
+}

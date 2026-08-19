@@ -55,6 +55,33 @@ database:
   dsn: "sqlserver://hortval:secret@sqlserver01:1433?database=hortval"
 ```
 
+#### Windows integrated authentication
+
+On Windows, Hortval can connect as the account it runs under, so no SQL password
+appears in the configuration file. Add `authenticator=winsspi` and drop the
+credentials:
+
+```yaml
+database:
+  driver: sqlserver
+  dsn: "sqlserver://sqlserver01:1433?database=hortval&authenticator=winsspi"
+```
+
+The identity used is the **account of the Hortval process**, so it is the one
+that needs a SQL Server login and permissions on the database. A domain account
+or a group Managed Service Account (gMSA) — see
+[Installation](/getting-started/installation#windows-service) for the account
+model.
+
+:::caution `LocalSystem` presents itself as the machine account
+A service created with `sc.exe` and no `obj=` runs as `LocalSystem`, which
+authenticates to SQL Server as `DOMAIN\MACHINE$`. Grant that, and every service
+on the host inherits database access. Give Hortval its own account.
+:::
+
+Windows only — the provider is compiled into the Windows binary alone. Linux and
+macOS builds use username and password.
+
 ## Fields
 
 | Field | Default | Description |

@@ -31,7 +31,7 @@ Certeasy is supported as a **single-instance** deployment, or as **cold Active /
 
 ### Download
 
-Download the latest release from the [releases page](https://github.com/certeasy-tech/certeasy/releases).
+Download the latest release from the [releases page](https://github.com/hortval/hortval/releases).
 
 Each release ships three binaries — `certeasy-<version>-linux-amd64`, `certeasy-<version>-darwin-arm64`, and `certeasy-<version>-windows-amd64.exe`. The Windows binary is a single executable, no installer or runtime dependencies.
 

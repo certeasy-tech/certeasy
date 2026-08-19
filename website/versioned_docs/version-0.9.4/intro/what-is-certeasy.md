@@ -5,7 +5,7 @@ sidebar_label: What is Hortval?
 description: Hortval — formerly Certeasy — is an on-premise ACME server that automates TLS certificate issuance from your internal Microsoft ADCS PKI, without exposing it and without leaving your network.
 ---
 
-# What is Hortval?
+# What is Hortval (Certeasy)?
 
 :::info Certeasy is now Hortval
 Same product, same team, new name. The release documented here — **0.9.4** — is

@@ -26,7 +26,7 @@ const config: Config = {
   baseUrl: '/',
 
   organizationName: 'hortval',
-  projectName: 'hortval-docs',
+  projectName: 'hortval',
 
   trailingSlash: false,
 

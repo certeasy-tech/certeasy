@@ -64,10 +64,10 @@ At this point the binary is in place but the server is **not** running yet — y
 
 The recommended path is:
 
-1. [**Quick start with the wizard**](/getting-started/wizard) — `hortval init` produces a valid configuration and offers to either open a cold-start window or install / register your license.
-2. [**First certificate**](/getting-started/first-certificate) — verify the end-to-end flow with an ACME client.
+1. [**Quick start with the wizard**](./wizard.md) — `hortval init` produces a valid configuration and offers to either open a cold-start window or install / register your license.
+2. [**First certificate**](./first-certificate.md) — verify the end-to-end flow with an ACME client.
 
-If you'd rather assemble the YAML by hand, the same content is covered in [Minimal configuration](/getting-started/minimal-configuration) and [License](/getting-started/license).
+If you'd rather assemble the YAML by hand, the same content is covered in [Minimal configuration](./minimal-configuration.md) and [License](./license.md).
 
 Once `hortval serve` runs cleanly and the first ACME client has obtained a certificate, come back to **Step 3** below to productize.
 

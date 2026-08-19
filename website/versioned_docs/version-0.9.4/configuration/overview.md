@@ -86,3 +86,24 @@ That directory is rarely the one you have in mind. A Windows service created wit
 
 Earlier revisions of this page stated the opposite. That was wrong, and it is withdrawn.
 :::
+
+:::tip Two habits that cost nothing here, and save an edit later
+**Set `workdir` explicitly, to an absolute path.** Leaving it out works — a
+default is picked for you, per the table above — but a value you wrote yourself
+is a value you can read, and it survives a change of platform, of service
+account, or of default.
+
+**Do not write `%WORKDIR%` in `audit.path`, `logs.file`,
+`letsencrypt.cache-dir`, `local-cert-file` or `local-key-file`.** This release
+takes it **literally**: it creates a directory actually named `%WORKDIR%` under
+the process working directory, and your audit log or cache quietly lands there.
+Write an absolute path, or omit the key — an omitted key already defaults under
+`workdir`, which is the behaviour people expect from the placeholder.
+
+**If `certeasy init` wrote `workdir: ./workdir`, replace it with an absolute
+path.** The wizard's own output is relative, and a relative path resolves
+against the process working directory — see the warning above for what that
+costs on a Windows service.
+
+A configuration written this way loads unchanged on later releases.
+:::

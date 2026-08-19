@@ -70,7 +70,7 @@ database:
 The identity used is the **account of the Hortval process**, so it is the one
 that needs a SQL Server login and permissions on the database. A domain account
 or a group Managed Service Account (gMSA) — see
-[Installation](/getting-started/installation#windows-service) for the account
+[Installation](../getting-started/installation.md#windows-service) for the account
 model.
 
 :::caution `LocalSystem` presents itself as the machine account
@@ -89,7 +89,7 @@ macOS builds use username and password.
 | `driver` | `sqlite` | Database driver: `sqlite`, `postgres`, `sqlserver` |
 | `dsn` | — | Connection string (PostgreSQL and SQL Server) |
 | `path` | `%WORKDIR%/db.sqlite` | File path (SQLite only) |
-| `noddl` | `false` | The application account holds no schema rights. Hortval never issues DDL: it checks the schema at startup, refuses to run if anything is missing, and `hortval migrate` writes the SQL for your DBA instead of applying it. See [Migrations](/administration/migrations). |
+| `noddl` | `false` | The application account holds no schema rights. Hortval never issues DDL: it checks the schema at startup, refuses to run if anything is missing, and `hortval migrate` writes the SQL for your DBA instead of applying it. See [Migrations](../administration/migrations.md). |
 | `ping-timeout-sec` | `10` | Timeout for the startup connectivity check |
 | `max-idle-conn` | `2` (SQLite), `5` (others) | Maximum idle connections |
 | `max-conn` | `10` | Maximum open connections |
@@ -101,7 +101,7 @@ macOS builds use username and password.
 The schema travels inside the binary — no external SQL files. A restart applies
 **additive** migrations on its own; anything that cannot be undone by doing
 nothing waits for an explicit `hortval migrate`. See
-[Migrations](/administration/migrations) for the full contract, the `--sql`
+[Migrations](../administration/migrations.md) for the full contract, the `--sql`
 output, and the `noddl` mode.
 
 ## Schema
@@ -129,4 +129,4 @@ string — use one user per installation, each with its own `DEFAULT_SCHEMA`.
 
 ## Schema Reference
 
-See [Schema Reference](/administration/schema) for the full list of tables and their lifecycle.
+See [Schema Reference](../administration/schema.md) for the full list of tables and their lifecycle.

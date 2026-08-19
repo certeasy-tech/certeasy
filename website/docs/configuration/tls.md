@@ -181,7 +181,7 @@ saying plainly: this mode is offered, not recommended by default.
    Both steps are one-time work for your configuration management, and good
    practice for any internal TLS service — but they are steps, and they are per
    client. Each client page gives the specifics:
-   [lego](/clients/lego), [certbot](/clients/certbot), [acme.sh](/clients/acme-sh).
+   [lego](../clients/lego.md), [certbot](../clients/certbot.md), [acme.sh](../clients/acme-sh.md).
 2. **DNS-01 with a standalone ACME client, then `mode: files`.** When you want a
    publicly-trusted certificate — so clients need no internal CA at all, which is
    exactly the step option 1 asks of you — without exposing anything. Hortval's
@@ -238,7 +238,7 @@ egress-filtered deployment cannot use it: choose `mode: pki` (option 1), or issu
 the certificate on a connected machine and carry it in with `mode: files`.
 
 Running disconnected also means running the licence offline — see
-[Offline Mode (Air-Gapped)](/configuration/license#offline-mode-air-gapped),
+[Offline Mode (Air-Gapped)](./license.md#offline-mode-air-gapped),
 which is the constraint to plan around first.
 :::
 

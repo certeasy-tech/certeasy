@@ -13,7 +13,7 @@ certbot's CLI has been stable since 1.x — the `certonly` / `renew` / `revoke` 
 
 ## What changes vs lego / acme.sh
 
-- **Key type**: certbot's default depends on the version — certbot **2.x defaults to ECDSA** (P-256), older versions to **RSA 2048**. Neither satisfies a template (or policy) that mandates RSA 4096, so pass the key type explicitly when you need it: `--key-type rsa --rsa-key-size 4096` for RSA, or `--key-type ecdsa` for ECDSA. See [FAQ → RSA-only templates](/reference/faq#rsa-only-templates).
+- **Key type**: certbot's default depends on the version — certbot **2.x defaults to ECDSA** (P-256), older versions to **RSA 2048**. Neither satisfies a template (or policy) that mandates RSA 4096, so pass the key type explicitly when you need it: `--key-type rsa --rsa-key-size 4096` for RSA, or `--key-type ecdsa` for ECDSA. See [FAQ → RSA-only templates](../reference/faq.md#rsa-only-templates).
 - **CSR EKU**: certbot declares `serverAuth` only — no `clientAuth` smuggling, no need to loosen `csr.allowed-extra-eku` on the policy.
 - **Trust store**: certbot uses Python's own CA bundle (`certifi`), **not** the OS trust store. You point it at the OS bundle via the `REQUESTS_CA_BUNDLE` env var. Once set, the OS trust store becomes the single source of truth for both system commands and certbot.
 - **Built-in scheduler**: certbot installs a `certbot.timer` systemd unit on most distros. `systemctl enable --now certbot.timer` is enough to wire renewal.

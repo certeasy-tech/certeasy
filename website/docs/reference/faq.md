@@ -25,7 +25,7 @@ tls-certificate-manager:
         size: 4096
 ```
 
-See [TLS certificate manager → Key type](/configuration/tls#key-type).
+See [TLS certificate manager → Key type](../configuration/tls.md#key-type).
 
 **2. Certificates issued to ACME clients.** Here the *client* generates the key,
 so the key type is chosen on the client, not in Hortval. Most clients default to
@@ -62,7 +62,7 @@ will refuse to start with `expected sequence (use '-' items)`.
 Use a certificate template **dedicated** to Hortval — it lets the key
 requirement, the SAN policy and the revocation permission be scoped to Hortval
 without affecting your other templates. Run
-[`hortval adcs check`](/configuration/adcs#preflight-your-setup-hortval-adcs-check)
+[`hortval adcs check`](../configuration/adcs.md#preflight-your-setup-hortval-adcs-check)
 to confirm the template is published and see its key requirement before you
 start the server.
 :::

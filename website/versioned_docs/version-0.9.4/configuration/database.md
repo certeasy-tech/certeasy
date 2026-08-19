@@ -62,7 +62,7 @@ database:
 | `driver` | `sqlite` | Database driver: `sqlite`, `postgres`, `sqlserver` |
 | `dsn` | — | Connection string (PostgreSQL and SQL Server) |
 | `path` | `%WORKDIR%/db.sqlite` | File path (SQLite only) |
-| `noddl` | `false` | The application account holds no schema rights. Certeasy never issues DDL: it checks the schema at startup, refuses to run if anything is missing, and `certeasy migrate` writes the SQL for your DBA instead of applying it. See [Migrations](/0.9.4/administration/migrations). |
+| `noddl` | `false` | The application account holds no schema rights. Certeasy never issues DDL: it checks the schema at startup, refuses to run if anything is missing, and `certeasy migrate` writes the SQL for your DBA instead of applying it. See [Migrations](../administration/migrations.md). |
 | `ping-timeout-sec` | `10` | Timeout for the startup connectivity check |
 | `max-idle-conn` | `2` (SQLite), `5` (others) | Maximum idle connections |
 | `max-conn` | `10` | Maximum open connections |
@@ -74,7 +74,7 @@ database:
 The schema travels inside the binary — no external SQL files. A restart applies
 **additive** migrations on its own; anything that cannot be undone by doing
 nothing waits for an explicit `certeasy migrate`. See
-[Migrations](/0.9.4/administration/migrations) for the full contract, the `--sql`
+[Migrations](../administration/migrations.md) for the full contract, the `--sql`
 output, and the `noddl` mode.
 
 ## Schema
@@ -102,4 +102,4 @@ string — use one user per installation, each with its own `DEFAULT_SCHEMA`.
 
 ## Schema Reference
 
-See [Schema Reference](/0.9.4/administration/schema) for the full list of tables and their lifecycle.
+See [Schema Reference](../administration/schema.md) for the full list of tables and their lifecycle.

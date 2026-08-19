@@ -113,4 +113,4 @@ dns-validation-profiles:
        - "172.16.0.0/12"
 ```
 
-When multiple profiles exist, each [issuance policy](/configuration/issuance-policies) must explicitly reference the profile to use.
+When multiple profiles exist, each [issuance policy](./issuance-policies.md) must explicitly reference the profile to use.

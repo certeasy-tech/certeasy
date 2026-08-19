@@ -15,7 +15,7 @@ apply** — the remaining host activity (an HTTPS listener, a local database, an
 append-only log) is benign.
 
 The certreq.exe details below apply **only if you explicitly chose the
-`adcs-cli` connector** (see [Authorities](/configuration/authorities)).
+`adcs-cli` connector** (see [Authorities](../configuration/authorities.md)).
 :::
 
 With the **native connector (default)**, Hortval on a Windows ADCS host binds

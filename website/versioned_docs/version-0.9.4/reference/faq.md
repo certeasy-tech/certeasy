@@ -25,7 +25,7 @@ tls-certificate-manager:
         size: 4096
 ```
 
-See [TLS certificate manager → Key type](/0.9.4/configuration/tls#key-type).
+See [TLS certificate manager → Key type](../configuration/tls.md#key-type).
 
 **2. Certificates issued to ACME clients.** Here the *client* generates the key,
 so the key type is chosen on the client, not in Certeasy. Most clients default to
@@ -62,7 +62,7 @@ will refuse to start with `expected sequence (use '-' items)`.
 Use a certificate template **dedicated** to Certeasy — it lets the key
 requirement, the SAN policy and the revocation permission be scoped to Certeasy
 without affecting your other templates. Run
-[`certeasy adcs check`](/0.9.4/configuration/adcs#preflight-your-setup-certeasy-adcs-check)
+[`certeasy adcs check`](../configuration/adcs.md#preflight-your-setup-certeasy-adcs-check)
 to confirm the template is published and see its key requirement before you
 start the server.
 :::

@@ -137,9 +137,9 @@ Before starting:
 
 ## Next step
 
-The configuration file is now in place, but `hortval serve` will refuse to start without an active license — or an explicit **cold-start window** opened for evaluation. The [License](/getting-started/license) page covers both paths:
+The configuration file is now in place, but `hortval serve` will refuse to start without an active license — or an explicit **cold-start window** opened for evaluation. The [License](./license.md) page covers both paths:
 
 - Register or import the license you received from the portal, or
 - Open a 1-week cold-start window with `hortval cold-start init --plan=<plan>` to evaluate.
 
-Then proceed to the [First certificate](/getting-started/first-certificate) guide.
+Then proceed to the [First certificate](./first-certificate.md) guide.

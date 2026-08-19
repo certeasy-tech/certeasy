@@ -133,7 +133,7 @@ caught before anything happens.
 For the ADCS binaries, a bare name such as `certutil.exe` resolves from the Windows
 system directory and keeps working. A path relative to the working directory
 (`tools\certutil.exe`) is refused. See
-[ADCS authorities](/0.9.4/configuration/authorities).
+[ADCS authorities](./configuration/authorities.md).
 
 ## Changes that do not stop startup
 
@@ -182,7 +182,7 @@ Two consequences:
 While you are editing these two keys, write them as **absolute paths**. A relative
 one resolves against the process working directory, not against `workdir` — this
 page's predecessor claimed otherwise. See
-[Configuration overview](/0.9.4/configuration/overview) for what that costs on a Windows
+[Configuration overview](./configuration/overview.md) for what that costs on a Windows
 service.
 
 `logs.rotate.max-backups` also changed default from `0` to `5`. At `0` — the old
@@ -204,7 +204,7 @@ authorities:
 ```
 
 `adcs-native` is available as an explicit spelling of the new default. See
-[Antivirus and EDR](/0.9.4/administration/antivirus-edr) for which one suits your host.
+[Antivirus and EDR](./administration/antivirus-edr.md) for which one suits your host.
 
 In the same release, `default-timeout` started being honoured. A bug meant it was
 overwritten with 30 seconds whenever `cert-util-timeout` was unset, which was the
@@ -235,6 +235,6 @@ Certeasy applies additive database migrations on its own at startup and refuses
 anything that a rollback could not undo, naming what is pending. Nothing in the
 0.9.1 → 0.9.4 range is affected — every migration shipped so far is additive — but
 the contract, the exit codes and the `noddl` workflow are described in
-[Migrations](/0.9.4/administration/migrations).
+[Migrations](./administration/migrations.md).
 
-For the full narrative of each release, see the [Changelog](/0.9.4/changelog).
+For the full narrative of each release, see the [Changelog](./changelog/index.md).

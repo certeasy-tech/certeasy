@@ -29,7 +29,7 @@ for:
   escalation vector **structurally impossible to request rather than filtered**
   — a distinction that matters on an ADCS deployment. It bounds what a client
   can ask for, not what your CA can issue; the template remains yours to
-  harden. See [Certificate Security Model](/0.9.4/security/certificate-model).
+  harden. See [Certificate Security Model](../security/certificate-model.md).
 - **JWS algorithm confusion has no landing point.** The verifier is selected on
   key type, each verifier re-reads the protected header and requires an exact
   algorithm with a matching curve, and there is **no HMAC verifier and no `none`
@@ -140,7 +140,7 @@ only what doing nothing could have survived.
 - **A database newer than the binary, or left mid-upgrade, is refused** rather
   than started on.
 
-See [Migrations](/0.9.4/administration/migrations) for the full contract, the exit
+See [Migrations](../administration/migrations.md) for the full contract, the exit
 codes and the `noddl` workflow.
 
 ### Breaking changes
@@ -211,7 +211,7 @@ codes and the `noddl` workflow.
   found outside it are named. Two instances sharing a database *and* a schema
   share their data — a valid multi-node deployment, and an accident that looks
   identical from the database's side. See
-  [Migrations](/0.9.4/administration/migrations).
+  [Migrations](../administration/migrations.md).
 
 ### Documentation
 
@@ -343,6 +343,8 @@ Initial public release.
 :::note
 Certeasy v0.9.x is a **stable release**, used for day-to-day issuance, renewal and revocation. The full **production-ready** label is reserved for the upcoming **v1.0**, which closes the known, non-blocking limitations below:
 
+- **`%WORKDIR%` is not expanded in path settings.** `audit.path`, `logs.file`, `letsencrypt.cache-dir`, `local-pki-cache-dir`, `local-cert-file` and `local-key-file` are used exactly as written. A value containing `%WORKDIR%` therefore creates a directory *literally named* `%WORKDIR%` under the process working directory — the audit log or the certificate cache then lives somewhere nobody looks for, and a service restarted from another directory starts again with an empty one. Write absolute paths, or omit the key to get the default under `workdir`. Earlier revisions of the [TLS](../configuration/tls.md) and [full example](../reference/full-example.md) pages showed `%WORKDIR%` values in copyable YAML; those examples were wrong and have been corrected. Resolved in 0.9.5, where the placeholder is expanded.
+- **`certeasy init` writes a relative `workdir`.** The wizard produces `workdir: ./workdir`, which resolves against the process working directory rather than the installation — the same trap as above, from the tool itself. Replace it with an absolute path. Later releases refuse a relative value outright.
 - **Certeasy cannot be started as a Windows service with `sc.exe`.** The Service Control Manager handshake is not implemented, so `sc.exe start` fails with error 1053 and the process is killed after about thirty seconds, leaving the shutdown drain unfinished. Run it in a console, or under a wrapper that performs the handshake. Planned for v1.0. See [Installation](../getting-started/installation.md).
 - **Some startup log lines only reach stderr, never `logs.file`.** The file receives everything the audit, PKI, HTTP, license and worker services emit, but a few lines from the main service are written before the configured destination is installed. A *refused* startup writes nothing to the file at all. Under systemd those lines land in journald; under the Windows SCM they are lost. Planned for v1.0. See [Logging](../administration/logging.md).
 - **No health or metrics HTTP endpoints yet.** Operational monitoring is limited to log scraping and database introspection for now; dedicated `/health` and metrics endpoints are planned for v1.0.

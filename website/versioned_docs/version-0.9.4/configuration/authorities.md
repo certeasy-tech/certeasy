@@ -39,7 +39,7 @@ the integration method differs.
 
 | `type` | Connector | Notes |
 |---|---|---|
-| `adcs` (default), `adcs-native` | **Native** — Certeasy enrolls in-process through the built-in Windows certificate API. No external program is launched. | Recommended. Nothing extra to install, and the cleanest fit for hardened, EDR-monitored hosts (see [Antivirus &amp; EDR](/0.9.4/administration/antivirus-edr)). |
+| `adcs` (default), `adcs-native` | **Native** — Certeasy enrolls in-process through the built-in Windows certificate API. No external program is launched. | Recommended. Nothing extra to install, and the cleanest fit for hardened, EDR-monitored hosts (see [Antivirus &amp; EDR](../administration/antivirus-edr.md)). |
 | `adcs-cli` | **certreq.exe** — Certeasy drives the standard Windows `certreq.exe` tool. | Choose this if you prefer the classic `certreq.exe` integration, or want it as a fallback. |
 
 `type: adcs` resolves to the native connector, so an existing configuration moves
@@ -228,4 +228,4 @@ authorities:
       certificate-template: "ACME-Server"
 ```
 
-Then reference both in a [policy binding](/0.9.4/configuration/policy-bindings) with `strategy: first_available`.
+Then reference both in a [policy binding](./policy-bindings.md) with `strategy: first_available`.

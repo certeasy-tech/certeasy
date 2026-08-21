@@ -14,20 +14,23 @@ the time of writing.
 
 | Category | Tests | What it verifies |
 |---|---|---|
-| Unit (TU) | **843** | Pure logic: configuration parsing and validation, policy resolution, JWS signing and verification, anti-replay nonces, DNS scope matching, CSR validation, key handling, the asynchronous job engine, licensing decisions, rate-limit decision tables, audit-line encoding. No I/O, no database. |
+| Unit (TU) | **865** | Pure logic: configuration parsing and validation, policy resolution, JWS signing and verification, anti-replay nonces, DNS scope matching, CSR validation, key handling, the asynchronous job engine, licensing decisions, rate-limit decision tables, audit-line encoding. No I/O, no database. |
 | Integration (IT) | **188** | Real database (SQLite, PostgreSQL, SQL Server), real audit file on disk, real PKI request store, full ACME handler stack wired against the storage layer. Each test runs against every supported database backend. |
-| End-to-end (E2E) | **162** | The full Hortval binary running as a subprocess. Two flavours: (1) CLI black-box — every subcommand (`serve`, `init`, `validate`, `migrate`, `license`, `cold-start`, `backup`, `audit`, `adcs check`), exit codes, error messages, **each run against every supported database backend**. (2) ACME protocol — real third-party clients (lego, certbot, acme.sh) plus a RFC-strict native client driving certificate issuance, renewal, revocation, account lifecycle, key rollover, and the full error/security path. |
-| **Total** | **1193** | |
+| End-to-end (E2E) | **167** | The full Hortval binary running as a subprocess. Two flavours: (1) CLI black-box — every subcommand (`serve`, `init`, `validate`, `migrate`, `license`, `cold-start`, `backup`, `audit`, `adcs check`), exit codes, error messages, **each run against every supported database backend**. (2) ACME protocol — real third-party clients (lego, certbot, acme.sh) plus a RFC-strict native client driving certificate issuance, renewal, revocation, account lifecycle, key rollover, and the full error/security path. |
+| **Total** | **1220** | |
 
 Numbers are refreshed at every release. The count above reflects the **v0.9.5**
-line — **+141 tests since v0.9.4**.
+line — **+168 tests since v0.9.4**.
 
 These count test *functions*, not executions. Most run several times — once per
 database backend — so a full run reports a much larger figure: the v0.9.5
-Windows run executed **5,540** cases across 39 phases, with **76** skipped.
+Windows run executed **5,608** cases across 39 phases, with **80** skipped.
 
-Every skip is declared and checked against a per-platform reference, so the
-coverage above cannot quietly erode between releases.
+Every skip — including a skipped sub-case inside a larger test — is declared in
+a reference kept under version control, and every full run compares against it
+**in both directions**: a test that starts skipping without being declared, and
+a declared skip that no longer happens. Coverage cannot quietly erode between
+releases, and a test that comes back to life is noticed rather than assumed.
 
 ## What is covered, by area
 
@@ -85,6 +88,11 @@ Directory Certificate Services authority:
 - **Server-certificate key selection** — Hortval's own certificate can be
   issued as RSA or ECDSA at the strength the CA template mandates, and this
   selection is verified end to end.
+- **Key-algorithm routing** — an ADCS template can pin the key algorithm, and
+  ACME clients disagree on their default: some generate ECDSA, others RSA. Where
+  a separate template is declared for each, a certificate is issued from the one
+  matching the client's key. Verified against a real CA carrying two
+  algorithm-pinned templates, with clients of both families in the same run.
 
 ### Database support
 
@@ -92,7 +100,12 @@ The integration suite runs the same test set against every supported
 backend:
 - **SQLite** — always.
 - **PostgreSQL** — when configured in the CI environment.
-- **SQL Server** — when configured in the CI environment.
+- **SQL Server** — when configured in the CI environment, including
+  **integrated authentication**: Hortval connects as its own Windows service
+  account, with no password in the configuration file. That path is exercised
+  against a domain-joined SQL Server, and the suite refuses to run unless the
+  server itself confirms the session was authenticated by Kerberos under a
+  Windows account — a password left in the connection string cannot pass for it.
 
 **The CLI black-box suite runs against all three as well**: `migrate`, the schema
 gate, the cold-start plans and `license install` are each exercised on every

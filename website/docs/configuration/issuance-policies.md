@@ -156,6 +156,31 @@ Two practical positions:
 1. **Strict (recommended for new deployments)**: leave `allowed-extra-eku` empty. Use lego or certbot, which emit `serverAuth` only by default. acme.sh works after a one-line override of its OpenSSL template.
 2. **Pragmatic (existing acme.sh fleet)**: add `clientAuth` to `allowed-extra-eku` so existing scripts keep working, and plan a migration once the fleet has moved off acme.sh's default template.
 
+:::tip On a "build from AD information" template, the pragmatic path costs nothing
+The two positions above are usually presented as a trade-off, and on ADCS with a
+template that builds the EKU itself, it is not one: acme.sh **asks** for
+`clientAuth`, the CA **does not grant it**, and acme.sh **does not care**.
+
+Verified 2026-08-21 against a lab ADCS. The CSR carried
+`serverAuth + clientAuth`; the issued certificate came back with:
+
+```
+Application Policies
+    [1] Policy Identifier = Server Authentication      ← Origin=Policy
+```
+
+`Origin=Policy` means the value came from the template, not from the request.
+acme.sh accepted that certificate and completed normally.
+
+So `allowed-extra-eku: [clientAuth]` decides only whether **Hortval** refuses the
+request; it does not decide what the certificate contains. With such a template
+you satisfy the CA/B Forum posture — no `clientAuth` is ever issued — while
+existing acme.sh clients keep working unchanged.
+
+This does **not** hold on a "supply in the request" template, where the CSR's EKU
+is honored. There, the two positions are a real trade-off again.
+:::
+
 ## Signature Defaults
 
 If `signature` is omitted:

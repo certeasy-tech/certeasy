@@ -24,6 +24,28 @@ acme.sh's CLI has been stable for years — `--issue` / `--renew` / `--revoke` a
   1. **Strict (preferred from June 2026)**: drop `clientAuth` from acme.sh's CSR template. The CA/B Forum baseline forbids the `serverAuth + clientAuth` combination on publicly-trusted server certificates from June 2026 onwards — production deployments should align even when fronted by an internal ADCS. The cleanest way is to maintain a private fork of `acme.sh` or to override its OpenSSL config file (`~/.acme.sh/openssl.cnf` if you use `--certhome`).
   2. **Pragmatic (existing fleet)**: add `clientAuth` to the policy's `csr.allowed-extra-eku` on the Hortval side. See [Configuration → Issuance policies → EKU](../configuration/issuance-policies.md). This unblocks acme.sh as-is; plan a migration before June 2026.
 
+  :::note Still true — verified 2026-08-21
+  Measured on a CSR produced by `neilpang/acme.sh:latest` in our ADCS lab. The
+  request carries the extension verbatim:
+
+  ```
+  2.5.29.37 = 30 14 06 08 2b 06 01 05 05 07 03 01 06 08 2b 06 01 05 05 07 03 02
+              └ SEQUENCE ─ 1.3.6.1.5.5.7.3.1 (serverAuth) ─ …3.2 (clientAuth)
+  ```
+
+  Worth re-checking when you upgrade acme.sh: the day its template drops
+  `clientAuth`, `allowed-extra-eku` becomes dead configuration you can remove —
+  and nothing will tell you, because a CSR asking for *less* than the policy
+  allows is accepted in silence.
+
+  **It asks, it does not receive, and it does not mind.** On the same run, the
+  issued certificate came back with `Server Authentication` only, marked
+  `Origin=Policy` — the ADCS template built the EKU and ignored the request.
+  acme.sh completed normally. So allowing `clientAuth` here decides whether
+  *Hortval* accepts the request, not what the certificate contains. See
+  [Issuance policies → clientAuth and the CA/B Forum baseline](../configuration/issuance-policies.md#note-on-clientauth-and-the-cab-forum-baseline).
+  :::
+
 - **Trust store**: acme.sh uses curl under the hood. Point both `--ca-bundle` and the `CA_BUNDLE` / `CURL_CA_BUNDLE` env vars at your OS bundle:
 
 ```bash

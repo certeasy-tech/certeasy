@@ -46,7 +46,10 @@ for the case-by-case.
 - **SQL Server integrated authentication.** Add `authenticator=winsspi` to your
   `database.dsn` and drop the credentials: Hortval connects as the Windows account
   it runs under, and no SQL password sits in `config.yml`. Windows only, and it
-  needs a domain account — see [Database](../configuration/database.md).
+  needs a domain account. **Hortval reports which method it obtained at startup**
+  and warns when the connection falls back to NTLM — which happens silently, and
+  succeeds, when no Service Principal Name is registered on the SQL Server
+  service account. See [Database](../configuration/database.md).
 
 - **`hortval validate` now checks the filesystem**, and `--no-disk` skips it. It
   looks at what it can — does a working directory's parent exist, is an

@@ -82,6 +82,70 @@ on the host inherits database access. Give Hortval its own account.
 Windows only — the provider is compiled into the Windows binary alone. Linux and
 macOS builds use username and password.
 
+#### Check that it is really Kerberos
+
+An integrated connection can fall back to **NTLM with no error at all**: it
+connects, and everything appears to work.
+
+Hortval therefore reports the method it obtained, once, at startup:
+
+```
+INFO  SQL Server: integrated authentication  account=DOMAIN\svc-hortval auth_scheme=KERBEROS
+WARN  SQL Server: the connection fell back to NTLM because no Service Principal Name …
+```
+
+If the account cannot read `sys.dm_exec_connections`, Hortval says that too
+rather than staying silent — an absent line would be ambiguous.
+
+To check independently, or from a DBA session, run this against the instance as
+the account Hortval runs under:
+
+```sql
+SELECT SUSER_SNAME(), auth_scheme
+FROM sys.dm_exec_connections
+WHERE session_id = @@SPID;
+```
+
+`KERBEROS`, together with the expected account name, is the answer you want.
+
+`NTLM` means the connection is integrated but no **Service Principal Name** is
+registered. It works — and it will keep working, until the day your domain
+restricts NTLM. Hortval then stops connecting, and the outage looks like a
+Hortval problem rather than what it is: a dependency that was there from the
+first day and that nothing ever reported. NTLM is also relayable where Kerberos
+is not, and the account Hortval uses holds schema and write rights on your
+certificate store.
+
+Either way the SQL password is out of `config.yml` — that part of the benefit
+does not depend on which one you got.
+
+The SPN belongs to the account the **SQL Server service** runs under, which is
+the machine account when that service runs as `LocalSystem` or `NetworkService`:
+
+```powershell
+setspn -S MSSQLSvc/sqlserver01.example.com:1433 EXAMPLE\SQLSERVER01$
+setspn -S MSSQLSvc/sqlserver01:1433             EXAMPLE\SQLSERVER01$
+```
+
+If `setspn` cannot bind to a domain controller — some hardened domains reject
+its LDAP bind — the ActiveDirectory module writes the same attribute over ADWS:
+
+```powershell
+Set-ADComputer -Identity SQLSERVER01 -ServicePrincipalNames @{
+    Add = 'MSSQLSvc/sqlserver01.example.com:1433', 'MSSQLSvc/sqlserver01:1433'
+}
+```
+
+An SPN carries a **port**. One registered for a port the instance does not
+listen on matches nothing, and the connection quietly falls back to NTLM — so
+fix the port the instance listens on first, register the SPN second.
+
+:::note A local connection never proves anything
+Connecting from the machine that hosts SQL Server goes over shared memory or
+named pipes, and reports `NTLM` even when everything is configured correctly.
+Run the check from another host — which is also how Hortval will connect.
+:::
+
 ## Fields
 
 | Field | Default | Description |

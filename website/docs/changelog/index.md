@@ -5,7 +5,7 @@ title: Changelog
 
 # Changelog
 
-## v0.9.5 - unreleased
+## v0.9.5 - 2026-08-22
 
 **The first Hortval release.** One idea runs through it: the server no longer
 guesses where anything is. Every path it uses is one you wrote, ambiguity is

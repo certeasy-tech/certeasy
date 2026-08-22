@@ -4,17 +4,17 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 // Which version the site serves at its root.
 //
-// 0.9.5 is not released yet, so the root serves 0.9.4 — the version you can
-// actually install — and 0.9.5 waits under /next/ behind an "unreleased" banner.
+// Flipped to 'current' on 2026-08-22, when 0.9.5 shipped: the root now serves
+// Hortval 0.9.5, and 0.9.4 moves to /0.9.4/ with an "unmaintained" banner.
 //
 // `lastVersion`, both version entries, the homepage target and the client
-// redirect all follow from this constant. Set it to 'current' when 0.9.5 ships;
+// redirect all follow from this constant — one line to change, and
 // scripts/check-urls.mjs checks the result against the generated files.
 //
 // (The assertion keeps the comparison below legal: TypeScript narrows a const
 // to its initializer.)
 type RootVersion = '0.9.4' | 'current';
-const ROOT_VERSION = '0.9.4' as RootVersion;
+const ROOT_VERSION = 'current' as RootVersion;
 const SHIPPED = ROOT_VERSION === 'current';
 
 const config: Config = {

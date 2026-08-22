@@ -85,16 +85,63 @@ If your EDR has an outbound-connection monitor, allow:
 
 ## Windows SmartScreen / Application Control
 
-If your environment uses Windows SmartScreen or AppLocker:
+**From v0.9.5 the Windows binary is signed** (Authenticode, timestamped). See
+[Verifying release binaries](../security/verifying-binaries.md) for the check
+and the publisher name to expect.
 
-- The Hortval binary is currently distributed **unsigned**. SmartScreen will
-  prompt the operator on the first launch (`Windows protected your PC`),
-  and AppLocker will block it unless an explicit publisher or path rule is
-  added.
-- Recommended: add a path rule in AppLocker pointing at your install
-  directory, or wait for a signed release (planned).
-- Defender SmartScreen "warn but allow" can be unblocked by an
-  administrator via *Properties → Unblock* on the binary right-click menu.
+### When SmartScreen actually prompts
+
+Not "when a binary is unsigned" — that is the common misreading. The app
+dialog is raised by the **Mark of the Web**: an NTFS alternate data stream a
+browser or mail client attaches to what it saves. **No mark, no prompt**,
+signed or not.
+
+That distinction decides what your operators will see:
+
+| How the binary reached the machine | Marked? | Prompt |
+|---|---|---|
+| Downloaded with a browser | yes | possible |
+| `curl.exe`, `Invoke-WebRequest` | no | no |
+| Copied from an internal share, or a USB stick | no | no |
+| Deployed by your software distribution tool | no | no |
+
+So an administrator who fetches Hortval from a terminal, or deploys it from an
+internal repository — which is how it usually arrives on a server — will not
+meet SmartScreen at all.
+
+**Which is a reason to verify the signature, not a reason to skip it.** Those
+are the paths on which nothing is checked and nothing is displayed, and this
+binary ends up on a host that enrols certificates against your CA. See
+[Verifying release binaries](../security/verifying-binaries.md).
+
+An administrator can also clear the mark deliberately: *Properties → Unblock*
+on the file, or `Unblock-File` in PowerShell.
+
+### What signing changes, and what it does not
+
+It does **not** remove the prompt. SmartScreen weighs two things: the file's
+own download history, and the publisher's reputation. An unsigned binary
+accrues reputation per exact file, so every release starts from zero. A signed
+one accrues it on the **publisher identity**, so releases build on each other.
+
+What changes immediately is the name: the dialog reads the publisher instead of
+*"Unknown publisher"* — which is the part you can verify. A recently published
+release may still warn while that reputation is young.
+
+Note that the name is **not on the first screen**. That one offers a single
+`Don't run` button; the publisher appears only after clicking **More info** —
+and on a server carrying the Microsoft security baseline (*"Warn and prevent
+bypass"*), there is no override button at all. Clear the Mark of the Web with
+`Unblock-File`, or allow the binary with an AppLocker publisher rule. The exact
+sequence is in
+[Verifying release binaries](../security/verifying-binaries.md#the-publisher-name-is-behind-a-click).
+
+### AppLocker / WDAC
+
+A signed binary lets you write a **publisher rule** rather than a path rule,
+which survives a move or a rename and does not have to be widened to a
+directory. A path rule pointing at your install directory remains valid, and is
+the simpler option if your policy already works that way.
 
 ## If your EDR blocks Hortval
 

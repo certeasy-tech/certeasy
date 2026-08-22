@@ -24,7 +24,8 @@ line — **+168 tests since v0.9.4**.
 
 These count test *functions*, not executions. Most run several times — once per
 database backend — so a full run reports a much larger figure: the v0.9.5
-Windows run executed **5,608** cases across 39 phases, with **80** skipped.
+Windows run executed **5,680** tests across 39 phases, with **80** skipped and
+no failure.
 
 Every skip — including a skipped sub-case inside a larger test — is declared in
 a reference kept under version control, and every full run compares against it

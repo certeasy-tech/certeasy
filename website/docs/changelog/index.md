@@ -5,6 +5,165 @@ title: Changelog
 
 # Changelog
 
+## v0.9.5 - unreleased
+
+**The first Hortval release.** One idea runs through it: the server no longer
+guesses where anything is. Every path it uses is one you wrote, ambiguity is
+refused instead of resolved silently, and each refusal names what it wanted and
+prints the exact line to paste.
+
+If you are coming from Certeasy v0.9.4 and you pass `-f` with absolute paths,
+your configuration needs nothing — jump to
+[Upgrading](#upgrading-from-v094--what-changes-for-an-existing-configuration)
+for the case-by-case.
+
+### What this release gives you
+
+- **Hortval, under its own name.** The command, the binary and the release
+  artefacts are `hortval` / `hortval-<version>-<os>-<arch>`. Every invocation
+  changes with it: the `ExecStart` of a systemd unit, the `binPath=` of a Windows
+  service, your runbooks and your monitoring.
+
+  Nothing inside the ACME protocol carries the name, so **ACME clients are
+  unaffected** — no account, order or certificate needs anything done to it, and
+  no client configuration changes. The configuration file keeps its name and every
+  one of its keys.
+
+- **Nothing is guessed any more.** Seven lookups and settings that used to resolve
+  silently now refuse, and say what to write instead. This is the release, not a
+  side effect of it — see [Breaking changes](#breaking-changes) for the list and
+  [Upgrading](#upgrading-from-v094--what-changes-for-an-existing-configuration)
+  for what to do.
+
+- **The Windows binary is signed with Authenticode**, timestamped so the
+  signature outlives the signing certificate. Verify with
+  `Get-AuthenticodeSignature`; the signer is SAFE PIC TECHNOLOGIES. Note that
+  **SmartScreen still appears** — what changes is that it now names the publisher
+  instead of saying "Unknown publisher". Linux and macOS binaries remain covered
+  by `SHA256SUMS` for integrity only. See
+  [Verifying release binaries](../security/verifying-binaries.md).
+
+- **SQL Server integrated authentication.** Add `authenticator=winsspi` to your
+  `database.dsn` and drop the credentials: Hortval connects as the Windows account
+  it runs under, and no SQL password sits in `config.yml`. Windows only, and it
+  needs a domain account. **Hortval reports which method it obtained at startup**
+  and warns when the connection falls back to NTLM — which happens silently, and
+  succeeds, when no Service Principal Name is registered on the SQL Server
+  service account. See [Database](../configuration/database.md).
+
+- **`hortval validate` now checks the filesystem**, and `--no-disk` skips it. It
+  looks at what it can — does a working directory's parent exist, is an
+  installation already sitting where a path resolves — because the machine you
+  validate on is usually the machine that will serve. Two things it deliberately
+  does not do: it never writes anything, and it never checks writability. A
+  filesystem failure it cannot attribute is reported as a **warning**, not a
+  verdict, because `validate` runs as the account that typed it while the server
+  runs as its service account — guessing another identity's permissions produces
+  confident wrong answers.
+
+- **New `%CONFIGDIR%` token, valid in `workdir`**, expanding to the directory
+  holding the configuration file. It exists because `workdir` is the one path that
+  could not use `%WORKDIR%` — it *is* the working directory. `hortval init` now
+  proposes `%CONFIGDIR%/workdir` instead of `./workdir`, so a generated
+  configuration means the same directory wherever it is later started from.
+
+- **A `letsencrypt` bundle now always serves an ECDSA P-256 certificate.**
+  Previously the key type was decided by whichever client connected first, and
+  then served to everyone: `autocert` indexes its cache by key type and holds
+  both, but the certificate manager keeps one certificate per bundle, so the first
+  handshake settled it for the life of the process. If a client of yours needs
+  RSA, use `mode: pki` or `mode: files`, where `key.type` is yours to set.
+
+### Not yet: running as a Windows service — this ships in v0.9.6
+
+**v0.9.5 cannot be started by the Windows Service Control Manager.** The SCM
+handshake is not implemented: `sc.exe start` fails with error 1053, and the
+process is killed after about thirty seconds with its shutdown drain unfinished,
+leaving `db.sqlite-wal` / `db.sqlite-shm` behind.
+
+Run it in a console, or under a wrapper that performs the handshake on its behalf
+(a scheduled task, or NSSM — neither is validated against Hortval yet). Native
+service support, the Windows event log, and a `hortval diag` subcommand to prove
+where the messages went are the headline of **v0.9.6**. See
+[Installation → Windows service](../getting-started/installation.md#windows-service).
+
+This is stated here rather than left to be discovered: on the platform Hortval
+targets, "runs as a service" is what deployment means.
+
+### Breaking changes
+
+All of them are the same rule — **a value that was guessed is now demanded** —
+and each refusal prints what to write. Only the last row is a rename rather than
+a refusal.
+
+| What | v0.9.4 did | v0.9.5 does |
+|---|---|---|
+| `workdir` absent | picked a location for you | **refuses.** Why, and the conventional value per platform: [`workdir`](../configuration/overview.md#workdir) |
+| a path setting holding a relative path | resolved it against the current directory | **refuses** unless absolute or anchored with `%WORKDIR%` / `%CONFIGDIR%` |
+| `config.yml` in the current directory | loaded it, ahead of everything else | **not searched at all** — the current directory of a service created by `sc.exe` is `C:\Windows\System32`, and any directory a lesser account can write to selected the database, the working directory, the audit destination and the outbound proxy |
+| two candidate configuration files | loaded one, ignored the other | **refuses**, naming both |
+| a configuration file that exists but cannot be read | selected it, then failed to open it | **skipped and reported**; a readable one is used with a warning |
+| `%WORKDIR%` in `audit.path`, `logs.file`, `letsencrypt.cache-dir`, `local-cert-file`, `local-key-file` | taken literally — it created a directory actually *named* `%WORKDIR%` | **resolved** |
+| an unrecognised name in `logs.services` | silently ignored, so the level you asked for never applied | **refuses**. `Certeasy-acme-server` → `acme-server`, `cert-easy-main` → `main` |
+
+Two lookups also changed order without changing any outcome, since ambiguity is
+now refused either way: configuration is looked for under `hortval` before
+`certeasy` (the `certeasy` directories are still read, with a warning naming
+both; they go away in v2), and machine-wide directories are searched before
+per-user ones on every platform.
+
+**The licensing backend moved to `api.hortval.com`.** If your egress is filtered
+by hostname, allow it before upgrading — otherwise online licence checks fail and
+the deployment slides into its degraded states. Offline installations are
+unaffected.
+
+### Upgrading from v0.9.4 — what changes for an existing configuration
+
+Nothing to do if you pass `-f` and every path in your configuration is absolute.
+Otherwise, find your case:
+
+| Your v0.9.4 setup | v0.9.4 did | v0.9.5 does | What to do |
+|---|---|---|---|
+| `-f <path>` on the command line | loads it | same | nothing |
+| No `-f`, `config.yml` in the **current directory** | loaded it | **refuses**, and lists where it looked | pass `-f`, or move the file |
+| No `-f`, `config.yml` next to the binary | loaded it | same | nothing |
+| No `-f`, `config.yml` in `/etc/certeasy` or `%PROGRAMDATA%\certeasy` | loaded it | loads it **and warns** | rename the directory to `hortval` before v2 |
+| Two candidate files in two directories | loaded the first, ignored the other | **refuses**, names both | pass `-f`, or delete one |
+| `config.yml` **and** `config.yaml` side by side | `.yml` won | **refuses**, names both | pass `-f`, or delete one |
+| A config file that exists but cannot be read | was selected, then failed to open | **skipped**, and reported; another readable file is used with a warning | fix the permissions |
+| `workdir: ./workdir` (or any relative path) | resolved against the working directory | **refuses**; if a live installation sits where it resolves, prints the exact line to write | use that line, or an absolute path, or `%CONFIGDIR%/…` |
+| `workdir` not set, old directory holds data | `%ProgramData%\certeasy` / `/var/lib/certeasy` | **refuses**, and names the three ways out | move it, or name it with `workdir:`, or delete it if it is a leftover |
+| `workdir` not set, nothing in the old directory | `%ProgramData%\certeasy` / `/var/lib/certeasy` | `%ProgramData%\hortval` / `/var/lib/hortval` | nothing |
+| `workdir` set to an absolute path | resolved | same, and the rename check is skipped | nothing |
+| `database.path: %WORKDIR%/db.sqlite` | resolved | same | nothing |
+| `audit.path`, `logs.file`, `letsencrypt.cache-dir`, `local-cert-file`, `local-key-file` with `%WORKDIR%` | **taken literally** — created a directory actually named `%WORKDIR%` under the working directory | resolved | delete any stray `%WORKDIR%` directory once the real files are in place |
+| `certreq-path` / `certutil-path` | resolved from the Windows system directory, relative refused | **unchanged** | nothing |
+| `logs.services` naming a service | applied it | **refuses** an unrecognised name (they were silently ignored); `Certeasy-acme-server` → `acme-server`, `cert-easy-main` → `main` | rename the keys |
+
+The wizard is affected too: `certeasy init` used to write `workdir: ./workdir`,
+which v0.9.5 refuses. A configuration generated by v0.9.4's wizard therefore
+needs its `workdir` line changed — the startup message tells you what to write.
+
+See [Minimal configuration](../getting-started/minimal-configuration.md) for the full
+search order, and [Configuration overview](../configuration/overview.md) for the
+anchor tokens. If you are coming from a release older than v0.9.4, work through
+[Upgrading](../upgrading.md) first — it collects everything that changed since v0.9.1.
+
+### Rolling back to v0.9.4
+
+**You can.** Nothing in this release prevents going back:
+
+- A configuration fixed for v0.9.5 stays readable by v0.9.4, provided you used
+  the absolute paths the startup message hands you. The `%CONFIGDIR%` token is
+  new and v0.9.4 would take it literally — it only appears in configurations
+  generated by `hortval init`, that is on fresh installs, which have nothing to
+  roll back to.
+- No schema migration ships in this release, so the database is unchanged.
+
+Keep this in mind if you edit by hand: anchoring a path with a token that
+v0.9.4 does not substitute is what would close the door. An absolute path never
+does.
+
 ## v0.9.4 - 2026-08-04
 
 We re-review the Certeasy codebase internally whenever materially more capable
@@ -29,7 +188,7 @@ for:
   escalation vector **structurally impossible to request rather than filtered**
   — a distinction that matters on an ADCS deployment. It bounds what a client
   can ask for, not what your CA can issue; the template remains yours to
-  harden. See [Certificate Security Model](/security/certificate-model).
+  harden. See [Certificate Security Model](../security/certificate-model.md).
 - **JWS algorithm confusion has no landing point.** The verifier is selected on
   key type, each verifier re-reads the protected header and requires an exact
   algorithm with a matching curve, and there is **no HMAC verifier and no `none`
@@ -140,7 +299,7 @@ only what doing nothing could have survived.
 - **A database newer than the binary, or left mid-upgrade, is refused** rather
   than started on.
 
-See [Migrations](/administration/migrations) for the full contract, the exit
+See [Migrations](../administration/migrations.md) for the full contract, the exit
 codes and the `noddl` workflow.
 
 ### Breaking changes
@@ -211,7 +370,7 @@ codes and the `noddl` workflow.
   found outside it are named. Two instances sharing a database *and* a schema
   share their data — a valid multi-node deployment, and an accident that looks
   identical from the database's side. See
-  [Migrations](/administration/migrations).
+  [Migrations](../administration/migrations.md).
 
 ### Documentation
 

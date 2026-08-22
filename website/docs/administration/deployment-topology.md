@@ -5,17 +5,17 @@ title: Deployment topology
 
 # Deployment topology
 
-Certeasy is designed and supported as a **single-instance** deployment. This page documents which topologies are supported today, and which ones will silently break your installation if you try.
+Hortval is designed and supported as a **single-instance** deployment. This page documents which topologies are supported today, and which ones will silently break your installation if you try.
 
 ## Supported
 
 ### Single instance (recommended)
 
-One Certeasy process on one host, with its own database. This is the production-ready topology.
+One Hortval process on one host, with its own database. This is the recommended production topology.
 
 ```
 ┌──────────────┐    HTTPS     ┌──────────────┐    RPC       ┌──────────┐
-│ ACME clients │ ──────────►  │   Certeasy   │ ───────────► │   ADCS   │
+│ ACME clients │ ──────────►  │   Hortval   │ ───────────► │   ADCS   │
 └──────────────┘              └──────────────┘              └──────────┘
                                      │
                                      ▼
@@ -26,11 +26,11 @@ One Certeasy process on one host, with its own database. This is the production-
                               └──────────────────┘
 ```
 
-This covers the vast majority of enterprise PKI volumes. A single Certeasy instance on a modest Windows Server processes several certificate orders per second.
+This covers the vast majority of enterprise PKI volumes. A single Hortval instance on a modest Windows Server processes several certificate orders per second.
 
 ### Cold Active / Passive (manual switchover)
 
-You can install Certeasy on two hosts for failover, **as long as only one instance is running at a time**. The standby is fully stopped (process not running, port not bound). The administrator switches manually : stop the active node, then start the standby.
+You can install Hortval on two hosts for failover, **as long as only one instance is running at a time**. The standby is fully stopped (process not running, port not bound). The administrator switches manually : stop the active node, then start the standby.
 
 ```
 ┌──────────────────────────────────────────┐
@@ -58,19 +58,19 @@ Requirements for this topology :
 
 Switchover procedure:
 
-1. Stop Certeasy on the active node (graceful shutdown drains in-flight ACME requests).
-2. Start Certeasy on the standby node.
+1. Stop Hortval on the active node (graceful shutdown drains in-flight ACME requests).
+2. Start Hortval on the standby node.
 3. Update your load balancer to route to the new active node.
 
 Expected switchover time: typically under a minute, including the standby's boot probe.
 
 ### Load balancer in front of a single instance
 
-A reverse proxy or load balancer in front of a single Certeasy instance — for TLS termination, IP filtering, geo-routing, etc. — is fully supported. Forward the `Host` header and preserve the client IP if your audit log relies on it.
+A reverse proxy or load balancer in front of a single Hortval instance — for TLS termination, IP filtering, geo-routing, etc. — is fully supported. Forward the `Host` header and preserve the client IP if your audit log relies on it.
 
 ## Node identity
 
-Each Certeasy instance has a stable identifier called `server_id`. It is materialised on first boot as a UUID v4 stored in `<workdir>/server_id` (file permissions `0o600`) and registered in the `servers` table of the database. Every subsequent boot of the same node reads back the same `server_id` and updates the `last_seen` timestamp; a background heartbeat refreshes it once per minute while the instance runs.
+Each Hortval instance has a stable identifier called `server_id`. It is materialised on first boot as a UUID v4 stored in `<workdir>/server_id` (file permissions `0o600`) and registered in the `servers` table of the database. Every subsequent boot of the same node reads back the same `server_id` and updates the `last_seen` timestamp; a background heartbeat refreshes it once per minute while the instance runs.
 
 Two operator-visible consequences:
 
@@ -80,12 +80,12 @@ Two operator-visible consequences:
 Do **not** copy a workdir from one host to another. Each new host should generate its own `server_id` on first boot — that is the point of the marker file. If you ever need to inspect or decommission a known node, list them with:
 
 ```
-certeasy audit list-servers -f config.yml
+hortval audit list-servers -f config.yml
 ```
 
 ## NOT supported — Active / Active
 
-Running two or more Certeasy instances **concurrently** against the same database **is not supported** in the current release. Several core mechanisms hold in-process state that does not coordinate across nodes:
+Running two or more Hortval instances **concurrently** against the same database **is not supported** in the current release. Several core mechanisms hold in-process state that does not coordinate across nodes:
 
 | Subsystem | What breaks under Active / Active |
 |---|---|
@@ -105,10 +105,10 @@ If you need true multi-node availability today, use **cold Active / Passive** ab
 
 ## Database backend behind a single instance
 
-Independently of the Certeasy topology, the database tier can run its own HA setup:
+Independently of the Hortval topology, the database tier can run its own HA setup:
 
-- **SQLite WAL** — concurrent readers + single writer. Adequate for single-instance Certeasy. Not usable across hosts.
-- **PostgreSQL with replication** — primary + read replicas for backup and reporting. Certeasy only writes to the primary. Database-level failover (e.g. `pg_auto_failover`, Patroni) is transparent to Certeasy as long as the connection string resolves to the new primary after the cut.
-- **SQL Server with Always On / mirroring** — same principle. Certeasy connects to one target ; failover at the database tier is handled by the listener / cluster role.
+- **SQLite WAL** — concurrent readers + single writer. Adequate for single-instance Hortval. Not usable across hosts.
+- **PostgreSQL with replication** — primary + read replicas for backup and reporting. Hortval only writes to the primary. Database-level failover (e.g. `pg_auto_failover`, Patroni) is transparent to Hortval as long as the connection string resolves to the new primary after the cut.
+- **SQL Server with Always On / mirroring** — same principle. Hortval connects to one target ; failover at the database tier is handled by the listener / cluster role.
 
-In all cases, scaling the database tier does **not** unlock Active / Active for Certeasy itself.
+In all cases, scaling the database tier does **not** unlock Active / Active for Hortval itself.

@@ -5,7 +5,7 @@ title: Overview
 
 # Configuration Overview
 
-Certeasy is configured with a single YAML file. The parser is strict: unknown fields, malformed YAML, and missing required relationships all cause startup to fail with an explicit error.
+Hortval is configured with a single YAML file. The parser is strict: unknown fields, malformed YAML, and missing required relationships all cause startup to fail with an explicit error.
 
 ## Top-Level Sections
 
@@ -24,7 +24,7 @@ Certeasy is configured with a single YAML file. The parser is strict: unknown fi
 | [`rate-limiting`](./rate-limiting) | No | Per-IP, per-account, and duplicate-certificate rate limits |
 | [`renewal-info`](./renewal-info) | No | ACME Renewal Information (RFC 9773) — suggested renewal window |
 | [`audit`](../administration/audit) | No | Tamper-evident audit log (HMAC-chained JSONL) |
-| `workdir` | No | Base directory for runtime files |
+| `workdir` | **Yes** | Base directory for runtime files — absolute, no default |
 
 ## Runtime Model
 
@@ -52,10 +52,10 @@ At runtime:
 
 ## Implicit Defaults
 
-Certeasy avoids requiring explicit configuration for common cases:
+Hortval avoids requiring explicit configuration for common cases:
 
 - If `database` is omitted → SQLite at `%WORKDIR%/db.sqlite`
-- If `license` is omitted → online license mode with defaults (`certeasy.tech`, `30s`)
+- If `license` is omitted → online license mode with defaults (`api.hortval.com`, `30s`)
 - If `license.offline: true` → offline license mode
 - If `workers` is omitted → 16 workers with sensible backoff settings
 - If only one DNS profile exists → policies don't need to reference it explicitly
@@ -67,22 +67,84 @@ Certeasy avoids requiring explicit configuration for common cases:
 ## `workdir`
 
 ```yaml
-workdir: "C:\\ProgramData\\certeasy"
+workdir: 'C:\ProgramData\hortval'
 ```
 
 Base directory for all runtime files: SQLite database, TLS certificate cache, log files (when `output: file`).
 
-| OS | Default |
+:::warning Required, and absolute. There is no default.
+A configuration that does not set `workdir` is refused at startup, and by
+`hortval validate`. Earlier releases picked a location for you; this one does
+not.
+
+**Why.** Every other path setting in this file already refuses to be guessed —
+all eight are rejected unless absolute or anchored (see below). `workdir` was
+the single exception, and it is the one that decides where the database, the
+node identity, the audit log and the CA key live. A default for *that* is a
+location nobody chose, that moves when the product is renamed, and that has to
+be arbitrated against the location the previous release used.
+
+These are the values previous releases used, and they remain the sensible
+choice — write the one for your platform:
+
+| OS | Conventional location |
 |---|---|
-| Windows | `%ProgramData%\certeasy` |
-| Linux | `/var/lib/certeasy` |
+| Windows | `%ProgramData%\hortval` |
+| Linux | `/var/lib/hortval` |
+| macOS | `~/Library/Application Support/hortval` |
 
-:::warning Relative paths are **not** resolved against `workdir`
-A path you write elsewhere in the configuration — `database.path`, `audit.path`, `logs.file`, `local-pki-cache-dir`, `letsencrypt.cache-dir`, or a bundle's `local-cert-file` / `local-key-file` — is used exactly as written. A relative one therefore resolves against the **process working directory**, not against `workdir`.
+**Upgrading? The refusal tells you where your data is.** Until v2, startup also
+looks at the locations previous releases used — including the pre-rename
+`certeasy` ones — and, when an installation is there, names it and prints the
+exact line to paste. If both hold one, it says so and lets you choose.
 
-That directory is rarely the one you have in mind. A Windows service created with `sc.exe` starts in `C:\Windows\System32` — and `sc.exe` offers no field to change it — so a relative path lands there instead of beside your installation. On PostgreSQL or SQL Server, where the connection string is independent of `workdir`, the server then starts perfectly well on a *second*, empty working directory: fresh node identity, fresh audit chain, regenerated fake CA.
+**Nothing is ever moved for you.** That directory holds the database, the node
+identity, the audit log and the CA key. Copying a database while opening it is
+not something a startup path should attempt, and a half-copy leaves two
+installations that both look right.
 
-**Write absolute paths.** Omitting a key is also always safe: only the defaults are anchored to `workdir` — leaving `audit.path` unset gives you `<workdir>/audit.log`.
-
-Earlier revisions of this page stated the opposite. That was wrong, and it is withdrawn.
+An installation is recognised by its `server_id` marker, which every release
+since v0.9.0 writes. A directory holding only a `logs/` folder is not one: a
+service that started once and failed leaves exactly that, and it says nothing
+about where your data is.
 :::
+
+## Every path must be absolute or anchored
+
+:::warning Relative paths are refused
+This corrects the documentation as much as the product. Earlier versions of this
+page stated that relative paths in other sections were resolved relative to
+`workdir`. **They were not** — they were resolved against the process working
+directory, which for a Windows service created with `sc.exe` is
+`C:\Windows\System32`, and `sc.exe` offers no field to change it.
+
+On SQLite that failed loudly. On PostgreSQL or SQL Server, where the connection
+string does not depend on `workdir`, it did not: the server started perfectly well
+on a *second*, empty working directory, with a fresh node identity, a fresh audit
+chain and a regenerated fake CA. Hortval now refuses them at startup and in
+`hortval validate`.
+:::
+
+A path setting is accepted when it is **absolute**, or when it starts with an
+anchor token:
+
+| Token | Expands to | Valid in |
+|---|---|---|
+| `%WORKDIR%` | the resolved `workdir` | `database.path`, `audit.path`, `logs.file`, `local-pki-cache-dir`, `letsencrypt.cache-dir`, `local-cert-file`, `local-key-file` |
+| `%CONFIGDIR%` | the directory holding the configuration file | `workdir` only |
+
+```yaml
+workdir: "%CONFIGDIR%/workdir"      # beside the config file — what `hortval init` writes
+database:
+  path: "%WORKDIR%/db.sqlite"
+audit:
+  path: "%WORKDIR%/audit.log"
+```
+
+`%CONFIGDIR%` exists for `workdir` alone: it is the one path that could not use
+`%WORKDIR%`, since it *is* the working directory. Written anywhere else it is
+refused rather than left as-is — an unsubstituted token would silently create a
+directory named `%CONFIGDIR%`.
+
+Omitting a key entirely is always safe: every default is anchored by
+construction.

@@ -12,7 +12,7 @@ This page is not yet complete. Content and best practices will be added shortly.
 :::tip Connector choice
 Certeasy reaches ADCS through a **native in-process connector by default**
 (`type: adcs`), with a `certreq.exe` fallback (`type: adcs-cli`). See
-[Authorities → Connector](/0.9.4/configuration/authorities#connector-native-default-or-certreqexe).
+[Authorities → Connector](./authorities.md#connector-native-default-or-certreqexe).
 :::
 
 This page will cover:
@@ -37,7 +37,7 @@ If the Certeasy service account has enrollment rights but **not** the Certificat
 Manager role, issuance works while revocation fails with *Access Denied*. If you
 cannot (or do not want to) grant that role, disable CA propagation per authority
 with `disable-ca-revocation: true` — see
-[Authorities → Revocation](/0.9.4/configuration/authorities#revocation) for the full
+[Authorities → Revocation](./authorities.md#revocation) for the full
 revocation behavior (asynchronous publication, authorization modes, accepted
 reason codes).
 
@@ -50,7 +50,7 @@ to Certeasy, with no side effects on your other templates.
 :::note RSA-only templates
 If your template mandates RSA (e.g. a minimum key size of 4096), both Certeasy's
 own certificate and the ACME clients' certificates must use RSA. See the FAQ:
-[My PKI / ADCS template only allows RSA](/0.9.4/reference/faq#rsa-only-templates).
+[My PKI / ADCS template only allows RSA](../reference/faq.md#rsa-only-templates).
 :::
 
 ## Preflight your setup: `certeasy adcs check`

@@ -13,7 +13,7 @@ lego 5.0 introduced a CLI breaking change: every flag (`--server`, `--email`, `-
 
 ## What changes vs certbot
 
-- **Key type**: lego generates **ECDSA P-256** keys by default for both the ACME account and the certificate. This sidesteps the `signature.min-rsa-bits` policy entirely. To force RSA, pass `--key-type rsa3072` (or `rsa4096`). `rsa2048` will be refused under the default `min-rsa-bits: 3072` policy. See [FAQ → RSA-only templates](/reference/faq#rsa-only-templates).
+- **Key type**: lego generates **ECDSA P-256** keys by default for both the ACME account and the certificate. This sidesteps the `signature.min-rsa-bits` policy entirely. To force RSA, pass `--key-type rsa3072` (or `rsa4096`). `rsa2048` will be refused under the default `min-rsa-bits: 3072` policy. See [FAQ → RSA-only templates](../reference/faq.md#rsa-only-templates).
 - **CSR EKU**: lego declares `serverAuth` only in its CSR — no `clientAuth` smuggling, no need to loosen `csr.allowed-extra-eku` on the policy.
 - **Trust store**: lego reads a single PEM file pointed at by the env var `LEGO_CA_CERTIFICATES`. Point it at your OS bundle to keep one source of truth:
 
@@ -77,7 +77,7 @@ lego run \
      --path /etc/lego
 ```
 
-lego binds port 443 with the ACME-specific ALPN protocol; Certeasy probes the IP at port 443 with ALPN `acme-tls/1` to verify ownership. Useful when port 80 is unavailable but port 443 is free.
+lego binds port 443 with the ACME-specific ALPN protocol; Hortval probes the IP at port 443 with ALPN `acme-tls/1` to verify ownership. Useful when port 80 is unavailable but port 443 is free.
 
 ## DNS-01 (for wildcards)
 
@@ -86,7 +86,7 @@ lego ships built-in plugins for ~80 DNS providers — no extra package needed. P
 :::warning Point the propagation check at your internal resolver
 By default, lego waits until the just-installed `_acme-challenge.<domain>` TXT
 record is visible through public resolvers (Cloudflare `1.1.1.1`, Google
-`8.8.8.8`) before notifying Certeasy. On an internal-only deployment that
+`8.8.8.8`) before notifying Hortval. On an internal-only deployment that
 check **will never succeed** — the names do not exist publicly — and worse,
 the internal domain name is leaked in cleartext to those resolvers.
 

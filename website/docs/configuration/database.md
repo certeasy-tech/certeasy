@@ -5,7 +5,7 @@ title: Database
 
 # Database
 
-Certeasy stores all ACME state (accounts, orders, challenges, certificates, audit logs) in a relational database.
+Hortval stores all ACME state (accounts, orders, challenges, certificates, audit logs) in a relational database.
 
 ## Supported Drivers
 
@@ -20,7 +20,7 @@ Certeasy stores all ACME state (accounts, orders, challenges, certificates, audi
 ```yaml
 database:
   driver: postgres
-  dsn: "postgres://certeasy:secret@db01:5432/certeasy?sslmode=require"
+  dsn: "postgres://hortval:secret@db01:5432/hortval?sslmode=require"
   ping-timeout-sec: 5
   max-idle-conn: 5
   max-conn: 10
@@ -30,13 +30,13 @@ database:
 
 ### SQLite (default)
 
-If `database` is omitted entirely, Certeasy uses SQLite at `%WORKDIR%/db.sqlite`.
+If `database` is omitted entirely, Hortval uses SQLite at `%WORKDIR%/db.sqlite`.
 
 ```yaml
 # Explicit SQLite config
 database:
   driver: sqlite
-  path: "C:\\ProgramData\\certeasy\\db.sqlite"
+  path: "C:\\ProgramData\\hortval\\db.sqlite"
 ```
 
 ### PostgreSQL
@@ -44,7 +44,7 @@ database:
 ```yaml
 database:
   driver: postgres
-  dsn: "postgres://certeasy:secret@db01:5432/certeasy?sslmode=require"
+  dsn: "postgres://hortval:secret@db01:5432/hortval?sslmode=require"
 ```
 
 ### SQL Server
@@ -52,8 +52,99 @@ database:
 ```yaml
 database:
   driver: sqlserver
-  dsn: "sqlserver://certeasy:secret@sqlserver01:1433?database=certeasy"
+  dsn: "sqlserver://hortval:secret@sqlserver01:1433?database=hortval"
 ```
+
+#### Windows integrated authentication
+
+On Windows, Hortval can connect as the account it runs under, so no SQL password
+appears in the configuration file. Add `authenticator=winsspi` and drop the
+credentials:
+
+```yaml
+database:
+  driver: sqlserver
+  dsn: "sqlserver://sqlserver01:1433?database=hortval&authenticator=winsspi"
+```
+
+The identity used is the **account of the Hortval process**, so it is the one
+that needs a SQL Server login and permissions on the database. A domain account
+or a group Managed Service Account (gMSA) — see
+[Installation](../getting-started/installation.md#windows-service) for the account
+model.
+
+:::caution `LocalSystem` presents itself as the machine account
+A service created with `sc.exe` and no `obj=` runs as `LocalSystem`, which
+authenticates to SQL Server as `DOMAIN\MACHINE$`. Grant that, and every service
+on the host inherits database access. Give Hortval its own account.
+:::
+
+Windows only — the provider is compiled into the Windows binary alone. Linux and
+macOS builds use username and password.
+
+#### Check that it is really Kerberos
+
+An integrated connection can fall back to **NTLM with no error at all**: it
+connects, and everything appears to work.
+
+Hortval therefore reports the method it obtained, once, at startup:
+
+```
+INFO  SQL Server: integrated authentication  account=DOMAIN\svc-hortval auth_scheme=KERBEROS
+WARN  SQL Server: the connection fell back to NTLM because no Service Principal Name …
+```
+
+If the account cannot read `sys.dm_exec_connections`, Hortval says that too
+rather than staying silent — an absent line would be ambiguous.
+
+To check independently, or from a DBA session, run this against the instance as
+the account Hortval runs under:
+
+```sql
+SELECT SUSER_SNAME(), auth_scheme
+FROM sys.dm_exec_connections
+WHERE session_id = @@SPID;
+```
+
+`KERBEROS`, together with the expected account name, is the answer you want.
+
+`NTLM` means the connection is integrated but no **Service Principal Name** is
+registered. It works — and it will keep working, until the day your domain
+restricts NTLM. Hortval then stops connecting, and the outage looks like a
+Hortval problem rather than what it is: a dependency that was there from the
+first day and that nothing ever reported. NTLM is also relayable where Kerberos
+is not, and the account Hortval uses holds schema and write rights on your
+certificate store.
+
+Either way the SQL password is out of `config.yml` — that part of the benefit
+does not depend on which one you got.
+
+The SPN belongs to the account the **SQL Server service** runs under, which is
+the machine account when that service runs as `LocalSystem` or `NetworkService`:
+
+```powershell
+setspn -S MSSQLSvc/sqlserver01.example.com:1433 EXAMPLE\SQLSERVER01$
+setspn -S MSSQLSvc/sqlserver01:1433             EXAMPLE\SQLSERVER01$
+```
+
+If `setspn` cannot bind to a domain controller — some hardened domains reject
+its LDAP bind — the ActiveDirectory module writes the same attribute over ADWS:
+
+```powershell
+Set-ADComputer -Identity SQLSERVER01 -ServicePrincipalNames @{
+    Add = 'MSSQLSvc/sqlserver01.example.com:1433', 'MSSQLSvc/sqlserver01:1433'
+}
+```
+
+An SPN carries a **port**. One registered for a port the instance does not
+listen on matches nothing, and the connection quietly falls back to NTLM — so
+fix the port the instance listens on first, register the SPN second.
+
+:::note A local connection never proves anything
+Connecting from the machine that hosts SQL Server goes over shared memory or
+named pipes, and reports `NTLM` even when everything is configured correctly.
+Run the check from another host — which is also how Hortval will connect.
+:::
 
 ## Fields
 
@@ -62,7 +153,7 @@ database:
 | `driver` | `sqlite` | Database driver: `sqlite`, `postgres`, `sqlserver` |
 | `dsn` | — | Connection string (PostgreSQL and SQL Server) |
 | `path` | `%WORKDIR%/db.sqlite` | File path (SQLite only) |
-| `noddl` | `false` | The application account holds no schema rights. Certeasy never issues DDL: it checks the schema at startup, refuses to run if anything is missing, and `certeasy migrate` writes the SQL for your DBA instead of applying it. See [Migrations](/administration/migrations). |
+| `noddl` | `false` | The application account holds no schema rights. Hortval never issues DDL: it checks the schema at startup, refuses to run if anything is missing, and `hortval migrate` writes the SQL for your DBA instead of applying it. See [Migrations](../administration/migrations.md). |
 | `ping-timeout-sec` | `10` | Timeout for the startup connectivity check |
 | `max-idle-conn` | `2` (SQLite), `5` (others) | Maximum idle connections |
 | `max-conn` | `10` | Maximum open connections |
@@ -73,13 +164,13 @@ database:
 
 The schema travels inside the binary — no external SQL files. A restart applies
 **additive** migrations on its own; anything that cannot be undone by doing
-nothing waits for an explicit `certeasy migrate`. See
-[Migrations](/administration/migrations) for the full contract, the `--sql`
+nothing waits for an explicit `hortval migrate`. See
+[Migrations](../administration/migrations.md) for the full contract, the `--sql`
 output, and the `noddl` mode.
 
 ## Schema
 
-Certeasy writes to the schema its database account resolves to, and says which
+Hortval writes to the schema its database account resolves to, and says which
 one at every start:
 
 ```
@@ -94,7 +185,7 @@ database's side. For two separate installations, give each one a schema:
 # PostgreSQL: the default search path sends everyone to `public`
 database:
   driver: postgres
-  dsn: "postgres://certeasy:secret@db01:5432/shared?options=-csearch_path%3Dcerteasy"
+  dsn: "postgres://hortval:secret@db01:5432/shared?options=-csearch_path%3Dhortval"
 ```
 
 On SQL Server the schema comes from the database user, not the connection
@@ -102,4 +193,4 @@ string — use one user per installation, each with its own `DEFAULT_SCHEMA`.
 
 ## Schema Reference
 
-See [Schema Reference](/administration/schema) for the full list of tables and their lifecycle.
+See [Schema Reference](../administration/schema.md) for the full list of tables and their lifecycle.

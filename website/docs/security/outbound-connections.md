@@ -5,15 +5,15 @@ title: Outbound connections & licensing
 
 # Outbound connections & licensing
 
-Certeasy is designed to run inside hardened, segmented networks — often right
+Hortval is designed to run inside hardened, segmented networks — often right
 next to your CA. Security teams rightly audit everything that leaves such a
-host. This page explains the **only** network connection Certeasy makes, **why**
+host. This page explains the **only** network connection Hortval makes, **why**
 it exists, and **how to turn it off entirely**.
 
 Short version:
 
 - In **online mode** (default), the binary's only outbound destination is
-  Certeasy's licensing backend (HTTPS, on `certeasy.tech`). Nothing else.
+  Hortval's licensing backend (HTTPS, on `hortval.com`). Nothing else.
 - In **offline mode** (`license: offline: true`), the binary makes **zero**
   outbound connections. It is fully air-gappable.
 - It **never** sends your certificates, private keys, the domain names you
@@ -21,7 +21,7 @@ Short version:
 
 ## Why the connection exists
 
-The connection serves one purpose: the **license lifecycle**. A Certeasy
+The connection serves one purpose: the **license lifecycle**. A Hortval
 license is a signed file (`.lic`) that describes what the instance is allowed to
 do (allowed databases, max CAs, max managed servers, expiry). The backend is the
 authority that issues and updates that file. The binary contacts it to:
@@ -35,7 +35,7 @@ authority that issues and updates that file. The binary contacts it to:
 
 ## How an instance becomes licensed
 
-- **From the box (CLI):** an operator runs `certeasy license register`. The
+- **From the box (CLI):** an operator runs `hortval license register`. The
   instance is bound to the license and receives its `.lic`.
 - **From the portal (web):** an admin links the instance's installation key to a
   license in the portal UI. The box only **polls**; once the key is linked, the
@@ -77,7 +77,7 @@ connections** — the mode for air-gapped or strictly segmented deployments.
 
 Trade-offs you accept offline:
 
-- You install the license yourself: `certeasy license install <file.lic>`
+- You install the license yourself: `hortval license install <file.lic>`
   (delivered out-of-band).
 - No automatic renewal or **plan-upgrade pickup** — apply a new `.lic` manually.
 - No portal-driven revocation/retirement of the instance.
@@ -85,7 +85,7 @@ Trade-offs you accept offline:
 ## Verifying it yourself
 
 The surface is small and deterministic, so you can confirm it: point a network
-monitor at the host — in online mode you see only HTTPS to `certeasy.tech`; in
+monitor at the host — in online mode you see only HTTPS to `hortval.com`; in
 offline mode, nothing at all. The binary is reproducible and its dependencies
 are published — see [Dependencies & SBOM](./dependencies.md) and
 [Verifying release binaries](./verifying-binaries.md).

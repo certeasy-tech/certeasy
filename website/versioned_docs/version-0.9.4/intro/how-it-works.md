@@ -85,4 +85,4 @@ Certeasy enforces a strict security model at issuance time:
 - **Restricted EKU**: only Server Authentication (`1.3.6.1.5.5.7.3.1`) is allowed
 - **No UPN/email SAN**: prevents ADCS ESC attacks
 
-See [Security Model](/0.9.4/security/certificate-model) for full details.
+See [Security Model](../security/certificate-model.md) for full details.

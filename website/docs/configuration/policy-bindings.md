@@ -30,7 +30,7 @@ policy-bindings:
 
 ### `first_available`
 
-Certeasy tries the first authority. If it fails (unreachable, error), it moves to the next. This provides **failover**.
+Hortval tries the first authority. If it fails (unreachable, error), it moves to the next. This provides **failover**.
 
 ```yaml
 strategy: first_available
@@ -40,7 +40,7 @@ Use this when you have a primary CA and a backup.
 
 ### `round_robin`
 
-Certeasy distributes requests evenly across all listed authorities. This provides **load balancing**.
+Hortval distributes requests evenly across all listed authorities. This provides **load balancing**.
 
 ```yaml
 strategy: round_robin
@@ -50,7 +50,7 @@ Use this when you have multiple equivalent CAs and want to spread load.
 
 ## Implicit Binding
 
-If `policy-bindings` is omitted entirely and the configuration has **exactly one issuance policy and one authority**, Certeasy creates an implicit binding:
+If `policy-bindings` is omitted entirely and the configuration has **exactly one issuance policy and one authority**, Hortval creates an implicit binding:
 
 - policy → the only issuance policy
 - authorities → the only authority
@@ -76,7 +76,7 @@ policy-bindings:
 
 ## Validation Rules
 
-At startup, Certeasy verifies:
+At startup, Hortval verifies:
 - Every issuance policy has exactly one binding
 - Every authority referenced in a binding exists
 - No dangling or duplicate bindings

@@ -16,7 +16,7 @@ acme.sh's CLI has been stable for years — `--issue` / `--renew` / `--revoke` a
 - **Key type**: acme.sh generates **RSA 2048** by default. This is **refused** by Certeasy under the default `signature.min-rsa-bits: 3072` policy — always pass `--keylength` explicitly:
   - `--keylength 3072` or `4096` for RSA
   - `--keylength ec-256` or `ec-384` for ECDSA
-  - See [FAQ → RSA-only templates](/0.9.4/reference/faq#rsa-only-templates).
+  - See [FAQ → RSA-only templates](../reference/faq.md#rsa-only-templates).
 - **CSR EKU — read this carefully**: acme.sh's built-in OpenSSL template declares **both `serverAuth` and `clientAuth`** in the CSR's Extended Key Usage, regardless of intended purpose. By default Certeasy rejects this combination, returning `badCSR: EKU 1.3.6.1.5.5.7.3.2 in CSR not allowed by policy`.
 
   Two paths to make it work:

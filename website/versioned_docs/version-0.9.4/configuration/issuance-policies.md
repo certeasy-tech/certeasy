@@ -183,4 +183,4 @@ issuance-policies:
         - ".dmz.example.com/2"
 ```
 
-When multiple policies exist, you must define explicit [policy bindings](/0.9.4/configuration/policy-bindings).
+When multiple policies exist, you must define explicit [policy bindings](./policy-bindings.md).

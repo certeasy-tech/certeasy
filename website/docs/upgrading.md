@@ -5,18 +5,26 @@ title: Upgrading
 
 # Upgrading from an earlier 0.9.x
 
-This page lists every configuration change between **v0.9.1** and **v0.9.4** that
+This page lists every configuration change between **v0.9.1** and **v0.9.5** that
 requires you to edit your `config.yml`, and the ones that change behaviour without
 saying so. Read it before replacing the binary.
 
-Two things make an upgrade here different from most:
+:::info The product was renamed in v0.9.5
+Releases up to v0.9.4 were called **Certeasy**; from v0.9.5 the product, the
+command and the binary are **`hortval`**. This page uses the new name for
+present-tense behaviour and the old one when it names something you already have
+on disk. Nothing inside the ACME protocol carries the name, so your ACME clients
+are unaffected.
+:::
 
-- **The configuration file carries no version number, and Certeasy never rewrites
-  it.** There is no migration step and no compatibility shim. A key that no longer
-  exists is not ignored — the file fails to parse and the server does not start.
-- **The break is symmetric.** A configuration written for 0.9.4 also fails to load
-  on a 0.9.3 binary. Rolling the binary back means restoring the old configuration
-  file with it, so keep a copy.
+One thing makes an upgrade here different from most: **the configuration file
+carries no version number, and it is never rewritten for you.** There is no
+migration step and no compatibility shim. A key that no longer exists is not
+ignored — the file fails to parse and the server does not start.
+
+Before any upgrade, back up **the database, the installation directory and the
+configuration**. Keep the database copy even for a release that does not seem to
+need one: it is the only part you cannot rebuild.
 
 ## Check before you switch
 
@@ -25,12 +33,25 @@ deployment. Download it, put it somewhere temporary, and point it at the
 configuration the running service uses:
 
 ```bash
-./certeasy-v0.9.4-linux-amd64 validate -f /etc/certeasy/config.yml
+./hortval validate -f /etc/certeasy/config.yml
 ```
 
 `validate` refuses exactly what `serve` refuses — that parity is guaranteed and
 tested as of 0.9.4 — so a clean run means the file will load. Nothing is written,
 no database is touched, and the running service is unaffected.
+
+:::caution `validate` runs as you, the server runs as its service account
+From 0.9.5 it also looks at the filesystem — does the working directory's parent
+exist, is an installation already sitting where a path resolves. That check
+answers *"can I see this?"*, never *"will the server be able to"*: you are
+typing the command, the service runs under another account. So a failure to read
+a directory is reported as a **warning**, not a verdict, and nothing checks
+writability — guessing another identity's permissions produces confident wrong
+answers.
+
+`validate --no-disk` skips the filesystem entirely, for a config-only check on a
+machine that will not run the server.
+:::
 
 Work through whatever it reports, then swap the binary.
 
@@ -133,7 +154,7 @@ caught before anything happens.
 For the ADCS binaries, a bare name such as `certutil.exe` resolves from the Windows
 system directory and keeps working. A path relative to the working directory
 (`tools\certutil.exe`) is refused. See
-[ADCS authorities](/configuration/authorities).
+[ADCS authorities](./configuration/authorities.md).
 
 ## Changes that do not stop startup
 
@@ -175,14 +196,14 @@ Two consequences:
   the path in `file`. Existing `logrotate` rules on `logs.file` become inert.
 - **Remove any `logrotate` rule targeting `audit.path`.** External rotation of the
   audit file is no longer supported at all: a third party renaming or truncating it
-  breaks the tamper-evident chain, and Certeasy cannot tell that apart from
+  breaks the tamper-evident chain, and the server cannot tell that apart from
   tampering. Earlier documentation recommended `copytruncate` here; that
   recommendation was wrong and is withdrawn.
 
 While you are editing these two keys, write them as **absolute paths**. A relative
 one resolves against the process working directory, not against `workdir` — this
 page's predecessor claimed otherwise. See
-[Configuration overview](/configuration/overview) for what that costs on a Windows
+[Configuration overview](./configuration/overview.md) for what that costs on a Windows
 service.
 
 `logs.rotate.max-backups` also changed default from `0` to `5`. At `0` — the old
@@ -204,21 +225,131 @@ authorities:
 ```
 
 `adcs-native` is available as an explicit spelling of the new default. See
-[Antivirus and EDR](/administration/antivirus-edr) for which one suits your host.
+[Antivirus and EDR](./administration/antivirus-edr.md) for which one suits your host.
 
 In the same release, `default-timeout` started being honoured. A bug meant it was
 overwritten with 30 seconds whenever `cert-util-timeout` was unset, which was the
 normal case; requests that used to be cut off at 30 seconds now run to the
 configured value, or to the 4-minute default.
 
+## Moving to 0.9.5
+
+Everything above still applies — 0.9.5 adds no new keys and removes none. What it
+changes is the *name*, and where paths are allowed to point.
+
+### You can still go back
+
+The symmetry noted at the top of this page stops at 0.9.4. **A configuration
+fixed for 0.9.5 still loads on 0.9.4**, provided you wrote absolute paths — which
+is what the startup message hands you, ready to paste. Only `%CONFIGDIR%` closes
+the door, and it appears solely in configurations generated by `hortval init`,
+that is on fresh installs, which have nothing to roll back to. No schema
+migration ships in this release either.
+
+Worth knowing before you upgrade, not after: the moment you want a rollback is
+rarely the moment you want to discover whether one is possible.
+
+### The command is `hortval`
+
+Update every invocation: the `ExecStart=` of a systemd unit, the `binPath=` of a
+Windows service, your runbooks, your monitoring. Your `config.yml` keeps its name
+and every key it has.
+
+### Every path must be absolute or anchored
+
+A relative path is now refused at startup and by `validate`, in all eight settings
+that name one: `workdir`, `database.path`, `audit.path`, `logs.file`,
+`local-pki-cache-dir`, `letsencrypt.cache-dir`, and a bundle's `local-cert-file` /
+`local-key-file`.
+
+Write an absolute path, or anchor it: `%WORKDIR%` in any of them except `workdir`
+itself, which takes `%CONFIGDIR%` — the directory holding the configuration file.
+
+```yaml
+workdir: "%CONFIGDIR%/workdir"
+database:
+  path: "%WORKDIR%/db.sqlite"
+```
+
+The refusal names the setting, and when a live installation sits where the value
+resolved, it prints the exact line to write.
+
+This one catches more deployments than it looks. A configuration generated by the
+0.9.4 wizard has `workdir: ./workdir`, and the shipped examples used `.workdir` —
+the documented onboarding path produced exactly the file that now fails.
+
+### `workdir` is required, and there is no default
+
+Set it to an absolute path. A configuration that omits it does not start.
+
+```yaml
+workdir: 'C:\ProgramData\hortval'     # or /var/lib/hortval
+```
+
+The reason is the same one behind the rule above: this key decides where the
+database, the node identity, the audit log and the CA key live, and that is not
+something the binary should pick for you. It was the only path setting still
+allowed to be guessed.
+
+**The refusal tells you where your data is.** Until v2, startup looks at the
+locations previous releases used — including the pre-rename `certeasy` ones —
+and names any installation it finds, with the exact line to paste. If both hold
+one, it says so and lets you choose. Nothing is moved for you.
+
+An installation is recognised by its `server_id` marker. A directory holding
+only a `logs/` folder is not one: a service that started once and failed leaves
+exactly that.
+
+### Configuration is no longer looked for in the current directory
+
+It never should have been: running a command from any directory a less privileged
+account could write to loaded *that* account's configuration, and the configuration
+selects the database, the working directory, the audit destination and the outbound
+proxy. Two candidate files is now a startup error too, rather than a silent
+first-wins.
+
+**Pass `-f <path>`** and neither concerns you. The `certeasy` configuration
+directories are still read, with a warning, until v2.
+
+### Per-service log levels: two names changed, and an unknown one now stops startup
+
+If you set `logs.services`, check it. Two services were renamed, dropping the
+product name they carried:
+
+| Before | Now |
+|---|---|
+| `Certeasy-acme-server` | `acme-server` |
+| `cert-easy-main` | `main` |
+
+**There is no alias.** A configuration carrying an old name is refused at startup
+and by `validate`, and the message lists the accepted names.
+
+That refusal is the point. Until 0.9.5 an unrecognised key was **silently
+ignored** — the level you asked for quietly fell back to the global default, and
+the only symptom was logs quieter than you expected, at the moment you were
+trying to diagnose something. A key that never applies is worse than a missing
+one, because nothing distinguishes it from a working setting.
+
+The examples on [Logging](./administration/logging.md) used the old name, so a
+configuration copied from that page will not start. One edit, once.
+
+### Two more, easy to miss
+
+- **Allow egress to `api.hortval.com`.** The licensing backend moved. If your
+  egress is filtered by hostname, an upgrade without this slides the deployment
+  into its degraded licence states.
+- **A `letsencrypt` bundle now always serves ECDSA P-256.** Before, the first
+  client to connect decided the key type for everyone. If a client of yours needs
+  RSA, use `mode: pki` or `mode: files`, where `key.type` is yours to set.
+
 ## What changed in which release
 
-| | 0.9.1 → 0.9.2 | 0.9.2 → 0.9.3 | 0.9.3 → 0.9.4 |
-|---|---|---|---|
-| Keys removed | — | — | `audit.rotate.max-backups` |
-| Values now refused | zone `protocol` | — | 11 groups, see above |
-| Behaviour changed | `adcs` connector, `default-timeout` | — | partial sections, rate limits, rotation |
-| Keys added | — | 7, all optional | 5, all optional |
+| | 0.9.1 → 0.9.2 | 0.9.2 → 0.9.3 | 0.9.3 → 0.9.4 | 0.9.4 → 0.9.5 |
+|---|---|---|---|---|
+| Keys removed | — | — | `audit.rotate.max-backups` | — |
+| Values now refused | zone `protocol` | — | 11 groups, see above | every relative path, unknown `logs.services` keys |
+| Behaviour changed | `adcs` connector, `default-timeout` | — | partial sections, rate limits, rotation | command name, `workdir` now required, config lookup, licence host, Let's Encrypt key type |
+| Keys added | — | 7, all optional | 5, all optional | — |
 
 **0.9.2 → 0.9.3 requires no configuration change.** It only added optional keys:
 `disable-ca-revocation`, the certificate manager's `key` block, and a fake
@@ -231,10 +362,10 @@ setting did nothing at all.
 
 ## After the upgrade
 
-Certeasy applies additive database migrations on its own at startup and refuses
+Hortval applies additive database migrations on its own at startup and refuses
 anything that a rollback could not undo, naming what is pending. Nothing in the
 0.9.1 → 0.9.4 range is affected — every migration shipped so far is additive — but
 the contract, the exit codes and the `noddl` workflow are described in
-[Migrations](/administration/migrations).
+[Migrations](./administration/migrations.md).
 
-For the full narrative of each release, see the [Changelog](/changelog).
+For the full narrative of each release, see the [Changelog](./changelog/index.md).

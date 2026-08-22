@@ -5,7 +5,7 @@ title: Authorities
 
 # Authorities
 
-Authorities are the PKI backends that Certeasy submits certificate requests to. Each authority represents one ADCS instance (or a fake PKI for testing).
+Authorities are the PKI backends that Hortval submits certificate requests to. Each authority represents one ADCS instance (or a fake PKI for testing).
 
 ## Configuration
 
@@ -26,21 +26,21 @@ authorities:
 | `name` | Yes | Unique authority name. Referenced in policy bindings. |
 | `type` | Yes | Authority type: `adcs` / `adcs-native` (native connector, default) · `adcs-cli` (certreq.exe connector) · `fake` (testing) |
 | `policies` | No | Remote authority policy constraints (advanced). If omitted, all local policies are candidates. |
-| `disable-ca-revocation` | No (default `false`) | When `true`, keep ACME revocations local to Certeasy instead of propagating them to the backing CA (CRL/OCSP). Leave unset (or `false`) to propagate. See [Revocation](#revocation). |
+| `disable-ca-revocation` | No (default `false`) | When `true`, keep ACME revocations local to Hortval instead of propagating them to the backing CA (CRL/OCSP). Leave unset (or `false`) to propagate. See [Revocation](#revocation). |
 | `configuration` | Yes | Type-specific configuration block (see below) |
 
 ## ADCS Authority
 
 ### Connector: native (default) or certreq.exe
 
-Certeasy talks to ADCS through one of two interchangeable connectors. Both issue
+Hortval talks to ADCS through one of two interchangeable connectors. Both issue
 the same certificates from the same `ca-name` and `certificate-template` — only
 the integration method differs.
 
 | `type` | Connector | Notes |
 |---|---|---|
-| `adcs` (default), `adcs-native` | **Native** — Certeasy enrolls in-process through the built-in Windows certificate API. No external program is launched. | Recommended. Nothing extra to install, and the cleanest fit for hardened, EDR-monitored hosts (see [Antivirus &amp; EDR](/administration/antivirus-edr)). |
-| `adcs-cli` | **certreq.exe** — Certeasy drives the standard Windows `certreq.exe` tool. | Choose this if you prefer the classic `certreq.exe` integration, or want it as a fallback. |
+| `adcs` (default), `adcs-native` | **Native** — Hortval enrolls in-process through the built-in Windows certificate API. No external program is launched. | Recommended. Nothing extra to install, and the cleanest fit for hardened, EDR-monitored hosts (see [Antivirus &amp; EDR](../administration/antivirus-edr.md)). |
+| `adcs-cli` | **certreq.exe** — Hortval drives the standard Windows `certreq.exe` tool. | Choose this if you prefer the classic `certreq.exe` integration, or want it as a fallback. |
 
 `type: adcs` resolves to the native connector, so an existing configuration moves
 to it automatically on upgrade — no change required. Both connectors are
@@ -62,7 +62,7 @@ fallback, not for heavy issuance/revocation volume.
 |---|---|---|---|
 | `ca-name` | — | both | Full CA name as shown by `certutil -CA` (e.g. `PKI\LAB-RootCA`) |
 | `certificate-template` | — | both | ADCS certificate template name for ACME issuance |
-| `default-timeout` | `4m` | both | Maximum wait time for a single ADCS request. Keep it **below** `workers.max-job-duration` (default `5m`) so the ADCS timeout — not the surrounding job deadline — bounds the call; Certeasy warns at startup if it is greater than or equal to `max-job-duration`. |
+| `default-timeout` | `4m` | both | Maximum wait time for a single ADCS request. Keep it **below** `workers.max-job-duration` (default `5m`) so the ADCS timeout — not the surrounding job deadline — bounds the call; Hortval warns at startup if it is greater than or equal to `max-job-duration`. |
 | `certreq-path` | system directory | `adcs-cli` only | Path to `certreq.exe` (enrollment). Ignored by the native connector. |
 | `certutil-path` | system directory | `adcs-cli` only | Path to `certutil.exe`, used for **revocation** (`certutil -revoke`). `certutil` is a different binary from `certreq`. Ignored by the native connector. Only relevant when revocation propagation is enabled (i.e. `disable-ca-revocation` is not set). |
 
@@ -79,7 +79,7 @@ path carved out of an Endpoint Detection and Response (EDR) policy:
 ```
 
 A path relative to the working directory (`tools\certutil.exe`) is refused at
-startup and by `certeasy validate`.
+startup and by `hortval validate`.
 
 ### Finding your CA Name
 
@@ -92,17 +92,17 @@ The output shows the CA name in the format `Machine\CAName`. Use this exact stri
 ### Certificate Template Requirements
 
 The ADCS template must:
-- Allow enrollment by the Certeasy service account
+- Allow enrollment by the Hortval service account
 - Be configured for **Web Server** or equivalent (Server Authentication EKU)
 - Not have conflicting subject policies that would override the CSR
 
 :::tip
-Create a dedicated template for Certeasy (e.g. `ACME-Template-Server`) rather than reusing an existing one. This isolates the configuration and simplifies auditing.
+Create a dedicated template for Hortval (e.g. `ACME-Template-Server`) rather than reusing an existing one. This isolates the configuration and simplifies auditing.
 :::
 
 ### Revocation
 
-When an ACME client revokes a certificate (RFC 8555 §7.6), Certeasy marks it
+When an ACME client revokes a certificate (RFC 8555 §7.6), Hortval marks it
 revoked in its own database and, by default, **propagates the revocation to the
 backing CA** so the certificate also appears revoked in the CA's CRL/OCSP.
 
@@ -119,16 +119,16 @@ authorities:
 **Revocation requires higher privileges than enrollment.** Issuing certificates
 needs only *Read* + *Enroll* on the template and *Request Certificates* on the
 CA. Revoking requires the **Certificate Manager** role — the *Issue and Manage
-Certificates* permission on the CA. If the Certeasy service account lacks it,
+Certificates* permission on the CA. If the Hortval service account lacks it,
 enrollment keeps working but revocation fails with an *Access Denied* error
 (surfaced in the audit log as `certificate.revoke.publish_failed`).
 
 Revocation is **asynchronous**: the ACME client receives its `200` immediately,
-and Certeasy publishes to the CA in the background, retrying with an escalating
+and Hortval publishes to the CA in the background, retrying with an escalating
 backoff (minutes to hours) if the CA is temporarily unreachable. RFC 8555 §7.6
 does not require publication to be confirmed before responding.
 
-Set `disable-ca-revocation: true` to keep revocation **local to Certeasy** (no CA
+Set `disable-ca-revocation: true` to keep revocation **local to Hortval** (no CA
 propagation). This is appropriate when:
 
 - the service account cannot be granted the Certificate Manager role, or
@@ -152,7 +152,7 @@ The following CRL reason codes are accepted: `0` unspecified, `1` keyCompromise,
 `2` cACompromise, `3` affiliationChanged, `4` superseded, `5`
 cessationOfOperation, `9` privilegeWithdrawn, `10` aACompromise. The stateful
 codes `6` (certificateHold) and `8` (removeFromCRL) are rejected, because
-Certeasy revocation is terminal (no hold/un-revoke lifecycle).
+Hortval revocation is terminal (no hold/un-revoke lifecycle).
 
 ## Fake PKI Authority (Testing)
 
@@ -163,7 +163,7 @@ authorities:
   - name: test-ca
     type: fake
     configuration:
-      common-name: "Certeasy Test CA"
+      common-name: "Hortval Test CA"
       password: "testpassword"
       key-size: 4096
       validity: 3650            # CA certificate lifetime, in days
@@ -184,7 +184,7 @@ authorities:
 `key-size` must be at least the highest `min-rsa-bits` of the issuance policies
 bound to this authority — `3072` by default — with a hard floor of `2048`. A CA
 signing 3072-bit certificates with a 2048-bit key is refused at startup, and by
-`certeasy validate`.
+`hortval validate`.
 :::
 
 :::caution `key-size` only applies when the CA is generated
@@ -194,12 +194,12 @@ an authority that already has a CA, changing `key-size` changes nothing: the key
 keeps the size it was created with, and the value in the configuration describes
 an intention rather than what runs.
 
-Certeasy logs a warning at startup when the two disagree, giving the size in use
+Hortval logs a warning at startup when the two disagree, giving the size in use
 and the configured one. Moving to a stronger CA is a deliberate rollover: create
 a new authority and re-issue, rather than editing this field.
 
 Note the two checks fire at different moments. `key-size` against the policy
-floor is a **static** check, so `certeasy validate` and the startup gate both
+floor is a **static** check, so `hortval validate` and the startup gate both
 refuse it before anything else happens. The `common-name` check compares the
 configuration with the certificate on disk, so it can only run once the
 authority is opened, later in startup.
@@ -228,4 +228,4 @@ authorities:
       certificate-template: "ACME-Server"
 ```
 
-Then reference both in a [policy binding](/configuration/policy-bindings) with `strategy: first_available`.
+Then reference both in a [policy binding](./policy-bindings.md) with `strategy: first_available`.

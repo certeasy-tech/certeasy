@@ -13,7 +13,7 @@ lego 5.0 introduced a CLI breaking change: every flag (`--server`, `--email`, `-
 
 ## What changes vs certbot
 
-- **Key type**: lego generates **ECDSA P-256** keys by default for both the ACME account and the certificate. This sidesteps the `signature.min-rsa-bits` policy entirely. To force RSA, pass `--key-type rsa3072` (or `rsa4096`). `rsa2048` will be refused under the default `min-rsa-bits: 3072` policy. See [FAQ → RSA-only templates](/0.9.4/reference/faq#rsa-only-templates).
+- **Key type**: lego generates **ECDSA P-256** keys by default for both the ACME account and the certificate. This sidesteps the `signature.min-rsa-bits` policy entirely. To force RSA, pass `--key-type rsa3072` (or `rsa4096`). `rsa2048` will be refused under the default `min-rsa-bits: 3072` policy. See [FAQ → RSA-only templates](../reference/faq.md#rsa-only-templates).
 - **CSR EKU**: lego declares `serverAuth` only in its CSR — no `clientAuth` smuggling, no need to loosen `csr.allowed-extra-eku` on the policy.
 - **Trust store**: lego reads a single PEM file pointed at by the env var `LEGO_CA_CERTIFICATES`. Point it at your OS bundle to keep one source of truth:
 

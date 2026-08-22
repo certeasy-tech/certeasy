@@ -181,7 +181,7 @@ saying plainly: this mode is offered, not recommended by default.
    Both steps are one-time work for your configuration management, and good
    practice for any internal TLS service — but they are steps, and they are per
    client. Each client page gives the specifics:
-   [lego](/0.9.4/clients/lego), [certbot](/0.9.4/clients/certbot), [acme.sh](/0.9.4/clients/acme-sh).
+   [lego](../clients/lego.md), [certbot](../clients/certbot.md), [acme.sh](../clients/acme-sh.md).
 2. **DNS-01 with a standalone ACME client, then `mode: files`.** When you want a
    publicly-trusted certificate — so clients need no internal CA at all, which is
    exactly the step option 1 asks of you — without exposing anything. Certeasy's
@@ -209,8 +209,21 @@ tls-certificate-manager:
     enabled: true                  # required when any bundle uses letsencrypt mode
     email: "pki@example.com"       # ACME account / expiry notices
     http-addr: ":80"               # where the HTTP-01 challenge is answered
-    cache-dir: "%WORKDIR%/autocert"
+    cache-dir: "C:\\ProgramData\\certeasy\\autocert"   # absolute — see the warning below
 ```
+
+:::warning `%WORKDIR%` is not expanded — write an absolute path
+This release uses these values **exactly as written**: `cache-dir`,
+`local-pki-cache-dir`, `audit.path`, `logs.file`, `local-cert-file` and
+`local-key-file` are never expanded. Writing `%WORKDIR%/autocert` therefore
+creates a directory literally named `%WORKDIR%`, under the process working
+directory — so the cache lives where nobody will look for it, and a service
+restarted from elsewhere starts again with an empty one.
+
+Write an absolute path, or omit the key when the default under `workdir` is what
+you want. An earlier revision of this page showed `%WORKDIR%/autocert`; that
+example was wrong and has been corrected.
+:::
 
 The Let's Encrypt Terms of Service are accepted automatically. If a bundle uses
 `mode: letsencrypt` while `letsencrypt.enabled` is `false`, the server refuses to
@@ -238,7 +251,7 @@ egress-filtered deployment cannot use it: choose `mode: pki` (option 1), or issu
 the certificate on a connected machine and carry it in with `mode: files`.
 
 Running disconnected also means running the licence offline — see
-[Offline Mode (Air-Gapped)](/0.9.4/configuration/license#offline-mode-air-gapped),
+[Offline Mode (Air-Gapped)](./license.md#offline-mode-air-gapped),
 which is the constraint to plan around first.
 :::
 

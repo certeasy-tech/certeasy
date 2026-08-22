@@ -1,0 +1,58 @@
+# URLs the site is expected to keep serving.
+#
+# These are the paths people reach from search results and bookmarks. Any one of
+# them that stops resolving is a visitor landing on a 404, and the build reports
+# SUCCESS all the same — scripts/check-urls.mjs is what turns that into an error.
+#
+# A path may resolve as a page or as a generated redirect; both count.
+#
+# Add a line when a new page has had time to be indexed. Removing one is a
+# decision to drop that URL, not a way to make the build pass.
+
+/
+/administration/antivirus-edr
+/administration/audit
+/administration/backup
+/administration/cold-start
+/administration/deployment-topology
+/administration/license-enforcement
+/administration/logging
+/administration/migrations
+/administration/schema
+/administration/shutdown
+/changelog
+/clients/acme-sh
+/clients/certbot
+/clients/lego
+/configuration/adcs
+/configuration/authorities
+/configuration/database
+/configuration/dns-profiles
+/configuration/issuance-policies
+/configuration/license
+/configuration/overview
+/configuration/policy-bindings
+/configuration/rate-limiting
+/configuration/renewal-info
+/configuration/server
+/configuration/tls
+/configuration/workers
+/getting-started/first-certificate
+/getting-started/installation
+/getting-started/license
+/getting-started/minimal-configuration
+/getting-started/wizard
+/intro/how-it-works
+/intro/plans
+/intro/roadmap
+/intro/what-is-certeasy
+/reference/faq
+/reference/full-example
+/reference/standards-compliance
+/reference/test-coverage
+/security/certificate-model
+/security/dependencies
+/security/hardening
+/security/outbound-connections
+/security/verifying-binaries
+/upgrading

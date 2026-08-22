@@ -5,14 +5,14 @@ title: Certificate Security Model
 
 # Certificate Security Model
 
-Certeasy enforces a strict certificate identity model at issuance time. This behavior is **mandatory, non-configurable, and secure by default**.
+Hortval enforces a strict certificate identity model at issuance time. This behavior is **mandatory, non-configurable, and secure by default**.
 
 :::warning These rules are enforced on the request, not on what your CA returns
 Every rule on this page is checked against the CSR and the ACME order, before submission. The certificate your CA issues is **not** re-checked against them.
 
-Certeasy prevents an ACME client from *asking* for a dangerous certificate. It does not prevent your CA from *issuing* one. If the ADCS template adds a SAN, sets a different Subject, or grants a broader EKU than was requested, Certeasy returns that certificate to the client without detecting the difference.
+Hortval prevents an ACME client from *asking* for a dangerous certificate. It does not prevent your CA from *issuing* one. If the ADCS template adds a SAN, sets a different Subject, or grants a broader EKU than was requested, Hortval returns that certificate to the client without detecting the difference.
 
-The mitigations below are therefore only as strong as the template they are paired with. See [ADCS hardening & shared responsibility](/security/hardening).
+The mitigations below are therefore only as strong as the template they are paired with. See [ADCS hardening & shared responsibility](./hardening.md).
 :::
 
 ## Core Principle
@@ -105,7 +105,7 @@ Security boundaries must be enforced in code. Allowing configuration to relax id
 - Complicate audits
 - Reintroduce known ADCS vulnerabilities
 
-Certeasy enforces a single safe issuance model.
+Hortval enforces a single safe issuance model.
 
 ---
 
@@ -135,7 +135,7 @@ The enforced rules prevent entire classes of ADCS certificate-based attacks (ESC
 
 **Mitigations**:
 - No delegation of enrollment authority — ACME clients never authenticate to ADCS directly *(architectural)*
-- ⚠️ **Operator responsibility**: do not configure `certificate-template` to point at an Enrollment Agent template. Certeasy does not validate the template type.
+- ⚠️ **Operator responsibility**: do not configure `certificate-template` to point at an Enrollment Agent template. Hortval does not validate the template type.
 
 ---
 
@@ -145,8 +145,8 @@ The enforced rules prevent entire classes of ADCS certificate-based attacks (ESC
 
 **Mitigations**:
 - Template selection not exposed to ACME clients — enforced in code, clients cannot influence which template is used
-- Enrollment runs under the Certeasy service account *(architectural)*
-- ⚠️ **Operator responsibility**: create a dedicated ADCS template for ACME issuance and grant only Enroll permission to the Certeasy service account
+- Enrollment runs under the Hortval service account *(architectural)*
+- ⚠️ **Operator responsibility**: create a dedicated ADCS template for ACME issuance and grant only Enroll permission to the Hortval service account
 
 ---
 
@@ -189,7 +189,7 @@ The enforced rules prevent entire classes of ADCS certificate-based attacks (ESC
 **Mitigations**:
 - All certificate operations are recorded in the tamper-evident [audit log](../administration/audit.md) (JSONL + HMAC chain) *(enforced)*
 - ACME protocol supports automated renewal — clients can request new certificates before expiry *(architectural)*
-- ⚠️ **Shared responsibility**: certificate validity comes from your ADCS template — configure it with a short validity period (30–90 days recommended); Certeasy honors the template's validity as-is. See [ADCS hardening & shared responsibility](/security/hardening).
+- ⚠️ **Shared responsibility**: certificate validity comes from your ADCS template — configure it with a short validity period (30–90 days recommended); Hortval honors the template's validity as-is. See [ADCS hardening & shared responsibility](./hardening.md).
 
 ---
 
@@ -207,7 +207,7 @@ The rules above apply at issuance time. Two additional protections operate aroun
 
 ### Anti-DoS: Pending Authorizations Cap
 
-Clients that create orders but never finalize them leave behind pending `acme_authorizations` rows. Without a cap, this is a silent storage-growth DoS. Certeasy refuses new orders when the account already has too many in-flight pending authzs.
+Clients that create orders but never finalize them leave behind pending `acme_authorizations` rows. Without a cap, this is a silent storage-growth DoS. Hortval refuses new orders when the account already has too many in-flight pending authzs.
 
 | Property | Default | Configurable |
 |---|---|---|
@@ -220,7 +220,7 @@ See [Rate Limiting](../configuration/rate-limiting#pending-authorizations).
 
 ### Anti-Misconfig: Failed Validation Limit
 
-A misconfigured ACME client (broken DNS, port 80 closed, wrong TLS-ALPN) will keep retrying validations indefinitely, burning CA worker capacity. Certeasy keeps an in-memory counter per `(account, hostname)` and refuses new authorizations once that counter is at cap.
+A misconfigured ACME client (broken DNS, port 80 closed, wrong TLS-ALPN) will keep retrying validations indefinitely, burning CA worker capacity. Hortval keeps an in-memory counter per `(account, hostname)` and refuses new authorizations once that counter is at cap.
 
 | Property | Default | Configurable |
 |---|---|---|
@@ -234,7 +234,7 @@ See [Rate Limiting](../configuration/rate-limiting#failed-validation).
 
 ### Anti-Runaway: Duplicate Certificate Limit
 
-A misconfigured or compromised ACME client can loop on the same domain and burn through CA resources — the "2000 certs for one site" failure mode. Certeasy caps repeat issuance of the same FQDN set per account within a rolling time window.
+A misconfigured or compromised ACME client can loop on the same domain and burn through CA resources — the "2000 certs for one site" failure mode. Hortval caps repeat issuance of the same FQDN set per account within a rolling time window.
 
 | Property | Default | Configurable |
 |---|---|---|
@@ -248,7 +248,7 @@ See [Rate Limiting](../configuration/rate-limiting#duplicate-certificate).
 
 ### Forced Renewal via ARI
 
-Certeasy implements ACME Renewal Information (RFC 9773). For a **revoked** certificate, the suggested renewal window collapses to `[now, now]`, instructing compliant clients (recent certbot, acme.sh, lego, Caddy, Traefik) to renew immediately. This makes revocation a usable rollover tool for key compromise, template misconfiguration, or rotation.
+Hortval implements ACME Renewal Information (RFC 9773). For a **revoked** certificate, the suggested renewal window collapses to `[now, now]`, instructing compliant clients (recent certbot, acme.sh, lego, Caddy, Traefik) to renew immediately. This makes revocation a usable rollover tool for key compromise, template misconfiguration, or rotation.
 
 For non-revoked certificates, ARI spreads renewals across a configurable window in the last third of the certificate's lifetime, avoiding thundering-herd reissue across thousands of clients.
 

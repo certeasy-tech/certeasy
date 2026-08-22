@@ -5,9 +5,21 @@ title: Graceful shutdown
 
 # Graceful shutdown
 
-Certeasy stops cleanly on `SIGTERM` (Linux) and on the equivalent stop signal
-sent by the Windows Service Control Manager. This page describes the behaviour
-you can rely on, the two timeouts that bound it, and how to tune them.
+Hortval stops cleanly on `SIGTERM` (Linux) and on **Ctrl+C / Ctrl+Break in a
+console** (Windows). This page describes the behaviour you can rely on, the two
+timeouts that bound it, and how to tune them.
+
+:::warning On Windows, a service stop does **not** drain — v0.9.5
+Everything below applies when Hortval is stopped by a signal it actually
+receives. **The Windows Service Control Manager is not one of them in v0.9.5**:
+the SCM handshake is not implemented, so the process is killed after about
+thirty seconds with the drain unfinished, leaving `db.sqlite-wal` /
+`db.sqlite-shm` behind.
+
+Ship as a console process or under a wrapper until **v0.9.6**, which brings
+native service support. See
+[Installation → Windows service](../getting-started/installation.md#windows-service).
+:::
 
 ## What happens on stop signal
 
@@ -27,13 +39,13 @@ that point are picked up on the next start (the jobs queue is durable).
 
 | Setting | Default | What it bounds |
 |---|---|---|
-| `server.shutdown-timeout` | `30s` | How long Certeasy waits for in-flight HTTP requests to finish before forcing the listener to close. |
-| `workers.drain-timeout` | `30s` | How long Certeasy waits for in-flight async jobs to finish before forcing them to stop. |
+| `server.shutdown-timeout` | `30s` | How long Hortval waits for in-flight HTTP requests to finish before forcing the listener to close. |
+| `workers.drain-timeout` | `30s` | How long Hortval waits for in-flight async jobs to finish before forcing them to stop. |
 
 ### Invariant
 
 `server.shutdown-timeout` must be **less than or equal to**
-`workers.drain-timeout`. Certeasy refuses to start otherwise:
+`workers.drain-timeout`. Hortval refuses to start otherwise:
 
 ```
 server.shutdown-timeout (45s) must be ≤ workers.drain-timeout (30s):
@@ -83,7 +95,7 @@ need a hard ceiling on individual request duration, use `server.write-timeout`
 
 ## After a restart
 
-Run `certeasy audit verify` if the audit log is enabled. The audit chain is
+Run `hortval audit verify` if the audit log is enabled. The audit chain is
 designed to resume cleanly across stop/start, but `verify` confirms that no
 gap was introduced and reports the first break otherwise.
 

@@ -45,7 +45,7 @@ For organizations with advanced requirements.
 
 - Everything in Pro, plus:
 - **Up to 5 ADCS production authorities**
-- Beyond 5 CAs — [contact us](https://certeasy.tech/contact)
+- Beyond 5 CAs — [contact us](https://hortval.com/contact)
 - Split deployment: ADCS connector on Tier 0 + ACME responder on separate server *(coming in v2.0)*
 - Warm Active/Passive and Active/Active high availability (multi-node, requires PostgreSQL or SQL Server) *(coming in v2.0)*
 - Distributed validators (segmented networks) *(coming in v3.0)*
@@ -53,11 +53,11 @@ For organizations with advanced requirements.
 - Optional SLA
 
 :::tip High availability
-Today, Certeasy supports **cold Active/Passive** with manual switchover (Pro and above): install it on two hosts sharing a PostgreSQL or SQL Server database, keep the standby fully stopped, and fail over by stopping the active node and starting the standby. Running two instances concurrently against the same database is **not supported** (see [Deployment topology](../administration/deployment-topology.md)). Warm Active/Passive and Active/Active high availability are planned for **v2.0 (Enterprise)**.
+Today, Hortval supports **cold Active/Passive** with manual switchover (Pro and above): install it on two hosts sharing a PostgreSQL or SQL Server database, keep the standby fully stopped, and fail over by stopping the active node and starting the standby. Running two instances concurrently against the same database is **not supported** (see [Deployment topology](../administration/deployment-topology.md)). Warm Active/Passive and Active/Active high availability are planned for **v2.0 (Enterprise)**.
 :::
 
 :::note License required
-A license file (`certeasy.lic`) is required to run Certeasy, including on the Free plan. Registration takes 30 seconds and delivers the file by email.
+A license file (`.lic`) is required to run Hortval, including on the Free plan. Registration takes 30 seconds and delivers the file by email.
 
 **Managed server quota** is counted as the number of distinct ACME accounts with at least one active (non-expired, non-revoked) certificate. Retries and re-issuances from the same ACME account do not count. An account with no active certificate (failed setup, tests) does not consume quota.
 
@@ -68,11 +68,11 @@ Plan quotas (managed server count, number of authorities, allowed database drive
 
 All paid plans include a **6-month free trial** — sign up, no card required, no automatic charge. At the end, you choose to subscribe for a year or simply stop.
 
-If you subscribe, a new license file is sent to your email. Replace the existing `certeasy.lic` on your server: no reinstallation, no configuration change. Your license is extended by one year from the trial expiry date, not from the payment date.
+If you subscribe, a new license file is sent to your email. Replace the existing `.lic` file on your server: no reinstallation, no configuration change. Your license is extended by one year from the trial expiry date, not from the payment date.
 
 On connected installations, auto-renewal can be configured so the binary fetches and replaces the file itself. On air-gapped servers, the manual file replacement is the only step required.
 
-[Start your free trial](https://certeasy.tech/trial) on the official site.
+[Start your free trial](https://hortval.com/trial) on the official site.
 
 :::note
 All prices exclude VAT. One activation slot = one ADCS CA fingerprint. Prices are locked — no unexpected increases.

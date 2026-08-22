@@ -237,5 +237,5 @@ The installation key is already bound to a different license on the server. Go t
 ## Next step
 
 Once the license is active (or the cold-start window is open), start
-`certeasy serve` and follow the [First certificate](/0.9.4/getting-started/first-certificate)
+`certeasy serve` and follow the [First certificate](./first-certificate.md)
 guide to verify the end-to-end flow with an ACME client.

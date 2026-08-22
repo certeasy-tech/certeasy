@@ -6,7 +6,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Introduction',
       items: [
-        'intro/what-is-certeasy',
+        'intro/what-is-hortval',
         'intro/how-it-works',
         'intro/plans',
         'intro/roadmap',

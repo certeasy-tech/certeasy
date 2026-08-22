@@ -77,13 +77,13 @@ tls-certificate-manager:
   renew-before: 720h                   # pki mode only — 30 days
   pki-poll-interval: 2s                # pki mode only
   file-watch-interval: 5s              # files mode only
-  local-pki-cache-dir: "%WORKDIR%\\server-certificate-cache"  # pki mode only
+  local-pki-cache-dir: "C:\\ProgramData\\certeasy\\server-certificate-cache"  # pki mode only — absolute — %WORKDIR% is NOT expanded
   # letsencrypt mode (beta) — public CA for an internet-facing host:
   letsencrypt:
     enabled: false                     # set true when a bundle uses mode: letsencrypt
     email: "pki@example.com"           # ACME account / expiry notices
     http-addr: ":80"                   # HTTP-01 challenge listener
-    cache-dir: "%WORKDIR%\\autocert"   # issued-cert + account-key cache
+    cache-dir: "C:\\ProgramData\\certeasy\\autocert"   # absolute — %WORKDIR% is NOT expanded
   bundles:
     - name: public
       hosts:

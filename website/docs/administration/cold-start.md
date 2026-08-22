@@ -5,12 +5,12 @@ title: Cold-start
 
 # Cold-start
 
-When you want to bring Certeasy up before a license is installed — typical
+When you want to bring Hortval up before a license is installed — typical
 during a fresh install, while a free or paid license is being procured, or
 during evaluation — you open a **cold-start window**.
 
 Cold-start is an explicit action: you choose the plan you want to evaluate
-under, the binary writes the window into the database, and `certeasy serve`
+under, the binary writes the window into the database, and `hortval serve`
 then boots normally against the plan's limits. The window lasts **1 week**
 and is extendable while you finish the onboarding.
 
@@ -21,7 +21,7 @@ installing a real license restores normal boot.
 ## Opening the window
 
 ```bash
-certeasy cold-start init --plan=<free|starter|pro|enterprise> -f config.yml
+hortval cold-start init --plan=<free|starter|pro|enterprise> -f config.yml
 ```
 
 The chosen plan determines the constraints that apply during the window —
@@ -46,17 +46,17 @@ later.
 Example:
 
 ```
-$ certeasy cold-start init --plan=pro -f config.yml
+$ hortval cold-start init --plan=pro -f config.yml
 Cold-start initialised.
   Plan       : pro
   Window ends: 2026-06-14 13:23 UTC (168h0m0s remaining)
-You may now start the server normally: certeasy serve -f <config>
+You may now start the server normally: hortval serve -f <config>
 ```
 
 ## Inspecting the window
 
 ```bash
-certeasy cold-start status -f config.yml
+hortval cold-start status -f config.yml
 ```
 
 `cold-start status` is read-only. It prints the current plan, the deadline,
@@ -74,14 +74,14 @@ between `pro` and `enterprise`, or a misjudged sizing during evaluation),
 you can change it without waiting out the window:
 
 ```bash
-certeasy cold-start switch --plan=<free|starter|pro|enterprise> -f config.yml
+hortval cold-start switch --plan=<free|starter|pro|enterprise> -f config.yml
 ```
 
 `cold-start switch` updates the active plan and leaves the window
 deadline untouched. There is no `--confirm` flag — the action is
 atomic and has no preview side-effect.
 
-The new plan's constraints take effect at the next `certeasy serve`
+The new plan's constraints take effect at the next `hortval serve`
 boot (and at the next online check for already-running instances).
 
 `cold-start switch` refuses when:
@@ -109,10 +109,10 @@ e.g. the license is on its way but has not arrived yet — open a new
 
 ```bash
 # Preview only — shows what would change, writes nothing.
-certeasy cold-start extend -f config.yml
+hortval cold-start extend -f config.yml
 
 # Actually opens a new 7-day window.
-certeasy cold-start extend --confirm -f config.yml
+hortval cold-start extend --confirm -f config.yml
 ```
 
 `cold-start extend` is intentionally a separate, deliberate action so that
@@ -157,12 +157,12 @@ Cold-start ends the moment a valid license is installed. Any of the
 three license commands clears the cold-start window automatically:
 
 ```bash
-certeasy license register --env <prod|dev|staging|uat> -f config.yml <license-key>
-certeasy license install -f config.yml /path/to/your.lic
-certeasy license refresh -f config.yml
+hortval license register --env <prod|dev|staging|uat> -f config.yml <license-key>
+hortval license install -f config.yml /path/to/your.lic
+hortval license refresh -f config.yml
 ```
 
-After installing the license, `certeasy serve` boots against the
+After installing the license, `hortval serve` boots against the
 license's own constraints. The cold-start state is cleared as part of
 the install operation — there is no separate clean-up command.
 
@@ -180,7 +180,7 @@ Runtime refusals (`license.deny`, `license.boot_refused`, …) use the same
 event names whether the binary is in cold-start or running against a real
 license. See [License enforcement / Audit events](license-enforcement.md#audit-events).
 
-The audit log is tamper-evident. Use `certeasy audit verify` to validate
+The audit log is tamper-evident. Use `hortval audit verify` to validate
 the chain end-to-end (see [Audit log](audit.md)).
 
 ## Example session
@@ -189,13 +189,13 @@ A fresh install, evaluating against the Pro plan, with a license to come
 within the week:
 
 ```
-$ certeasy cold-start init --plan=pro -f /etc/certeasy/config.yml
+$ hortval cold-start init --plan=pro -f /etc/hortval/config.yml
 Cold-start initialised.
   Plan       : pro
   Window ends: 2026-06-14 13:23 UTC (168h0m0s remaining)
-You may now start the server normally: certeasy serve -f <config>
+You may now start the server normally: hortval serve -f <config>
 
-$ certeasy cold-start status -f /etc/certeasy/config.yml
+$ hortval cold-start status -f /etc/hortval/config.yml
 License        : not installed.
 Cold-start plan: pro
 Window ends    : 2026-06-14 13:23 UTC
@@ -203,7 +203,7 @@ Remaining      : 6d23h
 Cap            : none (setup phase — no ACME account yet)
 
 # A week later, the license has not arrived yet — open a new window.
-$ certeasy cold-start extend --confirm -f /etc/certeasy/config.yml
+$ hortval cold-start extend --confirm -f /etc/hortval/config.yml
 Cold-start extend evaluation
   Current plan  : pro
   Current window: ends 2026-06-14 13:23 UTC
@@ -215,9 +215,9 @@ Cold-start extend evaluation
 Cold-start window extended until 2026-06-21 13:30 UTC.
 
 # License arrives — register it.
-$ certeasy license register --env prod -f /etc/certeasy/config.yml CRT-…
+$ hortval license register --env prod -f /etc/hortval/config.yml CRT-…
 License registered — plan=pro …
 ```
 
 Once the license is registered, the cold-start window is cleared and
-`certeasy serve` runs under the license's own constraints.
+`hortval serve` runs under the license's own constraints.

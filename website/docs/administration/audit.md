@@ -5,7 +5,7 @@ title: Audit Log
 
 # Audit Log
 
-Certeasy writes a tamper-evident audit log of business decisions and security-relevant events: account lifecycle, order creation, authorization outcomes, certificate issuance and revocation, rate-limit denials, and license transitions. Each line is HMAC-chained to the previous one so any insertion, deletion, or modification is detectable after the fact with the bundled `certeasy audit verify` command.
+Hortval writes a tamper-evident audit log of business decisions and security-relevant events: account lifecycle, order creation, authorization outcomes, certificate issuance and revocation, rate-limit denials, and license transitions. Each line is HMAC-chained to the previous one so any insertion, deletion, or modification is detectable after the fact with the bundled `hortval audit verify` command.
 
 The audit log is **enabled by default**: a silent opt-out would be a compliance hole. Disable it explicitly with `enabled: false` if you have a specific reason.
 
@@ -25,7 +25,7 @@ Omitting the `audit` block applies the defaults shown above.
 |---|---|---|
 | `enabled` | `true` | Set to `false` to disable the audit writer entirely. No file is created and `Audit()` calls are dropped silently. |
 | `path` | `""` | Base path for the audit log. Empty resolves to `<workdir>/audit.log`. With rotation enabled this is a **naming base**, not a file — see below. |
-| `rotate.max-size-mb` | `0` | When greater than zero, Certeasy starts a new segment once the current one exceeds this size. `0` means a single segment that grows indefinitely. |
+| `rotate.max-size-mb` | `0` | When greater than zero, Hortval starts a new segment once the current one exceeds this size. `0` means a single segment that grows indefinitely. |
 
 :::danger Removed in v0.9.4 — `rotate.max-backups`
 This field no longer exists, and **a configuration that still contains it is
@@ -44,17 +44,17 @@ Earlier versions of this page recommended a `logrotate` snippet with
 `copytruncate`. **That recommendation was wrong and is withdrawn.**
 
 A third party renaming or truncating the file breaks the HMAC chain, and
-Certeasy cannot distinguish that from tampering. Remove any `logrotate` rule,
+Hortval cannot distinguish that from tampering. Remove any `logrotate` rule,
 Scheduled Task or backup job that rotates, truncates or moves `audit.path`.
 Copying the closed segments elsewhere is fine — see below.
 :::
 
-Certeasy segments the file itself. Each segment is named after the instant it
+Hortval segments the file itself. Each segment is named after the instant it
 was opened and is **never renamed**:
 
 ```
-audit.path: C:\ProgramData\certeasy\audit\audit.log
-  ->  C:\ProgramData\certeasy\audit\audit.20260726T091702Z.ms123.log
+audit.path: C:\ProgramData\hortval\audit\audit.log
+  ->  C:\ProgramData\hortval\audit\audit.20260726T091702Z.ms123.log
 ```
 
 Two consequences worth knowing:
@@ -62,12 +62,12 @@ Two consequences worth knowing:
 - **A closed segment is immutable.** It is never reopened for writing, so an
   archiver can copy or move closed segments with no risk of catching a file
   mid-rotation. Leave the newest one alone: it is the one being written.
-- **Certeasy never deletes an audit segment.** Disk growth is bounded by your
+- **Hortval never deletes an audit segment.** Disk growth is bounded by your
   archival policy, not by the product. Sizing: at `max-size-mb: 100`, a busy
   enterprise CA produces on the order of a few segments per year.
 
 If a rotation cannot complete — an antivirus holding the file, a full disk, a
-permissions problem — Certeasy keeps writing to the current segment and reports
+permissions problem — Hortval keeps writing to the current segment and reports
 the reason on stderr (captured by systemd and the Windows service manager). It
 retries later. Nothing is lost and no history is touched.
 
@@ -141,7 +141,7 @@ Optional fields are omitted from the line when empty (`omitempty`).
 
 ## How the Chain Works
 
-On the very first install, Certeasy generates a 32-byte random secret and stores it in the database (`audit_state` table). The secret is never logged, never exposed via any API, and never rotated.
+On the very first install, Hortval generates a 32-byte random secret and stores it in the database (`audit_state` table). The secret is never logged, never exposed via any API, and never rotated.
 
 The first line of every installation is anchored to a **genesis MAC** computed from the secret and the stable installation identifier:
 
@@ -164,7 +164,7 @@ The threat model: filesystem compromise alone does not allow forgery. DB comprom
 The chain is only useful if you actually verify it. Run:
 
 ```sh
-certeasy audit verify -f /etc/certeasy/config.yml
+hortval audit verify -f /etc/hortval/config.yml
 ```
 
 The command walks every segment in write order, then the active one. It validates:
@@ -183,7 +183,7 @@ Exit codes:
 You can override the file path:
 
 ```sh
-certeasy audit verify -f /etc/certeasy/config.yml --path /backups/2026-05/audit.log
+hortval audit verify -f /etc/hortval/config.yml --path /backups/2026-05/audit.log
 ```
 
 This still requires the database (the secret and the installation key live there), so the override is for verifying a copy of the file alongside the live DB — not for verifying a backup on a different machine. To verify a snapshot offline, restore the DB backup alongside the audit file first.
@@ -199,7 +199,7 @@ This still requires the database (the secret and the installation key live there
 Each audit line carries the `server_id` of the node that wrote it (see [Node identity](./deployment-topology#node-identity)). To list every node that has ever booted against this database — useful when investigating who wrote which lines, or before decommissioning a host:
 
 ```sh
-certeasy audit list-servers -f /etc/certeasy/config.yml
+hortval audit list-servers -f /etc/hortval/config.yml
 ```
 
 Output columns: `server_id`, `hostname`, `first_seen`, `last_seen` (UTC, RFC 3339). Sorted by `last_seen` descending so the most recently active node appears first.
@@ -212,9 +212,9 @@ Loss of the secret means loss of verifiability for all earlier lines (the file i
 
 ## Personal Data and RGPD
 
-`source_ip` and `user_agent` are potential personal data. Retention and the user-facing notice are the responsibility of the operator who installs and runs Certeasy:
+`source_ip` and `user_agent` are potential personal data. Retention and the user-facing notice are the responsibility of the operator who installs and runs Hortval:
 
-- **Retention** — Certeasy does not delete audit lines on its own. The retention policy is whatever your OS rotation rule keeps.
+- **Retention** — Hortval does not delete audit lines on its own. The retention policy is whatever your OS rotation rule keeps.
 - **Notice** — Mention the audit log in your service's privacy notice.
 - **Access controls** — The audit file is created with `0644` permissions by default. Restrict the directory if your hosting model requires it.
 
@@ -224,4 +224,4 @@ There is no PII redaction option in v1: the goal of the audit log is forensic, a
 
 - **Failures do not block business flow.** If a write to the audit file fails (full disk, permission error), the failure is logged via the `audit` log service and the operation continues. Audit gaps are detected by `audit verify`, not by ACME clients.
 - **Line size cap.** Lines are capped at 1 MiB. Events that would produce a larger line are dropped with a log entry. The cap is a defence against a misbehaving event source — legitimate events are well below 1 KiB.
-- **No auto-purge, by design.** Certeasy never deletes an audit segment, whatever the configuration. Retention is entirely a function of your archival policy — copy closed segments to your long-term store and remove them there, never through a rotator pointed at the live directory. A duration-based retention setting is planned; until then, deleting evidence remains a deliberate operator action.
+- **No auto-purge, by design.** Hortval never deletes an audit segment, whatever the configuration. Retention is entirely a function of your archival policy — copy closed segments to your long-term store and remove them there, never through a rotator pointed at the live directory. A duration-based retention setting is planned; until then, deleting evidence remains a deliberate operator action.

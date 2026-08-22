@@ -12,7 +12,7 @@ Every rule on this page is checked against the CSR and the ACME order, before su
 
 Certeasy prevents an ACME client from *asking* for a dangerous certificate. It does not prevent your CA from *issuing* one. If the ADCS template adds a SAN, sets a different Subject, or grants a broader EKU than was requested, Certeasy returns that certificate to the client without detecting the difference.
 
-The mitigations below are therefore only as strong as the template they are paired with. See [ADCS hardening & shared responsibility](/0.9.4/security/hardening).
+The mitigations below are therefore only as strong as the template they are paired with. See [ADCS hardening & shared responsibility](./hardening.md).
 :::
 
 ## Core Principle
@@ -189,7 +189,7 @@ The enforced rules prevent entire classes of ADCS certificate-based attacks (ESC
 **Mitigations**:
 - All certificate operations are recorded in the tamper-evident [audit log](../administration/audit.md) (JSONL + HMAC chain) *(enforced)*
 - ACME protocol supports automated renewal — clients can request new certificates before expiry *(architectural)*
-- ⚠️ **Shared responsibility**: certificate validity comes from your ADCS template — configure it with a short validity period (30–90 days recommended); Certeasy honors the template's validity as-is. See [ADCS hardening & shared responsibility](/0.9.4/security/hardening).
+- ⚠️ **Shared responsibility**: certificate validity comes from your ADCS template — configure it with a short validity period (30–90 days recommended); Certeasy honors the template's validity as-is. See [ADCS hardening & shared responsibility](./hardening.md).
 
 ---
 

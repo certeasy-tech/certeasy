@@ -5,7 +5,7 @@ title: Standards & RFC support
 
 # Standards & RFC support
 
-Certeasy implements the IETF ACME family of standards. This page documents which parts of each RFC are supported today, which are partial, and which are planned. Use it when auditing Certeasy against a compliance requirement or before integrating an ACME client that depends on a specific feature.
+Hortval implements the IETF ACME family of standards. This page documents which parts of each RFC are supported today, which are partial, and which are planned. Use it when auditing Hortval against a compliance requirement or before integrating an ACME client that depends on a specific feature.
 
 ## RFC 8555 — ACME core protocol
 
@@ -26,10 +26,10 @@ Certeasy implements the IETF ACME family of standards. This page documents which
 
 #### ADCS revocation propagation (shipped in 0.9.3)
 
-Since **0.9.3**, `POST /acme/revoke-cert` propagates to the backing ADCS CA — the certificate is revoked on the CA itself, not only in Certeasy's database. Two things to know:
+Since **0.9.3**, `POST /acme/revoke-cert` propagates to the backing ADCS CA — the certificate is revoked on the CA itself, not only in Hortval's database. Two things to know:
 
 - Revoking on the CA requires the **Certificate Manager** role on the ADCS service account — a higher privilege than enrollment. If the account only holds enrollment rights (or the deployment is air-gapped), turn propagation off per authority with `disable-ca-revocation: true`; revocation then stays server-side only, as before.
-- Propagation to the CA is immediate, but a client validating chain status still sees the certificate as valid until the CA **publishes its next CRL** (or its OCSP responder refreshes). That cadence is governed by your ADCS CRL publication schedule, not by Certeasy.
+- Propagation to the CA is immediate, but a client validating chain status still sees the certificate as valid until the CA **publishes its next CRL** (or its OCSP responder refreshes). That cadence is governed by your ADCS CRL publication schedule, not by Hortval.
 
 #### External Account Binding (EAB) — planned for v2.0
 
@@ -49,7 +49,7 @@ EAB lets you bind a new ACME account to an out-of-band identity (HMAC key shared
 
 #### `replaces` semantics (planned for v1.1)
 
-ARI-aware clients (recent lego, certbot) can send `newOrder.replaces` without seeing a `400 malformed` — Certeasy accepts the field. However the server does not yet:
+ARI-aware clients (recent lego, certbot) can send `newOrder.replaces` without seeing a `400 malformed` — Hortval accepts the field. However the server does not yet:
 
 - Reject duplicate `replaces` with `409 alreadyReplaced`.
 - Persist the `old_cert → new_cert` link.
@@ -63,7 +63,7 @@ In a single-instance deployment this is invisible. In multi-instance or HA deplo
 
 - Issued certificates carry the **Subject Alternative Name** extension only, with DNS names from the validated authorizations.
 - The **Subject Common Name** field is intentionally left empty. This follows the CA/Browser Forum baseline since 2019: modern TLS clients (Chrome, Firefox, Go ≥ 1.15, Java ≥ 11) validate against SAN, not CN. Legacy clients that still require a CN-based match may need adjustment.
-- **Extended Key Usage**: `serverAuth` only. `clientAuth`, `codeSigning`, `anyPurpose` and other EKUs are never set, even if requested by the client's CSR. Certificates issued by Certeasy are TLS server certificates — never reusable for AD authentication, SMB signing, or other server-side roles. The strict EKU policy can be relaxed per-policy via `csr.allowed-extra-eku` if a specific client (e.g. acme.sh) declares additional EKUs in its CSR.
+- **Extended Key Usage**: `serverAuth` only. `clientAuth`, `codeSigning`, `anyPurpose` and other EKUs are never set, even if requested by the client's CSR. Certificates issued by Hortval are TLS server certificates — never reusable for AD authentication, SMB signing, or other server-side roles. The strict EKU policy can be relaxed per-policy via `csr.allowed-extra-eku` if a specific client (e.g. acme.sh) declares additional EKUs in its CSR.
 - **Signature algorithms**: configurable allow-list per policy, default minimum RSA 3072-bit, ECDSA P-256 and above.
 
 ## Roadmap

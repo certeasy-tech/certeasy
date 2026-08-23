@@ -33,6 +33,10 @@ export default function Home() {
         />
         <meta httpEquiv="refresh" content={`0; url=${home}`} />
         <link rel="canonical" href={siteConfig.url + home} />
+        {/* Matches the canonical, so a share of the root is attributed to the
+            page it redirects to. The hreflang alternates next to it are emitted
+            by Docusaurus from the route and cannot be overridden here. */}
+        <meta property="og:url" content={siteConfig.url + home} />
       </Head>
       <main>
         <h1>Hortval Documentation</h1>

@@ -46,9 +46,23 @@ revocations** without operator action.
 
 ## What is exchanged
 
-The binary sends **license-enforcement metrics** (the figures used to verify
-your running configuration against your plan) and the **machine name** you set
-at registration. In return it may receive an updated license file.
+The binary sends two categories, and nothing else. In return it may receive an
+updated license file.
+
+**What describes your installation** — the figures used to check your running
+configuration against your plan:
+
+- the Hortval server's hostname, as reported by the operating system;
+- the number of managed servers;
+- the number of managed CAs;
+- the database driver in use;
+- the environment you declared, at registration only.
+
+**What identifies the licence** — none of it describes your network:
+
+- the licence key and the installation key;
+- the plan the instance is running under;
+- the running binary version.
 
 It does **not** send any operational data — specifically never:
 
@@ -59,8 +73,8 @@ It does **not** send any operational data — specifically never:
 - your DNS-validation configuration or network topology;
 - the audit log or database contents.
 
-There is no telemetry, analytics, or crash-reporting channel. Licensing is the
-entire outbound surface.
+There is no *separate* telemetry, analytics, or crash-reporting channel: the
+licensing call above is the entire outbound surface.
 
 ## Turning it off — offline mode
 

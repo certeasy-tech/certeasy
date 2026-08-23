@@ -110,9 +110,11 @@ jobs:
           > Official documentation for Hortval, an on-premise ACME server for Microsoft ADCS.
 
           Hortval was called **Certeasy** until August 2026. It is the same
-          product, and the released binary and its commands are still named
-          `certeasy` — the pages exported here are the docs for that shipping
-          release. The next release, 0.9.5, is the first to carry the new name.
+          product: 0.9.5 is the first release to carry the new name, and the
+          binary and its commands are named `hortval`. The pages exported here
+          are the docs for that release. Documentation for 0.9.4 and earlier,
+          where the binary is still named `certeasy`, stays available under the
+          versioned pages.
 
           ## Main resources
 

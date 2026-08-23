@@ -122,5 +122,5 @@ Hortval is designed for a minimal attack surface:
 
 - **Single binary** — no installer, no runtime dependencies, no package manager
 - **Minimal outbound network** at runtime — your own ADCS and DNS servers, plus Hortval's licensing backend over HTTPS in the default online mode (`license: offline: true` removes it entirely). See [Outbound connections & licensing](./outbound-connections.md).
-- **No telemetry** — Hortval does not call home
+- **No separate telemetry channel** — the licensing call above is the entire outbound surface; there is no analytics or crash-reporting channel beside it, and what that call carries is listed in [What is exchanged](./outbound-connections.md#what-is-exchanged)
 - **Standard library first** — cryptographic operations use Go's standard `crypto/x509` and `crypto/tls`; no custom crypto implementations

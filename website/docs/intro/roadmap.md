@@ -30,10 +30,16 @@ Legend: ✅ shipped · 🎯 next release in flight.
 | Real ADCS revocation (CRL / OCSP propagation) | 0.9.3 ✅ | All | A revoked certificate is actually revoked end-to-end |
 | Configurable server-certificate key (RSA / ECDSA — e.g. RSA 4096 for RSA-only ADCS templates) | 0.9.3 ✅ | All | Start against CA templates that mandate a specific key type or size |
 | ADCS setup preflight (`hortval adcs check` + guided `init`: template picker, key-requirement detection, clear denial reasons) | 0.9.3 ✅ | All | Diagnose ADCS onboarding before go-live — fewer support tickets at setup |
-| Cleanup / retention of expired ACME records | 1.0 🎯 | All | Long-term operations: the database stops growing forever |
-| Health / metrics endpoints (`/healthz`, `/readyz`, Prometheus `/metrics`) | 1.0 🎯 | All | Drop-in integration with existing supervision (Zabbix, Centreon, Prometheus, Grafana) |
-| PKI health checks + load-balanced CAs (Ping at boot + runtime) | 1.0 🎯 | All | Mis-configured CAs fail loudly at boot; `round_robin` policy actually skips unhealthy CAs |
-| ADCS lab documentation (template setup, EKU, SAN, permissions) | 1.0 🎯 | All | Customers can deploy without contacting support |
+| Security review and hardening | 0.9.4 ✅ | All | The codebase is re-reviewed whenever materially more capable analysis tooling appears. The July 2026 review found nothing permitting private key compromise, data exfiltration or remote code execution; what it did find was fixed in this release |
+| Controlled schema migrations (`hortval migrate`) | 0.9.4 ✅ | All | Upgrading never rewrites your schema as a side effect: a restart applies additive changes only, anything riskier waits for an explicit command and your backup |
+| Certeasy becomes **Hortval**: the command, the binary and the release artefacts take the new name | 0.9.5 ✅ | All | Nothing inside the ACME protocol carries the name, so no client, account or certificate is affected — what changes is your `ExecStart`, your service `binPath=` and your runbooks |
+| Authenticode-signed Windows binary | 0.9.5 ✅ | All | SmartScreen names SAFE PIC TECHNOLOGIES instead of "Unknown publisher" — one less obstacle to getting it approved |
+| SQL Server integrated authentication (`authenticator=winsspi`) | 0.9.5 ✅ | Pro / Enterprise | No SQL password in `config.yml`: Hortval connects as the Windows account it runs under |
+| Native Windows service (SCM handshake), Windows event log, and a `hortval diag` subcommand to prove where the messages went | 0.9.6 🎯 | All | On the platform Hortval targets, "runs as a service" is what deployment means |
+| ADCS lab documentation completed (certificate-template creation in `certtmpl.msc`, SAN and EKU settings, Windows host prerequisites, troubleshooting) | 0.9.7 | All | Customers can deploy without contacting support — CA privileges, EC/RSA templates and `hortval adcs check` are already documented |
+| Cleanup / retention of expired ACME records | 1.0 | All | Long-term operations: the database stops growing forever |
+| Health / metrics endpoints (`/healthz`, `/readyz`, Prometheus `/metrics`) | 1.0 | All | Drop-in integration with existing supervision (Zabbix, Centreon, Prometheus, Grafana) |
+| PKI health checks + load-balanced CAs (Ping at boot + runtime) | 1.0 | All | Mis-configured CAs fail loudly at boot; `round_robin` policy actually skips unhealthy CAs |
 | ARI `replaces` semantics (RFC 9773 §5: link, persist, collapse window) | 1.1 | All | Full benefit of ARI in multi-instance fleets |
 | Split deployment (Tier 0 connector + ACME responder on separate host) | 2.0 | Enterprise | Keep the ADCS-touching component on Tier 0, expose ACME elsewhere |
 | Active/Active high availability (multi-node) | 2.0 | Enterprise | Uptime without a manual failover step |
@@ -45,7 +51,7 @@ Legend: ✅ shipped · 🎯 next release in flight.
 
 ## Compliance and RFC gaps
 
-The RFC and integration gaps documented in [Standards & RFC support](../reference/standards-compliance.md) are tracked in the table above. ADCS revocation propagation closed in **0.9.3 ✅**; the remaining "1.0 🎯" entries close the operational gaps still visible to a standard ACME client today. External Account Binding (EAB) is planned for 2.0.
+The RFC and integration gaps documented in [Standards & RFC support](../reference/standards-compliance.md) are tracked in the table above. ADCS revocation propagation closed in **0.9.3 ✅**; the remaining "1.0" entries close the operational gaps still visible to a standard ACME client today. External Account Binding (EAB) is planned for 2.0.
 
 ## Pricing and feature gating
 

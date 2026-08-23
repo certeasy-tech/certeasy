@@ -30,6 +30,8 @@ Legend: ✅ shipped · 🎯 next release in flight.
 | Real ADCS revocation (CRL / OCSP propagation) | 0.9.3 ✅ | All | A revoked certificate is actually revoked end-to-end |
 | Configurable server-certificate key (RSA / ECDSA — e.g. RSA 4096 for RSA-only ADCS templates) | 0.9.3 ✅ | All | Start against CA templates that mandate a specific key type or size |
 | ADCS setup preflight (`certeasy adcs check` + guided `init`: template picker, key-requirement detection, clear denial reasons) | 0.9.3 ✅ | All | Diagnose ADCS onboarding before go-live — fewer support tickets at setup |
+| Security review and hardening | 0.9.4 ✅ | All | The codebase is re-reviewed whenever materially more capable analysis tooling appears. The July 2026 review found nothing permitting private key compromise, data exfiltration or remote code execution; what it did find was fixed in this release |
+| Controlled schema migrations (`certeasy migrate`) | 0.9.4 ✅ | All | Upgrading never rewrites your schema as a side effect: a restart applies additive changes only, anything riskier waits for an explicit command and your backup |
 | Cleanup / retention of expired ACME records | 1.0 🎯 | All | Long-term operations: the database stops growing forever |
 | Health / metrics endpoints (`/healthz`, `/readyz`, Prometheus `/metrics`) | 1.0 🎯 | All | Drop-in integration with existing supervision (Zabbix, Centreon, Prometheus, Grafana) |
 | PKI health checks + load-balanced CAs (Ping at boot + runtime) | 1.0 🎯 | All | Mis-configured CAs fail loudly at boot; `round_robin` policy actually skips unhealthy CAs |

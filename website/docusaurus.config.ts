@@ -30,11 +30,16 @@ const config: Config = {
 
   trailingSlash: false,
 
-  // Where `/` sends the visitor. `src/pages/index.tsx` is a runtime <Redirect>
-  // to this path, so no build pass validates it: broken-link checking reads
-  // markdown, and the redirect plugin only validates its own table.
+  // The entry document IS the root: it carries `slug: /`, so `/` serves real
+  // server-rendered content and there is no redirect, no intermediate page and
+  // no second URL holding the same text. Whichever version sits at the root
+  // must be the one carrying the slug — moving `lastVersion` means moving that
+  // line too.
+  //
+  // docsHome stays so scripts/check-urls.mjs keeps a single declared entry
+  // point to assert against.
   customFields: {
-    docsHome: SHIPPED ? '/intro/what-is-hortval' : '/intro/what-is-certeasy',
+    docsHome: '/',
   },
 
   onBrokenLinks: 'throw',
@@ -105,10 +110,16 @@ const config: Config = {
       '@docusaurus/plugin-client-redirects',
       {
         // The identity page is the only one whose file name differs between the
-        // two versions, so it is the only URL the swap moves. Until then its
-        // source is a real page, and redirecting it would hide it.
+        // two versions, so it is the only URL the swap moves.
+        //
+        // Both entries point at `/`: that is where the entry document now
+        // lives. `/intro/what-is-hortval` was the canonical URL for a few
+        // hours on 2026-08-23, so it is carried too rather than left to 404.
         redirects: SHIPPED
-          ? [{ from: '/intro/what-is-certeasy', to: '/intro/what-is-hortval' }]
+          ? [
+              { from: '/intro/what-is-certeasy', to: '/' },
+              { from: '/intro/what-is-hortval', to: '/' },
+            ]
           : [],
       },
     ],

@@ -3,9 +3,11 @@
 // Two things no build pass covers, both of which send visitors to a 404 while
 // the build prints SUCCESS:
 //
-//   1. `/` is a runtime <Redirect> to `customFields.docsHome`. Broken-link
-//      checking reads markdown, the redirect plugin validates its own table,
-//      neither reads this.
+//   1. `/` is served by the entry document itself, which carries `slug: /`.
+//      Nothing else asserts that the root produced a page: broken-link
+//      checking reads markdown, and the redirect plugin only validates its own
+//      table. A `lastVersion` swap whose new entry document forgot the slug
+//      builds green and serves a 404 at the root.
 //
 //   2. The paths search engines already hold — scripts/indexed-paths.txt.
 //      Changing which version sits at the root swaps the content behind those
@@ -43,16 +45,16 @@ const home = (await import(pathToFileURL(resolved).href)).default?.customFields?
 
 if (typeof home !== 'string') {
   console.error('\n  ✗ customFields.docsHome is missing from docusaurus.config.ts.');
-  console.error('    src/pages/index.tsx reads it to know where `/` goes.');
+  console.error('    It names the page expected at the site root.');
   failed = true;
 } else if (!resolves(home)) {
-  console.error(`\n  ✗ The site root redirects to ${home}, which the build did not produce.`);
+  console.error(`\n  ✗ The site root (${home}) was not produced by the build.`);
   console.error('    Every visitor landing on / would get a 404.');
-  console.error('    docsHome must name a page of the version served at the root');
-  console.error('    (`lastVersion` in docusaurus.config.ts).');
+  console.error('    The entry document of the version served at the root');
+  console.error('    (`lastVersion`) must carry `slug: /`.');
   failed = true;
 } else {
-  console.log(`  ✓ site root redirects to ${home}, which exists`);
+  console.log(`  ✓ site root (${home}) is served by the build`);
 }
 
 // 2. The URLs already out there.

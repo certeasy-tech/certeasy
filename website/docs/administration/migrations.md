@@ -60,6 +60,49 @@ a change a restart may not apply.
 remedy the refusal points at, so it has to work on a database Hortval will not
 start on, and it never changes the schema.
 
+## Versions and support
+
+**Your ACME clients never change.** The interface between them and Hortval is
+RFC 8555, not our API. certbot, acme.sh, lego, Caddy and Traefik are unaffected
+by any Hortval version: an upgrade touches the server, never the fleet that talks
+to it. That is the reason everything below is affordable.
+
+**From 1.0.0 onward, no release asks you to edit your configuration.** The
+schema does keep evolving — a new capability usually needs a new table or column
+— but **that is not a break**: nothing you wrote stops working, and no client of
+yours is reconfigured.
+
+Additive changes apply on restart. Anything heavier waits for `hortval migrate`,
+which is to say for a moment when you are present and holding a backup. That is
+not a constraint we impose; it is the moment you would have chosen anyway, and
+the gate exists so a restart nobody decided cannot pick it for you.
+
+A minor adds capability, a patch fixes. Either way the upgrade is the same three
+steps: back up, replace the binary, restart.
+
+Each minor is supported for **twelve months**. Security fixes ship in the current
+release, and upgrading is how you receive them. If we do introduce a breaking
+change, the fix is **backported** to the minors still inside their twelve months:
+the backport is the price of our own break, not a service you have to ask for.
+
+**Before 1.0.0 — that is, today — the 0.9.x series still asks you to edit your
+configuration.** v0.9.4 and v0.9.5 carry fourteen breaking changes between them,
+and it is worth naming what they are: **every one of them is configuration.**
+
+- **None touches the ACME protocol.** No client was ever reconfigured.
+- **None touches the schema.** Every migration shipped to date is additive.
+- **None invalidates a certificate.**
+
+Most are refused **at startup**, with the line to write printed for you — v0.9.5
+sums its own up as *"a value that was guessed is now demanded, and each refusal
+prints what to write"*. The few exceptions are operational rather than syntactic:
+external rotation of the audit file was withdrawn, and `logs.file` and
+`audit.path` became naming bases rather than file names.
+
+So what stops at 1.0.0 is not "breaking your system" but **"asking you to edit
+your configuration again"**. Every [changelog](../changelog/) entry until then
+carries its own "Breaking changes" section and an upgrade guide.
+
 ## `hortval migrate`
 
 ```bash

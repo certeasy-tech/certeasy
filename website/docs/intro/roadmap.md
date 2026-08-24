@@ -9,6 +9,23 @@ This page lists the major features Hortval ships progressively across versions, 
 
 The roadmap is a planning indication, not a contractual commitment. Versions and feature ordering may change based on customer feedback.
 
+## What the number means
+
+The version number says **what the product becomes**, not what the upgrade will
+cost you.
+
+| | What changes | What you do |
+|---|---|---|
+| `1.0.1` → `1.0.2` | fixes | replace the binary, restart |
+| `1.0` → `1.1` | a capability, added | back up, replace, restart |
+| `1.x` → `2.0` | a shape the product did not have: it splits, distributes, gains a console | the same three steps |
+
+A major is therefore **neither a rewrite, nor a new licence, nor a migration
+project**. Your licence covers every version, your ACME clients never change
+because the interface is RFC 8555 and not our API, and from 1.0.0 onward no
+release asks you to edit your configuration. See
+[Versions and support](../administration/migrations.md#versions-and-support).
+
 Legend: ✅ shipped · 🎯 next release in flight.
 
 ## Features by version

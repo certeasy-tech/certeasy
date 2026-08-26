@@ -82,17 +82,22 @@ go list -m -json all > sbom-deps.json
 
 ### EU Cyber Resilience Act (CRA)
 
-The CRA (applicable from 2027) requires software vendors to:
+The CRA applies in two stages. The obligation to report actively exploited
+vulnerabilities and severe incidents applies from **11 September 2026**; the
+remaining obligations apply from **11 December 2027**.
+
+It requires software vendors to:
 
 - Maintain and publish an SBOM for each release
 - Track and remediate known vulnerabilities (CVEs) within defined timelines
+- Report actively exploited vulnerabilities and severe incidents
 - Provide a vulnerability disclosure policy
 - Document security properties of the software
 
 **Hortval approach:**
 - SBOM generated per release using `cyclonedx-gomod`
-- Dependencies monitored via `govulncheck` in CI
-- Vulnerability reports accepted at [security contact on hortval.com](https://hortval.com)
+- Dependencies scanned with `govulncheck`, in the test suite and in a daily drift report
+- Vulnerability reports accepted at **security@hortval.com**
 
 ### NIS2 Directive
 

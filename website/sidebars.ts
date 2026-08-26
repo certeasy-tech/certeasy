@@ -57,6 +57,9 @@ const sidebars: SidebarsConfig = {
       items: [
         'security/certificate-model',
         'security/dependencies',
+        'security/verifying-binaries',
+        'security/outbound-connections',
+        'security/cra-compliance',
         'security/hardening',
       ],
     },

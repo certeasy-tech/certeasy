@@ -66,6 +66,10 @@ In a single-instance deployment this is invisible. In multi-instance or HA deplo
 - **Extended Key Usage**: `serverAuth` only. `clientAuth`, `codeSigning`, `anyPurpose` and other EKUs are never set, even if requested by the client's CSR. Certificates issued by Hortval are TLS server certificates — never reusable for AD authentication, SMB signing, or other server-side roles. The strict EKU policy can be relaxed per-policy via `csr.allowed-extra-eku` if a specific client (e.g. acme.sh) declares additional EKUs in its CSR.
 - **Signature algorithms**: configurable allow-list per policy, default minimum RSA 3072-bit, ECDSA P-256 and above.
 
+## Regulatory compliance
+
+This page covers protocol standards. For where Hortval stands against the **EU Cyber Resilience Act** — what is in place, what is in progress, and what has not started — see [EU Cyber Resilience Act](../security/cra-compliance.md).
+
 ## Roadmap
 
 The remaining gaps on this page are tracked in the [public roadmap](../intro/roadmap.md) and target the next minor releases. Subscribe now (Pro, Enterprise) to lock the price while features ship progressively.
